@@ -31,6 +31,7 @@ export default function PDFUpload() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState<{ [key: string]: number }>({});
   const [isDragging, setIsDragging] = useState(false);
+  const [selectedPDFs, setSelectedPDFs] = useState<Set<string>>(new Set());
   const { toast } = useToast();
   const { addTransaction } = useDBContext();
 
@@ -200,6 +201,11 @@ export default function PDFUpload() {
   const handleDelete = async (id: string) => {
     try {
       await pdfService.deletePDFDocument(id);
+      setSelectedPDFs(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(id);
+        return newSet;
+      });
       toast({
         title: 'Success',
         description: 'PDF document deleted successfully',
@@ -212,6 +218,46 @@ export default function PDFUpload() {
         description: 'Failed to delete PDF document',
         variant: 'destructive',
       });
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    try {
+      const selectedIds = Array.from(selectedPDFs);
+      await pdfService.deleteDocuments(selectedIds);
+      setSelectedPDFs(new Set());
+      toast({
+        title: 'Success',
+        description: `Successfully deleted ${selectedIds.length} PDF documents`,
+      });
+      loadUploadedFiles();
+    } catch (error) {
+      logger.error('Error deleting PDFs:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to delete PDF documents',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const togglePDFSelection = (id: string) => {
+    setSelectedPDFs(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) {
+        newSet.delete(id);
+      } else {
+        newSet.add(id);
+      }
+      return newSet;
+    });
+  };
+
+  const toggleAllPDFs = () => {
+    if (selectedPDFs.size === uploadedFiles.length) {
+      setSelectedPDFs(new Set());
+    } else {
+      setSelectedPDFs(new Set(uploadedFiles.map(doc => doc.id)));
     }
   };
 
@@ -292,9 +338,39 @@ export default function PDFUpload() {
           </Button>
         </CollapsibleTrigger>
         <CollapsibleContent className="space-y-2 mt-2">
+          {uploadedFiles.length > 0 && (
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={selectedPDFs.size === uploadedFiles.length}
+                  onChange={toggleAllPDFs}
+                  className="w-4 h-4 rounded border-gray-300"
+                />
+                <span className="text-sm text-gray-600">Select All</span>
+              </div>
+              {selectedPDFs.size > 0 && (
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={handleBulkDelete}
+                  className="flex items-center gap-1"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Delete Selected ({selectedPDFs.size})
+                </Button>
+              )}
+            </div>
+          )}
           {uploadedFiles.map((doc) => (
             <div key={doc.id} className='flex items-center justify-between p-3 bg-gray-50 rounded-md'>
               <div className='flex items-center gap-2'>
+                <input
+                  type="checkbox"
+                  checked={selectedPDFs.has(doc.id)}
+                  onChange={() => togglePDFSelection(doc.id)}
+                  className="w-4 h-4 rounded border-gray-300"
+                />
                 {getStatusIcon(doc.status)}
                 <span className='text-sm font-medium'>{doc.name}</span>
                 {doc.transactionCount && (

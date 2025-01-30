@@ -70,7 +70,7 @@ export default function Dashboard() {
       totalSpending += spending;
     });
 
-    const totalSavings = totalIncome - totalSpending;
+    const totalSavings = totalIncome - Math.abs(totalSpending);
     const nonZeroIncome = totalIncome || 0.01; // Prevent division by zero
 
     return {

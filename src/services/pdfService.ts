@@ -543,21 +543,41 @@ class PDFService {
     currentDate: Date,
     statementPeriod?: { startDate: Date; endDate: Date }
   ): Date {
-    if (transactionDate > currentDate) {
-      // Assume the year was misread; subtract one year
-      transactionDate.setFullYear(transactionDate.getFullYear() - 1);
-      logger.warn(`Adjusted transaction date to previous year: ${transactionDate}`);
-    }
+    // Create a new Date object to avoid modifying the original
+    const correctedDate = new Date(transactionDate);
 
-    // If statementPeriod is available, ensure the date falls within it
+    // If we have a statement period, use it to determine the correct year
     if (statementPeriod) {
-      if (transactionDate < statementPeriod.startDate || transactionDate > statementPeriod.endDate) {
-        logger.warn(`Transaction date ${transactionDate.toDateString()} is outside the statement period.`);
-        // Additional handling can be implemented here if needed
+      const statementYear = statementPeriod.startDate.getFullYear();
+      
+      // Set the year to match the statement period
+      correctedDate.setFullYear(statementYear);
+      
+      // If the date is still outside the statement period, try adjusting
+      if (correctedDate < statementPeriod.startDate || correctedDate > statementPeriod.endDate) {
+        // If the date is before the start, it might be from the next month
+        if (correctedDate < statementPeriod.startDate) {
+          correctedDate.setMonth(correctedDate.getMonth() + 1);
+        }
+        // If the date is after the end, it might be from the previous month
+        else if (correctedDate > statementPeriod.endDate) {
+          correctedDate.setMonth(correctedDate.getMonth() - 1);
+        }
+      }
+
+      // Log if the date is still outside the statement period
+      if (correctedDate < statementPeriod.startDate || correctedDate > statementPeriod.endDate) {
+        logger.warn(`Transaction date ${correctedDate.toDateString()} is outside the statement period.`);
+      }
+    } else {
+      // If no statement period, use current date as reference
+      if (correctedDate > currentDate) {
+        correctedDate.setFullYear(correctedDate.getFullYear() - 1);
+        logger.warn(`Adjusted transaction date to previous year: ${correctedDate}`);
       }
     }
 
-    return transactionDate;
+    return correctedDate;
   }
 
   /**
@@ -775,7 +795,7 @@ class PDFService {
             let transactionDate = date;
             transactionDate = this.validateAndCorrectDate(
               transactionDate,
-              new Date('2025-01-30'),
+              new Date(),
               statementPeriod || undefined
             );
 
@@ -1039,6 +1059,27 @@ class PDFService {
       logger.info('PDF document deleted successfully:', id);
     } catch (error) {
       logger.error('Error deleting PDF document:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Deletes multiple PDF documents by their IDs.
+   * @param ids Array of document IDs to delete.
+   * @returns Promise that resolves when all documents are deleted.
+   */
+  async deleteDocuments(ids: string[]): Promise<void> {
+    try {
+      const db = await dbService.getDB();
+      const transaction = db.transaction('pdfs', 'readwrite');
+      const store = transaction.objectStore('pdfs');
+      
+      await Promise.all(ids.map(id => store.delete(id)));
+      await transaction.done;
+      
+      logger.info('Successfully deleted multiple PDF documents:', ids);
+    } catch (error) {
+      logger.error('Error deleting multiple PDF documents:', error);
       throw error;
     }
   }

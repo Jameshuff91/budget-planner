@@ -352,9 +352,9 @@ export const useAnalytics = () => {
         const current = monthlyTotals.get(yearMonthKey) || { spending: 0, income: 0 };
 
         if (t.type === 'expense') {
-          current.spending += t.amount;
+          current.spending += Math.abs(t.amount);
         } else {
-          current.income += t.amount;
+          current.income += Math.abs(t.amount);
         }
 
         monthlyTotals.set(yearMonthKey, current);
@@ -364,17 +364,32 @@ export const useAnalytics = () => {
       const currentMonthKey = months[currentMonth];
       const currentKey = `${currentYear}-${currentMonthKey}`;
       const currentData = monthlyTotals.get(currentKey) || { spending: 0, income: 0 };
-      const currentSpending = currentData.spending;
-      const currentIncome = currentData.income;
-      const currentSavings = currentIncome - currentSpending;
+      const currentSpending = Math.abs(currentData.spending);
+      const currentIncome = Math.abs(currentData.income);
+      // Calculate current month savings including investments
+      const currentInvestments = transactions
+        .filter(t =>
+          new Date(t.date).getMonth() === currentMonth &&
+          new Date(t.date).getFullYear() === currentYear &&
+          t.description.toLowerCase().includes('vanguard')
+        )
+        .reduce((sum, t) => sum + Math.abs(t.amount), 0);
+      const currentSavings = currentIncome - currentSpending + currentInvestments;
 
       // Get previous month data
       const previousMonthKey = months[previousMonth];
       const previousKey = `${previousYear}-${previousMonthKey}`;
       const previousData = monthlyTotals.get(previousKey) || { spending: 0, income: 0 };
-      const previousSpending = previousData.spending;
-      const previousIncome = previousData.income;
-      const previousSavings = previousIncome - previousSpending;
+      const previousSpending = Math.abs(previousData.spending);
+      const previousIncome = Math.abs(previousData.income);
+      const previousInvestments = transactions
+        .filter(t =>
+          new Date(t.date).getMonth() === previousMonth &&
+          new Date(t.date).getFullYear() === previousYear &&
+          t.description.toLowerCase().includes('vanguard')
+        )
+        .reduce((sum, t) => sum + Math.abs(t.amount), 0);
+      const previousSavings = previousIncome - previousSpending + previousInvestments;
 
       // Calculate percentage changes
       const calculatePercentageChange = (current: number, previous: number) => {
