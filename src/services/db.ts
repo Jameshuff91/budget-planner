@@ -230,6 +230,13 @@ class DatabaseService {
     await tx.done;
   }
 
+  async clearPDFs(): Promise<void> {
+    const db = await this.getDB();
+    const tx = db.transaction('pdfs', 'readwrite');
+    await tx.store.clear();
+    await tx.done;
+  }
+
   async getDB(): Promise<IDBPDatabase<BudgetDB>> {
     if (!this.db) await this.initialize();
     return this.db!;

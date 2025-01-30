@@ -196,11 +196,22 @@ export const useAnalytics = () => {
           const [year, month] = key.split('-');
           const spending = Math.abs(data.spending);
           const income = Math.abs(data.income);
+          
+          // Calculate savings by looking for investment transactions
+          const investmentSavings = transactions
+            .filter(t => {
+              const tDate = new Date(t.date);
+              return tDate.getFullYear() === parseInt(year) &&
+                     months[tDate.getMonth()] === month &&
+                     t.description.toLowerCase().includes('vanguard');
+            })
+            .reduce((sum, t) => sum + Math.abs(t.amount), 0);
+
           return {
             name: month,
             year: parseInt(year),
             spending: spending,
-            savings: income - spending
+            savings: income - spending + investmentSavings // Add investment amounts to savings
           };
         })
         .sort((a, b) => {

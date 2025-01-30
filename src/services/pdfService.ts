@@ -39,6 +39,7 @@ export interface PDFDocument {
   error?: string;
   transactionCount?: number;
   contentHash: string; // SHA-256 hash of the file content
+  documentDate?: Date; // Date extracted from filename
   statementPeriod?: {
     startDate: Date;
     endDate: Date;
@@ -56,6 +57,42 @@ export interface ExtractedData {
 }
 
 class PDFService {
+  /**
+   * Extracts date from filename in various formats like:
+   * - YYYYMMDD-description.pdf (e.g., 20241219-statements-8731-.pdf)
+   * - YYYY-MM-DD.pdf (e.g., 2023-06-08.pdf)
+   * @param filename The name of the file
+   * @returns Date object if successfully parsed, null otherwise
+   */
+  private parseDateFromFilename(filename: string): Date | null {
+    try {
+      // Match YYYYMMDD format (e.g., 20241219-statements-8731-.pdf)
+      const yyyymmddMatch = filename.match(/^(\d{4})(\d{2})(\d{2})/);
+      if (yyyymmddMatch) {
+        const [_, year, month, day] = yyyymmddMatch;
+        const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+        if (!isNaN(date.getTime())) {
+          return date;
+        }
+      }
+
+      // Match YYYY-MM-DD format (e.g., 2023-06-08.pdf)
+      const isoMatch = filename.match(/^(\d{4})-(\d{2})-(\d{2})/);
+      if (isoMatch) {
+        const [_, year, month, day] = isoMatch;
+        const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+        if (!isNaN(date.getTime())) {
+          return date;
+        }
+      }
+
+      return null;
+    } catch (error) {
+      logger.error('Error parsing date from filename:', error);
+      return null;
+    }
+  }
+
   private async storeDocument(document: PDFDocument): Promise<void> {
     try {
       await this.updateDocument(document);
@@ -73,7 +110,7 @@ class PDFService {
 
     const viewport = pdfPage.getViewport({ scale: 2.0 }); // Higher scale for better OCR
     const canvas = window.document.createElement('canvas');
-    const context = canvas.getContext('2d');
+    const context = canvas.getContext('2d', { willReadFrequently: true });
 
     if (!context) {
       throw new Error('Could not get canvas context');
@@ -194,22 +231,37 @@ class PDFService {
   private classifyTransaction(description: string, amount: number): 'income' | 'expense' {
     const lowerDesc = description.toLowerCase();
 
-    // Explicitly handle negative amounts
-    if (amount < 0) {
-      return 'expense';
+    // Handle peer-to-peer payments first
+    if (lowerDesc.includes('zelle') || lowerDesc.includes('venmo')) {
+      if (lowerDesc.includes('from')) {
+        return 'income';
+      } else if (lowerDesc.includes('to') || lowerDesc.includes('payment')) {
+        return 'expense';
+      }
     }
 
-    // **[Improvement]**: Expanded comprehensive keywords
+    // Investment-related keywords that should be treated as income/savings
+    const investmentKeywords = [
+      'vanguard', 'fidelity', 'schwab', 'investment', 'etf', 'mutual fund',
+      'stocks', 'bonds', '401k', 'ira', 'retirement'
+    ];
+
+    // Check if this is an investment transaction
+    for (const kw of investmentKeywords) {
+      if (lowerDesc.includes(kw)) {
+        return 'income'; // Treat investments as income/savings
+      }
+    }
+
     const incomeKeywords = [
       'payroll', 'direct deposit', 'salary', 'interest', 'refund', 'deposit from',
-      'transfer from', 'dfas-in', 'investment', 'venmo deposit', 'zelle deposit'
+      'transfer from', 'dfas-in', 'payment from', 'credit', 'deposit'
     ];
 
     const expenseKeywords = [
-      'payment', 'pmt', 'purchase', 'withdraw', 'debit', 'atm', 'fee', 'bill',
-      'transfer to', 'ach pmt', 'venmo payment', 'amex pmt', 'chase pmt',
-      'bill pay', 'withdrawal', 'pur', 'payment to', 'refund', 'utility',
-      'web id', 'ppd id', 'payment'
+      'payment to', 'pmt to', 'purchase', 'withdraw', 'debit', 'atm', 'fee', 'bill',
+      'transfer to', 'ach pmt', 'amex pmt', 'chase pmt', 'bill pay', 'withdrawal',
+      'pur', 'utility', 'insurance'
     ];
 
     // **[Improvement]**: Handle abbreviations and partial matches
@@ -413,20 +465,51 @@ class PDFService {
   private determineExpenseCategory(description: string): string {
     const lowerDesc = description.toLowerCase();
     const categoryMappings: { [key: string]: string } = {
+      // Credit Card Payments
       'payment to chase card': 'Credit Card Payment',
       'payment to amex': 'Credit Card Payment',
+      'american express ach pmt': 'Credit Card Payment',
+      'chase card': 'Credit Card Payment',
+      
+      // Utilities
       'utility': 'Utilities',
+      'comcast': 'Utilities',
+      'umc inc': 'Utilities',
+      
+      // Peer-to-Peer Payments
       'venmo payment': 'Peer-to-Peer Payment',
+      'zelle payment': 'Peer-to-Peer Payment',
+      
+      // Online Payments
       'paypal': 'Online Payment',
+      'affirm': 'Online Payment',
+      
+      // Housing
+      'newrez-shellpoin': 'Housing',
+      'mortgage': 'Housing',
+      'rent': 'Housing',
+      
+      // Insurance
+      'aaa insurance': 'Insurance',
+      
+      // General Purchases
       'purchase': 'Purchases',
+      'pur': 'Purchases',
+      
+      // ATM/Cash
       'withdrawal': 'ATM Withdrawal',
-      // Add more mappings as needed
+      'atm': 'ATM Withdrawal'
     };
 
     for (const [key, category] of Object.entries(categoryMappings)) {
       if (lowerDesc.includes(key)) {
         return category;
       }
+    }
+
+    // If it contains 'ach pmt' and hasn't been categorized yet, it's likely a credit card payment
+    if (lowerDesc.includes('ach pmt')) {
+      return 'Credit Card Payment';
     }
 
     return 'Other Expenses';
@@ -493,6 +576,7 @@ class PDFService {
 
     try {
       const arrayBuffer = await file.arrayBuffer();
+      const documentDate = this.parseDateFromFilename(file.name);
       const document: PDFDocument = {
         id: crypto.randomUUID(),
         name: file.name,
@@ -501,7 +585,17 @@ class PDFService {
         processed: false,
         status: 'processing',
         contentHash: await this.calculateFileHash(arrayBuffer),
+        documentDate: documentDate || undefined,
       };
+
+      // If we found a date in the filename, use it to set the statement period
+      if (documentDate) {
+        // Set statement period to cover the month of the document date
+        const startDate = new Date(documentDate.getFullYear(), documentDate.getMonth(), 1);
+        const endDate = new Date(documentDate.getFullYear(), documentDate.getMonth() + 1, 0);
+        document.statementPeriod = { startDate, endDate };
+        logger.info('Set statement period from filename date:', { startDate, endDate });
+      }
 
       // Check for duplicate file
       const duplicate = await this.checkForDuplicateFile(document.contentHash);
@@ -531,8 +625,8 @@ class PDFService {
         tessedit_char_whitelist: '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ.,/- ',
       });
 
-      // Detect statement period once for the entire document
-      let statementPeriod: { startDate: Date; endDate: Date } | null = null;
+      // Use document date from filename or detect statement period from content
+      let statementPeriod = document.statementPeriod || null;
 
       // Process each page
       const totalPages = pdfDoc.numPages;
@@ -545,7 +639,7 @@ class PDFService {
 
         // Convert ImageData to a format Tesseract can process
         const canvas = window.document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
         if (!ctx) throw new Error('Could not get canvas context');
 
         canvas.width = imageData.width;
@@ -572,8 +666,8 @@ class PDFService {
           dueDate: /(?:Payment\s*Due\s*Date|Due\s*Date)\s*(\d{2}\/\d{2}\/\d{4})/i,
           accountNumber: /(?:Account\s*Ending|ending\s*in)\s*([\d-]+)/i,
           paymentAmount: /(?:AutoPay\s*Amount|Payment\s*Amount)\s*\$?\s*([0-9,.]+)/i,
-          transactions: /(?:Transaction Date|Date)\s+(?:Description|Merchant|Payee)\s+Amount/i,
-          transactionLine: /(\d{2}\/\d{2}\/\d{4})\s+([^$]+?)\s+\$?\s*([\-]?[0-9,]+\.\d{2})/i,
+          transactions: /(?:Transaction Date|Date|TRANSACTION DETAIL)/i,
+          transactionLine: /(\d{2}\/\d{2})\s+([^$]+?)\s+([\-]?[0-9,.]+\.\d{2})\s+[0-9,.]+\.\d{2}/i,
         };
 
         // Extract bill summary and individual transactions
@@ -945,6 +1039,20 @@ class PDFService {
       logger.info('PDF document deleted successfully:', id);
     } catch (error) {
       logger.error('Error deleting PDF document:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Clears all stored PDFs and their associated transactions.
+   */
+  async clearAllPDFs(): Promise<void> {
+    try {
+      await dbService.clearPDFs();
+      await dbService.clearTransactions();
+      logger.info('Successfully cleared all PDFs and transactions');
+    } catch (error) {
+      logger.error('Error clearing PDFs and transactions:', error);
       throw error;
     }
   }
