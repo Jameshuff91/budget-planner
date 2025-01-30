@@ -3,7 +3,7 @@
 import { dbService } from './db';
 import { logger } from './logger';
 import * as pdfjs from 'pdfjs-dist';
-import { createWorker } from 'tesseract.js';
+import { createWorker, WorkerOptions } from 'tesseract.js';
 
 // Set worker path before any PDF operations
 if (typeof window !== 'undefined') {
@@ -87,7 +87,37 @@ class PDFService {
       viewport: viewport,
     }).promise;
 
+    // **[Improvement]**: Preprocess the image for better OCR accuracy
+    const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+    const preprocessedData = this.preprocessImage(imageData);
+    context.putImageData(preprocessedData, 0, 0);
+
     return context.getImageData(0, 0, canvas.width, canvas.height);
+  }
+
+  /**
+   * Preprocesses the image data to enhance OCR accuracy.
+   * Converts to grayscale and applies thresholding.
+   * @param imageData The original ImageData.
+   * @returns The preprocessed ImageData.
+   */
+  private preprocessImage(imageData: ImageData): ImageData {
+    const data = imageData.data;
+    // Convert to grayscale
+    for (let i = 0; i < data.length; i += 4) {
+      const grayscale = data[i] * 0.3 + data[i + 1] * 0.59 + data[i + 2] * 0.11;
+      data[i] = grayscale;
+      data[i + 1] = grayscale;
+      data[i + 2] = grayscale;
+    }
+    // Apply simple thresholding
+    for (let i = 0; i < data.length; i += 4) {
+      const threshold = data[i] > 128 ? 255 : 0;
+      data[i] = threshold;
+      data[i + 1] = threshold;
+      data[i + 2] = threshold;
+    }
+    return imageData;
   }
 
   /**
@@ -169,23 +199,36 @@ class PDFService {
       return 'expense';
     }
 
-    // Define comprehensive keywords
+    // **[Improvement]**: Expanded comprehensive keywords
     const incomeKeywords = [
-      'payroll', 'direct deposit', 'salary', 'interest', 'refund', 'deposit from', 'transfer from', 'dfas-in'
+      'payroll', 'direct deposit', 'salary', 'interest', 'refund', 'deposit from',
+      'transfer from', 'dfas-in', 'investment', 'venmo deposit', 'zelle deposit'
     ];
 
     const expenseKeywords = [
-      'payment', 'pmt', 'purchase', 'withdraw', 'debit', 'atm', 'fee', 'bill', 'transfer to', 'ach pmt',
-      'venmo payment', 'amex pmt', 'chase pmt', 'bill pay', 'withdrawal'
+      'payment', 'pmt', 'purchase', 'withdraw', 'debit', 'atm', 'fee', 'bill',
+      'transfer to', 'ach pmt', 'venmo payment', 'amex pmt', 'chase pmt',
+      'bill pay', 'withdrawal', 'pur', 'payment to', 'refund', 'utility',
+      'web id', 'ppd id', 'payment'
     ];
 
+    // **[Improvement]**: Handle abbreviations and partial matches
     // Check for income keywords first
-    if (incomeKeywords.some(kw => lowerDesc.includes(kw))) {
-      return 'income';
+    for (const kw of incomeKeywords) {
+      if (lowerDesc.includes(kw)) {
+        return 'income';
+      }
     }
 
     // Check for expense keywords
-    if (expenseKeywords.some(kw => lowerDesc.includes(kw))) {
+    for (const kw of expenseKeywords) {
+      if (lowerDesc.includes(kw)) {
+        return 'expense';
+      }
+    }
+
+    // **[Improvement]**: Specific handling for abbreviations like 'pur'
+    if (/pur\b/.test(lowerDesc)) {
       return 'expense';
     }
 
@@ -200,36 +243,13 @@ class PDFService {
    */
   private cleanDescription(description: string): string {
     // Remove any balance amounts or payment amounts that might appear in the description
-    return description.replace(/\+?\$?[0-9,.]+(?:\.\d{2})?(?=\s|$)/g, '').trim();
-  }
+    const cleaned = description
+      .replace(/\+?\$?[0-9,.]+(?:\.\d{2})?(?=\s|$)/g, '')
+      .replace(/(?:web id:|ppd id:)\s*\S+/gi, '') // Remove Web ID and PPD ID
+      .replace(/[^a-zA-Z\s\-]/g, '') // Remove non-alphabetic characters except spaces and hyphens
+      .trim();
 
-  /**
-   * Validates and corrects the transaction date.
-   * @param transactionDate The parsed transaction date.
-   * @param currentDate The current date to compare against.
-   * @param statementPeriod Optional statement period for additional validation.
-   * @returns The validated and possibly corrected transaction date.
-   */
-  private validateAndCorrectDate(
-    transactionDate: Date,
-    currentDate: Date,
-    statementPeriod?: { startDate: Date; endDate: Date }
-  ): Date {
-    if (transactionDate > currentDate) {
-      // Assume the year was misread; subtract one year
-      transactionDate.setFullYear(transactionDate.getFullYear() - 1);
-      logger.warn(`Adjusted transaction date to previous year: ${transactionDate}`);
-    }
-
-    // If statementPeriod is available, ensure the date falls within it
-    if (statementPeriod) {
-      if (transactionDate < statementPeriod.startDate || transactionDate > statementPeriod.endDate) {
-        logger.warn(`Transaction date ${transactionDate.toDateString()} is outside the statement period.`);
-        // Additional handling can be implemented here if needed
-      }
-    }
-
-    return transactionDate;
+    return cleaned;
   }
 
   /**
@@ -239,10 +259,24 @@ class PDFService {
    */
   private parseDate(dateStr: string): Date | null {
     try {
-      const [month, day, year] = dateStr.split('/').map(Number);
-      const fullYear = year < 100 ? 2000 + year : year;
-      const date = new Date(fullYear, month - 1, day);
-      return isNaN(date.getTime()) ? null : date;
+      const parts = dateStr.split('/').map(Number);
+      if (parts.length === 2) {
+        // Assume current year if year is missing
+        const [month, day] = parts;
+        const year = new Date().getFullYear();
+        const date = new Date(year, month - 1, day);
+        return isNaN(date.getTime()) ? null : date;
+      } else if (parts.length === 3) {
+        let [month, day, year] = parts;
+        if (year < 100) {
+          year += 2000;
+        }
+        const date = new Date(year, month - 1, day);
+        return isNaN(date.getTime()) ? null : date;
+      } else {
+        logger.error(`Unexpected date format: ${dateStr}`);
+        return null;
+      }
     } catch (error) {
       logger.error(`Error parsing date string "${dateStr}":`, error);
       return null;
@@ -305,9 +339,8 @@ class PDFService {
   private async detectStatementPeriod(text: string): Promise<{ startDate: Date; endDate: Date } | null> {
     // Common date formats in statements
     const datePatterns = [
-      /Statement Period:\s*(\d{2}\/\d{2}\/\d{2,4})\s*(?:to|-)\s*(\d{2}\/\d{2}\/\d{2,4})/i,
-      /Billing Period:\s*(\d{2}\/\d{2}\/\d{2,4})\s*(?:to|-)\s*(\d{2}\/\d{2}\/\d{2,4})/i,
-      /Activity from\s*(\d{2}\/\d{2}\/\d{2,4})\s*(?:to|-)\s*(\d{2}\/\d{2}\/\d{2,4})/i
+      /(?:Statement Period|Billing Period|Activity from)\s*[:\-]?\s*(\d{2}\/\d{2}\/\d{4})\s*(?:to|-)\s*(\d{2}\/\d{2}\/\d{4})/i,
+      /(?:from|through)\s*(\d{2}\/\d{2}\/\d{4})\s*(?:to|through)\s*(\d{2}\/\d{2}\/\d{4})/i
     ];
 
     for (const pattern of datePatterns) {
@@ -326,8 +359,8 @@ class PDFService {
       }
     }
 
-    // Fallback: Use the earliest and latest transaction dates
-    const transactionDates = Array.from(text.matchAll(/(\d{2}\/\d{2}\/\d{2,4})/g))
+    // **[Improvement]**: More robust fallback using transaction dates
+    const transactionDates = Array.from(text.matchAll(/(\d{2}\/\d{2}\/\d{4})/g))
       .map(match => this.parseDate(match[1]))
       .filter((date): date is Date => date !== null)
       .sort((a, b) => a.getTime() - b.getTime());
@@ -373,68 +406,75 @@ class PDFService {
   }
 
   /**
-   * Cleans and processes stored content lines into transactions.
-   * This function can be used for reprocessing stored PDFs.
-   * @param lines The lines of text extracted from the PDF.
-   * @param docId The ID of the document being processed.
-   * @returns An array of extracted transactions.
+   * Determines the category of an expense based on the description.
+   * @param description The transaction description.
+   * @returns The specific category of the expense.
    */
-  private async processStoredContent(lines: string[], docId: string): Promise<ExtractedData[]> {
-    const extractedData: ExtractedData[] = [];
-    let billInfo = {
-      accountNumber: undefined as string | undefined,
+  private determineExpenseCategory(description: string): string {
+    const lowerDesc = description.toLowerCase();
+    const categoryMappings: { [key: string]: string } = {
+      'payment to chase card': 'Credit Card Payment',
+      'payment to amex': 'Credit Card Payment',
+      'utility': 'Utilities',
+      'venmo payment': 'Peer-to-Peer Payment',
+      'paypal': 'Online Payment',
+      'purchase': 'Purchases',
+      'withdrawal': 'ATM Withdrawal',
+      // Add more mappings as needed
     };
 
-    // Use the same patterns as in processPDF
-    const patterns = {
-      accountNumber: /(?:Account\s*Ending|ending\s*in)\s*([\d-]+)/i,
-      transactionLine: /(\d{2}\/\d{2}(?:\/\d{2,4})?)\s+([^$]+?)\s+\$?\s*([\d,]+\.\d{2})/i,
-    };
-
-    // First pass: extract account number
-    for (const line of lines) {
-      const accountMatch = line.match(patterns.accountNumber);
-      if (accountMatch) {
-        billInfo.accountNumber = accountMatch[1];
-        break;
+    for (const [key, category] of Object.entries(categoryMappings)) {
+      if (lowerDesc.includes(key)) {
+        return category;
       }
     }
 
-    // Second pass: extract transactions
-    let inTransactionSection = false;
+    return 'Other Expenses';
+  }
 
-    for (const line of lines) {
-      const match = line.match(patterns.transactionLine);
-      if (match) {
-        const [_, dateStr, description, amountStr] = match;
-        try {
-          // Parse date
-          const [month, day, year] = dateStr.split('/').map(Number);
-          const fullYear = year < 100 ? 2000 + year : year;
-          const date = new Date(fullYear, month - 1, day);
+  /**
+   * Classifies a transaction into specific categories based on description and amount.
+   * @param description The transaction description.
+   * @param amount The transaction amount.
+   * @returns The specific category of the transaction.
+   */
+  private categorizeTransaction(description: string, amount: number): string {
+    const type = this.classifyTransaction(description, amount);
+    if (type === 'income') {
+      return 'Income';
+    } else if (type === 'expense') {
+      return this.determineExpenseCategory(description);
+    }
+    return 'Uncategorized';
+  }
 
-          // Parse amount and description
-          const amount = this.parseCurrencyAmount(amountStr);
-          const cleanDescription = description.trim();
+  /**
+   * Validates and corrects the transaction date within the statement period.
+   * @param transactionDate The parsed transaction date.
+   * @param currentDate The current date to compare against.
+   * @param statementPeriod Optional statement period for additional validation.
+   * @returns The validated and possibly corrected transaction date.
+   */
+  private validateAndCorrectDate(
+    transactionDate: Date,
+    currentDate: Date,
+    statementPeriod?: { startDate: Date; endDate: Date }
+  ): Date {
+    if (transactionDate > currentDate) {
+      // Assume the year was misread; subtract one year
+      transactionDate.setFullYear(transactionDate.getFullYear() - 1);
+      logger.warn(`Adjusted transaction date to previous year: ${transactionDate}`);
+    }
 
-          if (!isNaN(amount) && cleanDescription) {
-            extractedData.push({
-              date,
-              amount,
-              description: cleanDescription,
-              type: amount < 0 ? 'expense' : 'income',
-              category: amount < 0 ? 'Credit Card Purchase' : 'Income',
-              isMonthSummary: false,
-              accountNumber: billInfo.accountNumber,
-            });
-          }
-        } catch (error) {
-          logger.error('Error parsing stored transaction line:', error);
-        }
+    // If statementPeriod is available, ensure the date falls within it
+    if (statementPeriod) {
+      if (transactionDate < statementPeriod.startDate || transactionDate > statementPeriod.endDate) {
+        logger.warn(`Transaction date ${transactionDate.toDateString()} is outside the statement period.`);
+        // Additional handling can be implemented here if needed
       }
     }
 
-    return extractedData;
+    return transactionDate;
   }
 
   /**
@@ -452,14 +492,15 @@ class PDFService {
     }
 
     try {
+      const arrayBuffer = await file.arrayBuffer();
       const document: PDFDocument = {
         id: crypto.randomUUID(),
         name: file.name,
-        content: await file.arrayBuffer(),
+        content: arrayBuffer,
         uploadDate: new Date(),
         processed: false,
         status: 'processing',
-        contentHash: await this.calculateFileHash(await file.arrayBuffer()),
+        contentHash: await this.calculateFileHash(arrayBuffer),
       };
 
       // Check for duplicate file
@@ -473,19 +514,25 @@ class PDFService {
       logger.info('Document stored successfully');
 
       // Load PDF document
-      const arrayBuffer = await file.arrayBuffer();
       const pdfDoc = await pdfjs.getDocument({ data: arrayBuffer }).promise;
       const extractedData: ExtractedData[] = [];
 
-      // Initialize Tesseract worker
-      const worker = await createWorker({
-        logger: (m: any) => logger.info(m)
-      } as any);
+      // Initialize Tesseract worker with optimized settings
+      const worker = await createWorker();
+      (worker as any).logger = (m: { status: string; progress: number }) => {
+        logger.info(`Tesseract.js: ${m.status} ${Math.round(m.progress * 100)}%`);
+      };
 
-      // Start the Tesseract worker
+      // Start the Tesseract worker with proper typing
       await (worker as any).load();
       await (worker as any).loadLanguage('eng');
       await (worker as any).initialize('eng');
+      await (worker as any).setParameters({
+        tessedit_char_whitelist: '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ.,/- ',
+      });
+
+      // Detect statement period once for the entire document
+      let statementPeriod: { startDate: Date; endDate: Date } | null = null;
 
       // Process each page
       const totalPages = pdfDoc.numPages;
@@ -505,20 +552,28 @@ class PDFService {
         canvas.height = imageData.height;
         ctx.putImageData(imageData, 0, 0);
 
-        // Perform OCR on the image
+        // Perform OCR on the image with enhanced configuration
         const {
           data: { text },
-        } = await worker.recognize(canvas);
+        } = await (worker as any).recognize(canvas);
         logger.info('OCR extracted text:', text);
+
+        // Extract statement period if not already detected
+        if (!statementPeriod) {
+          statementPeriod = await this.detectStatementPeriod(text);
+          if (statementPeriod) {
+            logger.info('Detected statement period:', statementPeriod);
+          }
+        }
 
         // Enhanced patterns for credit card bills with looser matching
         const patterns = {
           balance: /New\s*Balance\s*\$?\s*([0-9,.]+)/i,
-          dueDate: /(?:Payment\s*Due\s*Date|Due\s*Date)\s*(\d{2}\/\d{2}\/\d{2,4})/i,
+          dueDate: /(?:Payment\s*Due\s*Date|Due\s*Date)\s*(\d{2}\/\d{2}\/\d{4})/i,
           accountNumber: /(?:Account\s*Ending|ending\s*in)\s*([\d-]+)/i,
           paymentAmount: /(?:AutoPay\s*Amount|Payment\s*Amount)\s*\$?\s*([0-9,.]+)/i,
-          transactions: /(?:Transaction Date|Date)\s*(?:Description|Merchant|Payee)\s*Amount/i,
-          transactionLine: /(\d{2}\/\d{2}(?:\/\d{2,4})?)\s+(.*?(?:-\$?[0-9,.]+\.\d{2})?)\s+(-?\$?[0-9,.]+\.\d{2}|\(\$?[0-9,.]+\.\d{2}\))\s*$/i,
+          transactions: /(?:Transaction Date|Date)\s+(?:Description|Merchant|Payee)\s+Amount/i,
+          transactionLine: /(\d{2}\/\d{2}\/\d{4})\s+([^$]+?)\s+\$?\s*([\-]?[0-9,]+\.\d{2})/i,
         };
 
         // Extract bill summary and individual transactions
@@ -545,8 +600,8 @@ class PDFService {
                 break;
               case 'dueDate':
                 try {
-                  const [month, day, year] = value.split('/').map(Number);
-                  billInfo.dueDate = this.parseDate(value);
+                  const date = this.parseDate(value);
+                  billInfo.dueDate = date;
                 } catch (error) {
                   logger.error('Error parsing due date:', error);
                 }
@@ -572,7 +627,7 @@ class PDFService {
               date: billInfo.dueDate || new Date(),
               amount: amount,
               description: `Credit Card Bill - Account ending in ${billInfo.accountNumber || 'N/A'}`,
-              type: 'expense' as const,
+              type: 'expense',
               category: 'Credit Card Payment',
               isMonthSummary: true,
               accountNumber: billInfo.accountNumber,
@@ -617,44 +672,22 @@ class PDFService {
 
           try {
             // Parse date with current month/year context
-            const [month, day, yearOrEmpty] = dateStr.split('/').map(Number);
-            let transactionYear: number;
-            let transactionMonth: number;
-
-            if (yearOrEmpty?.toString().length === 2) {
-              transactionYear = 2000 + yearOrEmpty;
-            } else if (yearOrEmpty) {
-              transactionYear = yearOrEmpty;
-            } else if (currentYear !== null) {
-              transactionYear = currentYear;
-            } else {
-              transactionYear = new Date().getFullYear();
+            const date = this.parseDate(dateStr);
+            if (!date) {
+              logger.warn(`Invalid date format for transaction: ${dateStr}`);
+              continue;
             }
 
-            transactionMonth = Number(month) - 1; // Convert to 0-based month
-
-            // If we have a current month context and the transaction month is different,
-            // use the context month instead (handles cases where the statement spans months)
-            if (currentMonth !== null) {
-              transactionMonth = currentMonth;
-            }
-
-            let transactionDate = new Date(transactionYear, transactionMonth, Number(day));
-            transactionDate = this.validateAndCorrectDate(transactionDate, new Date('2025-01-30'), document.statementPeriod);
+            let transactionDate = date;
+            transactionDate = this.validateAndCorrectDate(
+              transactionDate,
+              new Date('2025-01-30'),
+              statementPeriod || undefined
+            );
 
             const cleanDesc = this.cleanDescription(rawDesc);
             const type = this.classifyTransaction(cleanDesc, amount);
-
-            // Detect statement period if not already detected
-            if (!document.statementPeriod) {
-              const statementPeriod = await this.detectStatementPeriod(text);
-              if (statementPeriod) {
-                document.statementPeriod = statementPeriod;
-                logger.info('Detected statement period:', statementPeriod);
-                // Re-validate the transaction date with the statement period
-                transactionDate = this.validateAndCorrectDate(transactionDate, new Date('2025-01-30'), statementPeriod);
-              }
-            }
+            const category = this.categorizeTransaction(cleanDesc, amount);
 
             if (!isNaN(amount) && cleanDesc) {
               // Validate amount
@@ -664,26 +697,26 @@ class PDFService {
                 continue; // Skip this transaction
               }
 
-              // Extract amount from description if it contains a payment amount
-              const paymentMatch = cleanDesc.match(/-\$?([0-9,.]+\.\d{2})/);
-              const actualAmount = paymentMatch ?
-                parseFloat(paymentMatch[1]) :
-                (type === 'expense' ? -Math.abs(amount) : Math.abs(amount));
+              // **[Improvement]**: Handle cases where description includes payment amount
+              // e.g., "Payment To Chase Card Ending IN 1867 -624.25"
+              const paymentMatch = cleanDesc.match(/payment to|pmt to|purchase/i);
+              const actualAmount = paymentMatch ? -Math.abs(amount) : (type === 'expense' ? -Math.abs(amount) : Math.abs(amount));
 
               extractedData.push({
                 date: transactionDate,
                 amount: actualAmount,
                 description: cleanDesc,
                 type: type,
-                category: type === 'expense' ? 'Credit Card Purchase' : 'Income',
+                category: category,
                 isMonthSummary: false,
                 accountNumber: billInfo.accountNumber,
               });
               logger.info('Added transaction:', {
                 date: transactionDate,
-                amount,
+                amount: actualAmount,
                 description: cleanDesc,
                 type,
+                category,
               });
             }
           } catch (error) {
@@ -691,7 +724,7 @@ class PDFService {
           }
         }
 
-        logger.info('Extracted transactions:', extractedData);
+        logger.info('Extracted transactions from page:', extractedData);
       }
 
       // Terminate Tesseract worker
@@ -720,7 +753,11 @@ class PDFService {
       // Attempt to update document status if possible
       try {
         const documentId = crypto.randomUUID(); // Replace with actual document ID if available
-        await this.updateDocumentStatus(documentId, 'error', error instanceof Error ? error.message : 'Unknown error');
+        await this.updateDocumentStatus(
+          documentId,
+          'error',
+          error instanceof Error ? error.message : 'Unknown error'
+        );
       } catch (updateError) {
         logger.error('Error updating document status after failure:', updateError);
       }
