@@ -227,15 +227,10 @@ class DatabaseService {
     const db = await this.getDB();
     const tx = db.transaction('transactions', 'readwrite');
     await tx.store.clear();
-
-    // Add default transactions
-    for (const transaction of DEFAULT_TRANSACTIONS) {
-      await tx.store.add(transaction);
-    }
     await tx.done;
   }
 
-  private async getDB(): Promise<IDBPDatabase<BudgetDB>> {
+  async getDB(): Promise<IDBPDatabase<BudgetDB>> {
     if (!this.db) await this.initialize();
     return this.db!;
   }
