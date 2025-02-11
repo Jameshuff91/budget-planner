@@ -465,40 +465,47 @@ class PDFService {
   private determineExpenseCategory(description: string): string {
     const lowerDesc = description.toLowerCase();
     const categoryMappings: { [key: string]: string } = {
-      // Credit Card Payments
-      'payment to chase card': 'Credit Card Payment',
-      'payment to amex': 'Credit Card Payment',
-      'american express ach pmt': 'Credit Card Payment',
-      'chase card': 'Credit Card Payment',
+      // Rent/Housing
+      'rent': 'Rent',
+      'mortgage': 'Rent',
+      'newrez-shellpoin': 'Rent',
+      'housing': 'Rent',
+      
+      // Groceries
+      'grocery': 'Groceries',
+      'trader': 'Groceries',
+      'whole foods': 'Groceries',
+      'safeway': 'Groceries',
+      'food': 'Groceries',
       
       // Utilities
       'utility': 'Utilities',
       'comcast': 'Utilities',
       'umc inc': 'Utilities',
+      'electric': 'Utilities',
+      'water': 'Utilities',
+      'gas': 'Utilities',
+      'internet': 'Utilities',
       
-      // Peer-to-Peer Payments
-      'venmo payment': 'Peer-to-Peer Payment',
-      'zelle payment': 'Peer-to-Peer Payment',
+      // Transport
+      'uber': 'Transport',
+      'lyft': 'Transport',
+      'transit': 'Transport',
+      'parking': 'Transport',
+      'gas station': 'Transport',
+      'shell': 'Transport',
+      'chevron': 'Transport',
       
-      // Online Payments
-      'paypal': 'Online Payment',
-      'affirm': 'Online Payment',
-      
-      // Housing
-      'newrez-shellpoin': 'Housing',
-      'mortgage': 'Housing',
-      'rent': 'Housing',
-      
-      // Insurance
-      'aaa insurance': 'Insurance',
-      
-      // General Purchases
-      'purchase': 'Purchases',
-      'pur': 'Purchases',
-      
-      // ATM/Cash
-      'withdrawal': 'ATM Withdrawal',
-      'atm': 'ATM Withdrawal'
+      // Entertainment
+      'netflix': 'Entertainment',
+      'spotify': 'Entertainment',
+      'hulu': 'Entertainment',
+      'disney': 'Entertainment',
+      'movie': 'Entertainment',
+      'theatre': 'Entertainment',
+      'restaurant': 'Entertainment',
+      'bar': 'Entertainment',
+      'cafe': 'Entertainment'
     };
 
     for (const [key, category] of Object.entries(categoryMappings)) {

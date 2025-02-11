@@ -33,7 +33,7 @@ export default function PDFUpload() {
   const [isDragging, setIsDragging] = useState(false);
   const [selectedPDFs, setSelectedPDFs] = useState<Set<string>>(new Set());
   const { toast } = useToast();
-  const { addTransaction } = useDBContext();
+  const { addTransaction, refreshData } = useDBContext();
 
   useEffect(() => {
     loadUploadedFiles();
@@ -172,12 +172,15 @@ export default function PDFUpload() {
         });
       }
 
+      // Refresh data to ensure categories and transactions are in sync
+      await refreshData();
+      
       toast({
         title: 'Success',
         description: `Successfully processed ${pdfFiles.length + csvFiles.length} file(s)`,
       });
 
-      loadUploadedFiles();
+      await loadUploadedFiles();
     } catch (error) {
       logger.error('Error processing files:', error);
       toast({

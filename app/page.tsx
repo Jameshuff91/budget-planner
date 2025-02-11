@@ -9,7 +9,7 @@ import { useDBContext } from '@context/DatabaseContext';
 import { pdfService } from '@services/pdfService';
 
 export default function Home() {
-  const { clearTransactions, addTransaction } = useDBContext();
+  const { clearTransactions, addTransaction, refreshData } = useDBContext();
 
   const handleReset = async () => {
     try {

@@ -85,8 +85,13 @@ export default function SpendingTrend() {
         .sort((a, b) => {
           const yearDiff = a.year - b.year;
           if (yearDiff !== 0) return yearDiff;
-          const monthA = new Date(a.name + ' 1, 2000').getMonth();
-          const monthB = new Date(b.name + ' 1, 2000').getMonth();
+          // Create a map of month abbreviations to their numeric values
+          const monthMap: { [key: string]: number } = {
+            'Jan': 0, 'Feb': 1, 'Mar': 2, 'Apr': 3, 'May': 4, 'Jun': 5,
+            'Jul': 6, 'Aug': 7, 'Sep': 8, 'Oct': 9, 'Nov': 10, 'Dec': 11
+          };
+          const monthA = monthMap[a.name] ?? 0;
+          const monthB = monthMap[b.name] ?? 0;
           return monthA - monthB;
         });
 
@@ -102,14 +107,22 @@ export default function SpendingTrend() {
       
       // Add forecast points
       for (let i = 0; i < 3; i++) {
-        const lastDate = new Date(sortedData[sortedData.length - 1].name);
-        lastDate.setMonth(lastDate.getMonth() + i + 1);
-        const forecastMonth = lastDate.toLocaleString('default', { month: 'short' });
+        // Get the last month's index and calculate next month
+        const monthMap: { [key: string]: number } = {
+          'Jan': 0, 'Feb': 1, 'Mar': 2, 'Apr': 3, 'May': 4, 'Jun': 5,
+          'Jul': 6, 'Aug': 7, 'Sep': 8, 'Oct': 9, 'Nov': 10, 'Dec': 11
+        };
+        const reverseMonthMap = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        
+        const lastMonth = monthMap[sortedData[sortedData.length - 1].name];
+        const nextMonthIndex = (lastMonth + i + 1) % 12;
+        const forecastMonth = reverseMonthMap[nextMonthIndex];
         
         const x = sortedData.length + i;
         dataWithTrends.push({
           name: forecastMonth,
-          year: sortedData[sortedData.length - 1].year,
+          year: sortedData[sortedData.length - 1].year +
+            (lastMonth + i + 1 >= 12 ? Math.floor((lastMonth + i + 1) / 12) : 0),
           spending: 0,
           savings: 0,
           spendingTrend: spendingTrend.slope * x + spendingTrend.intercept,

@@ -1,9 +1,11 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend, CartesianGrid } from 'recharts';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
+import { Button } from '../components/ui/button';
 import { useAnalytics } from '../src/hooks/useAnalytics';
 import { formatCurrency } from '../src/utils/helpers';
 
@@ -12,6 +14,7 @@ import { ExpenseDetailsModal } from './ExpenseDetailsModal';
 export default function SpendingOverview() {
   const { spendingOverview, monthlyTrends } = useAnalytics();
   const [selectedMonth, setSelectedMonth] = useState<(typeof spendingOverview)[0] | null>(null);
+  const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
   const trends = monthlyTrends;
 
   // Get current date and month names dynamically
@@ -21,9 +24,32 @@ export default function SpendingOverview() {
   const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
                      'July', 'August', 'September', 'October', 'November', 'December'];
 
+  // Filter data for selected year
+  const yearData = useMemo(() => {
+    return spendingOverview.filter(item => item.year === selectedYear);
+  }, [spendingOverview, selectedYear]);
+
   const handleBarClick = (data: any) => {
     setSelectedMonth(data.payload);
   };
+
+  const handleYearChange = (direction: 'next' | 'prev') => {
+    setSelectedYear(prev => direction === 'next' ? prev + 1 : prev - 1);
+  };
+
+  // Get available years from the data
+  const availableYears = useMemo(() => {
+    const years = new Set(spendingOverview.map(item => item.year));
+    return Array.from(years).sort();
+  }, [spendingOverview]);
+
+  const canNavigateNext = useMemo(() => {
+    return selectedYear < Math.max(...availableYears);
+  }, [selectedYear, availableYears]);
+
+  const canNavigatePrev = useMemo(() => {
+    return selectedYear > Math.min(...availableYears);
+  }, [selectedYear, availableYears]);
 
   const TrendIndicator = ({ value }: { value: number }) => {
     if (value === 0) return null;
@@ -71,10 +97,31 @@ export default function SpendingOverview() {
             </div>
           </div>
         </div>
+        <div className='flex justify-between items-center mb-4'>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => handleYearChange('prev')}
+            disabled={!canNavigatePrev}
+          >
+            <ChevronLeft className="h-4 w-4 mr-1" />
+            Previous Year
+          </Button>
+          <div className='text-lg font-semibold'>{selectedYear}</div>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => handleYearChange('next')}
+            disabled={!canNavigateNext}
+          >
+            Next Year
+            <ChevronRight className="h-4 w-4 ml-1" />
+          </Button>
+        </div>
         <div className='h-[300px] w-full'>
           <ResponsiveContainer width='100%' height='100%'>
             <BarChart 
-              data={spendingOverview}
+              data={yearData}
               margin={{ top: 10, right: 10, left: 60, bottom: 30 }}
             >
               <XAxis
@@ -83,16 +130,6 @@ export default function SpendingOverview() {
                 fontSize={12}
                 tickLine={false}
                 axisLine={false}
-                tickFormatter={(value, index) => {
-                  const item = spendingOverview[index];
-                  const prevItem = index > 0 ? spendingOverview[index - 1] : null;
-                  
-                  // Show year if it's the first item or if the year changed
-                  if (index === 0 || (prevItem && prevItem.year !== item?.year)) {
-                    return `${value} ${item?.year || ''}`;
-                  }
-                  return value;
-                }}
                 angle={-45}
                 textAnchor="end"
                 height={60}

@@ -73,7 +73,37 @@ export function DatabaseProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    loadData();
+    const initializeData = async () => {
+      try {
+        // Get existing categories
+        const existingCategories = await dbService.getCategories();
+        
+        // If no categories exist, add default ones
+        if (existingCategories.length === 0) {
+          const defaultCategories = [
+            { id: 'salary', name: 'Salary', type: 'income' as const },
+            { id: 'rent', name: 'Rent', type: 'expense' as const },
+            { id: 'groceries', name: 'Groceries', type: 'expense' as const },
+            { id: 'utilities', name: 'Utilities', type: 'expense' as const },
+            { id: 'transport', name: 'Transport', type: 'expense' as const },
+            { id: 'entertainment', name: 'Entertainment', type: 'expense' as const }
+          ];
+
+          for (const category of defaultCategories) {
+            await dbService.addCategory(category);
+          }
+          logger.info('Default categories initialized');
+        }
+
+        // Load all data after ensuring categories exist
+        await loadData();
+      } catch (error) {
+        logger.error('Error initializing data:', error);
+        setError(error instanceof Error ? error : new Error('Failed to initialize data'));
+      }
+    };
+
+    initializeData();
   }, [loadData]);
 
   const addTransaction = useCallback(
