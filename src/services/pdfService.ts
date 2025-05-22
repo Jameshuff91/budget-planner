@@ -139,22 +139,134 @@ class PDFService {
    * @returns The preprocessed ImageData.
    */
   private preprocessImage(imageData: ImageData): ImageData {
-    const data = imageData.data;
-    // Convert to grayscale
-    for (let i = 0; i < data.length; i += 4) {
-      const grayscale = data[i] * 0.3 + data[i + 1] * 0.59 + data[i + 2] * 0.11;
-      data[i] = grayscale;
-      data[i + 1] = grayscale;
-      data[i + 2] = grayscale;
+    // Assuming OpenCV (cv) is loaded and available globally
+    if (typeof cv === 'undefined') {
+      logger.error('OpenCV (cv) is not loaded. Skipping advanced preprocessing.');
+      // Fallback to basic preprocessing if OpenCV is not available
+      const data = imageData.data;
+      for (let i = 0; i < data.length; i += 4) {
+        const grayscale = data[i] * 0.3 + data[i + 1] * 0.59 + data[i + 2] * 0.11;
+        data[i] = grayscale; data[i + 1] = grayscale; data[i + 2] = grayscale;
+      }
+      for (let i = 0; i < data.length; i += 4) {
+        const thresholdVal = data[i] > 128 ? 255 : 0;
+        data[i] = thresholdVal; data[i + 1] = thresholdVal; data[i + 2] = thresholdVal;
+      }
+      return imageData;
     }
-    // Apply simple thresholding
-    for (let i = 0; i < data.length; i += 4) {
-      const threshold = data[i] > 128 ? 255 : 0;
-      data[i] = threshold;
-      data[i + 1] = threshold;
-      data[i + 2] = threshold;
+
+    let src = null;
+    let gray = null;
+    let edges = null;
+    let lines = null;
+    let deskewed = null;
+    let blurred = null;
+    let adaptThresh = null;
+
+    try {
+      src = cv.matFromImageData(imageData);
+      gray = new cv.Mat();
+      deskewed = src.clone(); // Initialize deskewed with src, apply operations if skew is detected
+
+      // 1. Grayscaling
+      cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
+
+      // 2. Deskewing
+      // Create a binary image for contour detection for deskewing
+      let binary = new cv.Mat();
+      cv.threshold(gray, binary, 0, 255, cv.THRESH_BINARY_INV | cv.THRESH_OTSU);
+
+      // Find contours
+      let contours = new cv.MatVector();
+      let hierarchy = new cv.Mat();
+      cv.findContours(binary, contours, hierarchy, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
+
+      let angles: number[] = [];
+      for (let i = 0; i < contours.size(); ++i) {
+        const contour = contours.get(i);
+        const rect = cv.minAreaRect(contour);
+        let angle = rect.angle;
+
+        // Adjust angle: OpenCV's minAreaRect returns angles in [-90, 0).
+        // We want to find the dominant angle of the text lines.
+        if (rect.size.width < rect.size.height) {
+          angle += 90;
+        } else {
+          // Angle is likely correct
+        }
+        
+        // Filter out very small contours if necessary (e.g., by area)
+        if (rect.size.width * rect.size.height > 100) { // Example threshold for contour area
+            angles.push(angle);
+        }
+        contour.delete();
+      }
+
+      if (angles.length > 0) {
+        // Calculate median angle
+        angles.sort((a, b) => a - b);
+        const medianAngle = angles[Math.floor(angles.length / 2)];
+
+        // Only rotate if the angle is significant (e.g., > 0.5 or < -0.5 degrees from horizontal)
+        // Note: minAreaRect angles might need adjustment based on text orientation.
+        // This simple median might not be robust for all cases.
+        // A more robust method would involve projection profiles or Hough transform.
+        if (Math.abs(medianAngle) > 0.5 && Math.abs(medianAngle) < 45) { // Avoid extreme rotations
+          logger.info(`Deskewing image by ${medianAngle.toFixed(2)} degrees.`);
+          const M = cv.getRotationMatrix2D(new cv.Point(gray.cols / 2, gray.rows / 2), medianAngle, 1);
+          cv.warpAffine(gray, deskewed, M, new cv.Size(gray.cols, gray.rows), cv.INTER_LINEAR, cv.BORDER_CONSTANT, new cv.Scalar());
+          M.delete();
+        } else {
+          gray.copyTo(deskewed); // No significant skew or unable to determine reliably
+        }
+      } else {
+        gray.copyTo(deskewed); // No contours found to determine skew
+      }
+      
+      binary.delete();
+      contours.delete();
+      hierarchy.delete();
+
+      // 3. Noise Removal (Median Filter)
+      blurred = new cv.Mat();
+      // Use the deskewed image (which is grayscale) if deskewing was applied, otherwise use original gray
+      cv.medianBlur(deskewed, blurred, 3); // Kernel size 3x3. Adjust if needed.
+
+      // 4. Adaptive Thresholding
+      adaptThresh = new cv.Mat();
+      cv.adaptiveThreshold(blurred, adaptThresh, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY, 11, 2);
+      // Parameters: (src, dst, maxValue, adaptiveMethod, thresholdType, blockSize, C)
+      // blockSize = 11 (size of the neighborhood area)
+      // C = 2 (constant subtracted from the mean or weighted mean)
+
+      // Convert the final processed Mat back to ImageData
+      // Ensure the output is RGBA for putImageData
+      let finalMat = new cv.Mat();
+      if (adaptThresh.channels() === 1) {
+        cv.cvtColor(adaptThresh, finalMat, cv.COLOR_GRAY2RGBA);
+      } else {
+        finalMat = adaptThresh.clone(); // Should already be RGBA if adaptThresh was not GRAY
+      }
+      
+      const outputImageData = new ImageData(new Uint8ClampedArray(finalMat.data), finalMat.cols, finalMat.rows);
+      finalMat.delete();
+      return outputImageData;
+
+    } catch (error) {
+      logger.error('Error during OpenCV image preprocessing:', error);
+      // Fallback to original image data or basic processing if error occurs
+      // For now, return original imageData if advanced processing fails
+      return imageData;
+    } finally {
+      // Clean up OpenCV Mats
+      if (src) src.delete();
+      if (gray) gray.delete();
+      if (edges) edges.delete();
+      if (lines) lines.delete(); // lines from HoughLinesP if used
+      if (deskewed) deskewed.delete();
+      if (blurred) blurred.delete();
+      if (adaptThresh) adaptThresh.delete();
     }
-    return imageData;
   }
 
   /**
@@ -164,62 +276,127 @@ class PDFService {
    * @returns The parsed number.
    */
   private parseCurrencyAmount(amountStr: string): number {
-    // Check for parentheses first (typically means negative)
-    const hasParentheses = /\(\$?[0-9,.]+\)/.test(amountStr);
-    if (hasParentheses) {
-      amountStr = '-' + amountStr.replace(/[()]/g, '');
-    }
-
-    // Remove any currency symbols and whitespace
-    let cleanStr = amountStr.replace(/[$\s]/g, '');
-
-    // Handle common OCR misreads (e.g., 'k' instead of '0', 'O' instead of '0')
-    cleanStr = cleanStr.replace(/[koO]/gi, '0');
-
-    // Check if it's a negative number
-    const isNegative = cleanStr.startsWith('-');
-
-    // Remove any remaining special characters except numbers, comma, and period
-    let numberStr = cleanStr.replace(/[^0-9.,\-]/g, '');
-
-    // Split by decimal point (if any)
-    const parts = numberStr.split('.');
-
-    // Remove commas from the whole number part
-    const wholeNumber = parts[0].replace(/,/g, '');
-
-    // Combine whole number with decimal part if it exists
-    const finalNumberStr = parts.length > 1 ? `${wholeNumber}.${parts[1]}` : wholeNumber;
-
-    // Parse to float and apply negative sign if needed
-    let amount = parseFloat(finalNumberStr);
-    if (isNaN(amount)) {
-      logger.error(`Parsed amount is NaN for amount string: ${amountStr}`);
+    if (!amountStr || typeof amountStr !== 'string' || amountStr.trim() === '') {
+      logger.warn(`Input amount string is empty or invalid: "${amountStr}"`);
       return 0;
     }
 
+    let originalAmountStr = amountStr; // For logging
+    let str = amountStr.trim();
+
+    // Handle parentheses for negative numbers
+    let isNegative = false;
+    if (str.startsWith('(') && str.endsWith(')')) {
+      isNegative = true;
+      str = str.substring(1, str.length - 1);
+    }
+
+    // Handle common OCR misreads for digits and negative signs
+    str = str.replace(/[Ss]/g, '5')
+             .replace(/[B]/g, '8')
+             .replace(/[Il]/g, '1') // I (capital i) and l (lowercase L)
+             .replace(/[Zz]/g, '2')
+             .replace(/[Gg]/g, '6') // Assuming G is more likely 6 in currency
+             .replace(/[Qq]/g, '9')
+             .replace(/[kKoO]/gi, '0') // k, K, o, O to 0
+             .replace(/[–—]/g, '-'); // En-dash, Em-dash to hyphen
+
+    // Remove currency symbols (common ones) and excess whitespace
+    str = str.replace(/[\$€£¥\s]/g, '');
+
+    // Check for trailing negative sign and move to front
+    if (str.endsWith('-')) {
+      isNegative = true;
+      str = '-' + str.substring(0, str.length - 1);
+    }
+    if (str.startsWith('-')) {
+        isNegative = true;
+        // Ensure only one leading negative sign if multiple due to replacements
+        str = '-' + str.replace(/^-+/, '');
+    }
+
+
+    // Detect European format (e.g., 1.234,56) vs. US format (1,234.56)
+    const hasDot = str.includes('.');
+    const hasComma = str.includes(',');
+
+    let numberStr = str;
+
+    if (hasDot && hasComma) {
+      const lastDotIndex = str.lastIndexOf('.');
+      const lastCommaIndex = str.lastIndexOf(',');
+      // If comma is after dot and likely a decimal separator (1 or 2 digits after)
+      if (lastCommaIndex > lastDotIndex && (str.length - lastCommaIndex - 1 <= 2 && str.length - lastCommaIndex - 1 > 0)) {
+        // European format: 1.234,56 -> 1234.56
+        numberStr = str.replace(/\./g, '').replace(',', '.');
+      } else if (lastDotIndex > lastCommaIndex) {
+        // US format: 1,234.56 -> 1234.56 (commas are thousand separators)
+        numberStr = str.replace(/,/g, '');
+      } else {
+        // Ambiguous or potentially malformed, try removing all non-essential separators
+        // If only one type of separator is present, assume it's for thousands if it's not the last one before 1-2 digits
+        // This part can be tricky. Defaulting to removing commas if a period exists as decimal.
+        if (hasDot) numberStr = str.replace(/,/g, ''); // Assume dot is decimal, remove commas
+        else if (hasComma) numberStr = str.replace(/\./g, '').replace(',', '.'); // Assume comma is decimal, remove dots
+      }
+    } else if (hasComma && !hasDot) {
+      // Only commas present. If last comma is followed by 1 or 2 digits, it's likely a decimal. Otherwise, it's a thousand separator.
+      const lastCommaIndex = str.lastIndexOf(',');
+      if (str.length - lastCommaIndex - 1 <= 2 && str.length - lastCommaIndex - 1 > 0) {
+        numberStr = str.replace(/,/g, (match, offset) => offset === lastCommaIndex ? '.' : '');
+      } else {
+        numberStr = str.replace(/,/g, ''); // All commas are thousand separators
+      }
+    }
+    // If only dots or no separators, numberStr is already mostly fine, just need to ensure no multiple decimals.
+
+    // Final cleanup: remove any characters that are not digits, a single decimal point, or a leading hyphen
+    numberStr = numberStr.replace(/[^-0-9.]/g, ''); // Remove anything not a digit, hyphen, or period
+
+    // Ensure only one decimal point
+    const decimalParts = numberStr.split('.');
+    if (decimalParts.length > 2) {
+      // Multiple dots, e.g., "1.2.34" or OCR error "1..23"
+      // Try to form a valid number, e.g., take first part as whole, second as decimal
+      numberStr = decimalParts[0] + '.' + decimalParts.slice(1).join('');
+    }
+     if (numberStr.startsWith('.')) {
+        numberStr = '0' + numberStr;
+    }
+
+
+    let amount = parseFloat(numberStr);
+
+    if (isNaN(amount)) {
+      logger.error(`Parsed amount is NaN for amount string: "${originalAmountStr}" (cleaned: "${numberStr}")`);
+      return 0;
+    }
+
+    if (isNegative) {
+      amount = -Math.abs(amount);
+    }
+
     // Define reasonable limits
-    const MAX_AMOUNT = 100000;
+    const MAX_AMOUNT = 100000; // Increased limit for flexibility
     const MIN_AMOUNT = -100000;
 
     if (amount > MAX_AMOUNT || amount < MIN_AMOUNT) {
-      logger.warn(`Amount ${amount} is outside the reasonable range. Attempting to correct.`);
+      logger.warn(`Amount ${amount} from string "${originalAmountStr}" is outside the reasonable range [${MIN_AMOUNT}, ${MAX_AMOUNT}].`);
+      // Basic correction attempt (could be enhanced if needed)
+      // For now, we'll rely on the parsing logic. If it's still out of range, it might be a genuine large number or a severe OCR error.
+      // Consider if capping or a more sophisticated correction is needed here.
+      // If the original string was complex, the current parsing might already be the best guess.
+      // Setting to 0 if still out of range after parsing.
+      logger.error(`Amount ${amount} remains outside reasonable limits. Setting to 0 for string: "${originalAmountStr}".`);
+      return 0;
 
-      // Attempt to correct common OCR errors
-      // Example: Remove extraneous characters
-      const correctedStr = amountStr.replace(/[^\d.,\-]/g, '').replace(/[koO]/gi, '0');
-      const correctedAmount = parseFloat(correctedStr);
-
-      if (!isNaN(correctedAmount) && correctedAmount >= MIN_AMOUNT && correctedAmount <= MAX_AMOUNT) {
-        logger.info(`Corrected amount from ${amount} to ${correctedAmount}`);
-        amount = correctedAmount;
-      } else {
-        logger.error(`Unable to correct amount for string: ${amountStr}. Setting amount to 0.`);
-        amount = 0;
-      }
     }
+    
+    // Ensure correct sign, especially if -0 was parsed.
+    if (Object.is(amount, -0)) return -0;
 
-    return isNegative ? -amount : amount;
+
+    return amount;
   }
 
   /**
@@ -255,33 +432,37 @@ class PDFService {
 
     const incomeKeywords = [
       'payroll', 'direct deposit', 'salary', 'interest', 'refund', 'deposit from',
-      'transfer from', 'dfas-in', 'payment from', 'credit', 'deposit'
+      'transfer from', 'dfas-in', 'payment from', 'credit', 'deposit',
+      'cash deposit', 'mobile deposit', 'payment received', 'dividend',
+      'reimbursement', 'cashback reward'
     ];
 
     const expenseKeywords = [
       'payment to', 'pmt to', 'purchase', 'withdraw', 'debit', 'atm', 'fee', 'bill',
       'transfer to', 'ach pmt', 'amex pmt', 'chase pmt', 'bill pay', 'withdrawal',
-      'pur', 'utility', 'insurance'
+      'utility', 'insurance', // 'pur' is handled below with word boundary
+      'recurring payment', 'subscription', 'service fee', 'online purchase',
+      'pos debit', 'atm withdrawal'
     ];
 
-    // **[Improvement]**: Handle abbreviations and partial matches
-    // Check for income keywords first
+    // Improved keyword matching with word boundaries
     for (const kw of incomeKeywords) {
-      if (lowerDesc.includes(kw)) {
+      const regex = new RegExp(`\\b${kw}\\b`, 'i');
+      if (regex.test(lowerDesc)) {
         return 'income';
       }
     }
 
-    // Check for expense keywords
     for (const kw of expenseKeywords) {
-      if (lowerDesc.includes(kw)) {
+      const regex = new RegExp(`\\b${kw}\\b`, 'i');
+      if (regex.test(lowerDesc)) {
         return 'expense';
       }
     }
-
-    // **[Improvement]**: Specific handling for abbreviations like 'pur'
-    if (/pur\b/.test(lowerDesc)) {
-      return 'expense';
+    
+    // Specific handling for 'pur' or 'purchase' as whole words/prefixes
+    if (/\bpur\b|\bpurchase\b/i.test(lowerDesc)) {
+        return 'expense';
     }
 
     // Default classification based on amount sign
@@ -294,14 +475,74 @@ class PDFService {
    * @returns The cleaned description.
    */
   private cleanDescription(description: string): string {
-    // Remove any balance amounts or payment amounts that might appear in the description
-    const cleaned = description
-      .replace(/\+?\$?[0-9,.]+(?:\.\d{2})?(?=\s|$)/g, '')
-      .replace(/(?:web id:|ppd id:)\s*\S+/gi, '') // Remove Web ID and PPD ID
-      .replace(/[^a-zA-Z\s\-]/g, '') // Remove non-alphabetic characters except spaces and hyphens
-      .trim();
+    let cleaned = description;
 
-    return cleaned;
+    // 1. Remove specific known patterns and boilerplate first
+    const patternsToRemove: RegExp[] = [
+      /\b(?:Transaction Date|Posting Date|Effective Date)[:\s]*\d{1,2}[-/. ]\d{1,2}(?:[-/. ]\d{2,4})?/gi,
+      /\b(?:Card No\.|Account Number|Member Number|Account ending in)[:\s]*[X\d\s*-]+/gi,
+      /\b(?:Reference Number|Transaction ID|Ref #|Trace Number|Invoice Number|Auth Code|Authorization #|Approval Code)[\s:]*[\w\d-]+/gi,
+      /\b(?:Web ID|PPD ID)[\s:]*\S+/gi, // Kept from original
+      /\b(?:Purchase from merchant|Payment to merchant)\b/gi,
+      // More generic payment descriptions - apply carefully
+      /\bOnline payment\b/gi, 
+      /\bInternet payment\b/gi,
+      /\bWeb payment\b/gi,
+      // Trailing OCR artifacts
+      /\s*\.{2,}$/g, // remove trailing ".." or "..."
+      // Amounts - kept from original, applied early
+      /\+?\$?[0-9,.]+(?:\.\d{2})?(?=\s|$)/g,
+      // Common prefixes that are often too generic if merchant info follows
+      /^(?:CHECKCARD PURCHASE|POS DEBIT|ACH DEBIT|DEBIT CARD PURCHASE|ONLINE TRANSFER TO)\s+/i,
+    ];
+
+    for (const pattern of patternsToRemove) {
+      cleaned = cleaned.replace(pattern, '');
+    }
+
+    // 2. Standardize common abbreviations (case-insensitive for matching, specific for replacement)
+    const abbreviationMap: { [key: string]: string } = {
+      'PMT': 'Payment',
+      'DEPT': 'Department',
+      'SVC': 'Service',
+      'TRN': 'Transaction',
+      'REF': 'Reference',
+      'ACCT': 'Account',
+      'PUR': 'Purchase', // Consider if this is too aggressive or if it should be part of expense keywords
+      'XFER': 'Transfer',
+      'PYMT': 'Payment',
+      'WD': 'Withdrawal',
+      'DEP': 'Deposit',
+      'BAL': 'Balance',
+      'STMT': 'Statement',
+      'SVC CHG': 'Service Charge',
+      'CHECKCARD': 'Checkcard', // Standardize casing
+      'P O S': 'POS', // Point Of Sale
+    };
+
+    for (const [abbr, full] of Object.entries(abbreviationMap)) {
+      // Use regex to match whole words, case-insensitive
+      const regex = new RegExp(`\\b${abbr}\\b`, 'gi');
+      cleaned = cleaned.replace(regex, full);
+    }
+    
+    // 3. Refined Character Filtering:
+    // Allow alphanumeric, spaces, and a specific set of useful symbols: - & / . #
+    // Remove characters that are NOT in this allowed set.
+    cleaned = cleaned.replace(/[^a-zA-Z0-9\s\-&/.#]/g, '');
+
+
+    // 4. Normalize Whitespace
+    cleaned = cleaned.replace(/\s+/g, ' ').trim();
+    
+    // 5. Remove isolated special characters that might be left, e.g. a single "-" or "." surrounded by spaces
+    cleaned = cleaned.replace(/\s+[-&/.#]\s+/g, ' '); // remove isolated symbols surrounded by space
+    cleaned = cleaned.replace(/^[-&/.#]\s+/, ''); // remove leading symbol followed by space
+    cleaned = cleaned.replace(/\s+[-&/.#]$/, ''); // remove trailing space followed by symbol
+    cleaned = cleaned.replace(/^[-&/.#]$/, '');   // remove if string is only a single symbol
+
+
+    return cleaned.trim(); // Final trim
   }
 
   /**
@@ -310,29 +551,101 @@ class PDFService {
    * @returns The parsed Date object or null if invalid.
    */
   private parseDate(dateStr: string): Date | null {
-    try {
-      const parts = dateStr.split('/').map(Number);
-      if (parts.length === 2) {
-        // Assume current year if year is missing
-        const [month, day] = parts;
-        const year = new Date().getFullYear();
-        const date = new Date(year, month - 1, day);
-        return isNaN(date.getTime()) ? null : date;
-      } else if (parts.length === 3) {
-        let [month, day, year] = parts;
-        if (year < 100) {
-          year += 2000;
-        }
-        const date = new Date(year, month - 1, day);
-        return isNaN(date.getTime()) ? null : date;
-      } else {
-        logger.error(`Unexpected date format: ${dateStr}`);
-        return null;
-      }
-    } catch (error) {
-      logger.error(`Error parsing date string "${dateStr}":`, error);
+    if (!dateStr || typeof dateStr !== 'string') {
+      logger.warn(`Invalid date string provided: ${dateStr}`);
       return null;
     }
+    const cleanedDateStr = dateStr.trim().replace(/[,.]/g, m => (m === ',' && dateStr.includes('.') ? '' : m)); // Remove commas unless it's the only separator, then keep for EU style dot later
+
+    const monthMap: { [key: string]: number } = {
+      jan: 0, january: 0, feb: 1, february: 1, mar: 2, march: 2, apr: 3, april: 3,
+      may: 4, jun: 5, june: 5, jul: 6, july: 6, aug: 7, august: 7, sep: 8, september: 8,
+      oct: 9, october: 9, nov: 10, november: 10, dec: 11, december: 11,
+    };
+
+    const currentYear = new Date().getFullYear();
+
+    // Helper to check if a date is valid
+    const isValidDate = (year: number, month: number, day: number): boolean => {
+      const d = new Date(year, month, day);
+      return d.getFullYear() === year && d.getMonth() === month && d.getDate() === day;
+    };
+
+    const dateFormats: { regex: RegExp; parser: (match: RegExpMatchArray) => Date | null }[] = [
+      // YYYY-MM-DD or YYYY/MM/DD or YYYY.MM.DD
+      {
+        regex: /^(\d{4})[-/. ](\d{1,2})[-/. ](\d{1,2})$/,
+        parser: (match) => {
+          const [, year, month, day] = match.map(Number);
+          return isValidDate(year, month - 1, day) ? new Date(year, month - 1, day) : null;
+        },
+      },
+      // MM/DD/YYYY or MM-DD-YYYY or MM.DD.YYYY (also M/D/YYYY)
+      {
+        regex: /^(\d{1,2})[-/. ](\d{1,2})[-/. ](\d{4})$/,
+        parser: (match) => {
+          const [, month, day, year] = match.map(Number);
+          return isValidDate(year, month - 1, day) ? new Date(year, month - 1, day) : null;
+        },
+      },
+      // MM/DD/YY or MM-DD-YY or MM.DD.YY (also M/D/YY)
+      {
+        regex: /^(\d{1,2})[-/. ](\d{1,2})[-/. ](\d{2})$/,
+        parser: (match) => {
+          const [, month, day, yearShort] = match.map(Number);
+          const year = 2000 + yearShort; // Assume 20xx
+          return isValidDate(year, month - 1, day) ? new Date(year, month - 1, day) : null;
+        },
+      },
+      // Month DD, YYYY (e.g., Jan 01, 2023, January 01, 2023, Jan. 01 2023)
+      {
+        regex: /^([a-zA-Z]{3,})\.?\s+(\d{1,2}),?\s+(\d{4})$/i,
+        parser: (match) => {
+          const [, monthStr, dayStr, yearStr] = match;
+          const month = monthMap[monthStr.toLowerCase()];
+          const day = parseInt(dayStr, 10);
+          const year = parseInt(yearStr, 10);
+          if (month !== undefined && isValidDate(year, month, day)) {
+            return new Date(year, month, day);
+          }
+          return null;
+        },
+      },
+      // DD Month YYYY (e.g., 01 Jan 2023, 1 January 2023, 01 Jan. 2023)
+      {
+        regex: /^(\d{1,2})\s+([a-zA-Z]{3,})\.?\s+(\d{4})$/i,
+        parser: (match) => {
+          const [, dayStr, monthStr, yearStr] = match;
+          const day = parseInt(dayStr, 10);
+          const month = monthMap[monthStr.toLowerCase()];
+          const year = parseInt(yearStr, 10);
+          if (month !== undefined && isValidDate(year, month, day)) {
+            return new Date(year, month, day);
+          }
+          return null;
+        },
+      },
+       // MM/DD or M/D (assuming current year, common in statements)
+       {
+        regex: /^(\d{1,2})[-/. ](\d{1,2})$/,
+        parser: (match) => {
+          const [, month, day] = match.map(Number);
+          // Year will be set by validateAndCorrectDate based on context
+          return isValidDate(currentYear, month - 1, day) ? new Date(currentYear, month - 1, day) : null;
+        },
+      },
+    ];
+
+    for (const format of dateFormats) {
+      const match = cleanedDateStr.match(format.regex);
+      if (match) {
+        const date = format.parser(match);
+        if (date) return date;
+      }
+    }
+    
+    logger.error(`Error parsing date string "${dateStr}" - unknown format or invalid date.`);
+    return null;
   }
 
   /**
@@ -389,41 +702,99 @@ class PDFService {
    * @returns The statement period or null if not found.
    */
   private async detectStatementPeriod(text: string): Promise<{ startDate: Date; endDate: Date } | null> {
-    // Common date formats in statements
-    const datePatterns = [
-      /(?:Statement Period|Billing Period|Activity from)\s*[:\-]?\s*(\d{2}\/\d{2}\/\d{4})\s*(?:to|-)\s*(\d{2}\/\d{2}\/\d{4})/i,
-      /(?:from|through)\s*(\d{2}\/\d{2}\/\d{4})\s*(?:to|through)\s*(\d{2}\/\d{2}\/\d{4})/i
+    // General date string regex part - designed to be flexible for parseDate
+    const datePatternStr = String.raw`([\w\s.,/-]+?)`; // Capture group for a date string
+
+    const primaryPeriodPatterns: { regex: RegExp; startGroup: number; endGroup: number }[] = [
+      { // Keywords: Statement Period, Billing Period, Account Period, Billing Cycle, Activity from
+        regex: new RegExp(String.raw`(?:Statement Period|Billing Period|Account Period|Billing Cycle|Activity from)\s*[:\-]?\s*${datePatternStr}\s*(?:to|-|through|–)\s*${datePatternStr}`, 'i'),
+        startGroup: 1,
+        endGroup: 2,
+      },
+      { // Keywords: Statement Date ... to ... (common in some statements)
+        regex: new RegExp(String.raw`Statement Date\s*[:\-]?\s*${datePatternStr}\s*(?:to|-|through|–)\s*${datePatternStr}`, 'i'),
+        startGroup: 1,
+        endGroup: 2,
+      },
+      { // Keywords: Opening Date ... Closing Date
+        regex: new RegExp(String.raw`(?:Opening Date|Statement open)\s*[:\-]?\s*${datePatternStr}\s*(?:Closing Date|Statement close)\s*[:\-]?\s*${datePatternStr}`, 'i'),
+        startGroup: 1,
+        endGroup: 2,
+      },
+       { // Keywords: from DATE through DATE / from DATE to DATE
+        regex: new RegExp(String.raw`from\s*${datePatternStr}\s*(?:to|through|–)\s*${datePatternStr}`, 'i'),
+        startGroup: 1,
+        endGroup: 2,
+      },
+      { // Keywords: Statement includes activity between DATE and DATE
+        regex: new RegExp(String.raw`activity between\s*${datePatternStr}\s*(?:and|&)\s*${datePatternStr}`, 'i'),
+        startGroup: 1,
+        endGroup: 2,
+      },
+      { // Statement Dates: DATE - DATE
+        regex: new RegExp(String.raw`Statement Dates\s*[:\-]?\s*${datePatternStr}\s*(?:to|-|through|–)\s*${datePatternStr}`, 'i'),
+        startGroup: 1,
+        endGroup: 2,
+      }
     ];
 
-    for (const pattern of datePatterns) {
-      const match = text.match(pattern);
+    for (const patternInfo of primaryPeriodPatterns) {
+      const match = text.match(patternInfo.regex);
       if (match) {
-        const [_, startDateStr, endDateStr] = match;
-        try {
+        const startDateStr = match[patternInfo.startGroup];
+        const endDateStr = match[patternInfo.endGroup];
+        
+        if (startDateStr && endDateStr) {
           const startDate = this.parseDate(startDateStr);
           const endDate = this.parseDate(endDateStr);
+
           if (startDate && endDate) {
-            return { startDate, endDate };
+            if (startDate.getTime() <= endDate.getTime()) {
+              logger.info(`Statement period found via primary pattern: ${startDate.toLocaleDateString()} - ${endDate.toLocaleDateString()}`);
+              return { startDate, endDate };
+            } else {
+              logger.warn(`Parsed dates from primary pattern are in wrong order: Start: ${startDateStr}, End: ${endDateStr}. Ignoring.`);
+            }
           }
-        } catch (error) {
-          logger.error('Error parsing statement period dates:', error);
         }
       }
     }
 
-    // **[Improvement]**: More robust fallback using transaction dates
-    const transactionDates = Array.from(text.matchAll(/(\d{2}\/\d{2}\/\d{4})/g))
-      .map(match => this.parseDate(match[1]))
-      .filter((date): date is Date => date !== null)
-      .sort((a, b) => a.getTime() - b.getTime());
+    logger.info('No statement period found via primary patterns. Attempting fallback logic.');
 
-    if (transactionDates.length >= 2) {
-      return {
-        startDate: transactionDates[0],
-        endDate: transactionDates[transactionDates.length - 1]
-      };
+    // Fallback logic: Find all parsable dates in the text
+    // This regex aims to capture various date-like structures broadly.
+    // It's less precise than primary patterns but gives parseDate a chance.
+    const generalDateRegex = /\b(?:\d{1,4}[-/. ]\d{1,2}(?:[-/. ]\d{1,4})?|[A-Za-z]{3,9}\.?\s\d{1,2},?\s\d{2,4}|\d{1,2}\s[A-Za-z]{3,9}\.?\s\d{2,4})\b/gi;
+    let potentialDates: Date[] = [];
+    let match;
+    while ((match = generalDateRegex.exec(text)) !== null) {
+      const parsed = this.parseDate(match[0]);
+      if (parsed) {
+        potentialDates.push(parsed);
+      }
+    }
+    
+    // Remove duplicate dates by converting to time value
+    const uniqueDateTimes = new Set(potentialDates.map(d => d.getTime()));
+    const uniqueDates = Array.from(uniqueDateTimes).map(time => new Date(time));
+
+
+    if (uniqueDates.length >= 2) {
+      uniqueDates.sort((a, b) => a.getTime() - b.getTime());
+      const startDate = uniqueDates[0];
+      const endDate = uniqueDates[uniqueDates.length - 1];
+
+      if (startDate.getTime() < endDate.getTime()) { // Ensure start is strictly before end for a period
+        logger.info(`Statement period derived from fallback logic: ${startDate.toLocaleDateString()} - ${endDate.toLocaleDateString()} (from ${uniqueDates.length} unique dates)`);
+        return { startDate, endDate };
+      } else {
+         logger.warn(`Fallback logic resulted in start date not before end date or only one unique date value. Start: ${startDate.toLocaleDateString()}, End: ${endDate.toLocaleDateString()}.`);
+         return null;
+      }
     }
 
+    logger.warn('Could not determine statement period from text after fallback.');
     return null;
   }
 
@@ -472,53 +843,92 @@ class PDFService {
       'housing': 'Rent',
       
       // Groceries
-      'grocery': 'Groceries',
-      'trader': 'Groceries',
-      'whole foods': 'Groceries',
-      'safeway': 'Groceries',
-      'food': 'Groceries',
-      
+      'grocery': 'Groceries', 'trader': 'Groceries', 'whole foods': 'Groceries',
+      'safeway': 'Groceries', 'food': 'Groceries', 'supermarket': 'Groceries',
+      'market': 'Groceries', 'fresh market': 'Groceries', 'aldi': 'Groceries',
+      'lidl': 'Groceries', 'publix': 'Groceries', 'kroger': 'Groceries',
+
       // Utilities
-      'utility': 'Utilities',
-      'comcast': 'Utilities',
-      'umc inc': 'Utilities',
-      'electric': 'Utilities',
-      'water': 'Utilities',
-      'gas': 'Utilities',
-      'internet': 'Utilities',
-      
+      'utility': 'Utilities', 'comcast': 'Utilities', 'umc inc': 'Utilities',
+      'electric': 'Utilities', 'water': 'Utilities', 'gas': 'Utilities',
+      'internet': 'Utilities', 'pge': 'Utilities', 'con edison': 'Utilities',
+      'spectrum': 'Utilities', 'verizon fios': 'Utilities', 'trash': 'Utilities',
+      'recycling': 'Utilities',
+
       // Transport
-      'uber': 'Transport',
-      'lyft': 'Transport',
-      'transit': 'Transport',
-      'parking': 'Transport',
-      'gas station': 'Transport',
-      'shell': 'Transport',
-      'chevron': 'Transport',
-      
+      'uber': 'Transport', 'lyft': 'Transport', 'transit': 'Transport',
+      'parking': 'Transport', 'gas station': 'Transport', 'shell': 'Transport',
+      'chevron': 'Transport', 'gasoline': 'Transport', 'fuel': 'Transport',
+      'metro': 'Transport', 'subway': 'Transport', 'taxi': 'Transport',
+      'parking fee': 'Transport', 'toll': 'Transport',
+
       // Entertainment
-      'netflix': 'Entertainment',
-      'spotify': 'Entertainment',
-      'hulu': 'Entertainment',
-      'disney': 'Entertainment',
-      'movie': 'Entertainment',
-      'theatre': 'Entertainment',
-      'restaurant': 'Entertainment',
-      'bar': 'Entertainment',
-      'cafe': 'Entertainment'
+      'netflix': 'Entertainment', 'spotify': 'Entertainment', 'hulu': 'Entertainment',
+      'disney': 'Entertainment', 'movie': 'Entertainment', 'theatre': 'Entertainment',
+      'restaurant': 'Entertainment', 'bar': 'Entertainment', 'cafe': 'Entertainment',
+      'ticketmaster': 'Entertainment', 'eventbrite': 'Entertainment', 'amc': 'Entertainment',
+      'regal': 'Entertainment', 'starbucks': 'Entertainment', 'coffee shop': 'Entertainment',
+      'dining': 'Entertainment',
+
+      // Healthcare
+      'pharmacy': 'Healthcare', 'cvs': 'Healthcare', 'walgreens': 'Healthcare',
+      'doctor': 'Healthcare', 'dentist': 'Healthcare', 'hospital': 'Healthcare',
+      'urgent care': 'Healthcare', 'health insurance': 'Healthcare',
+
+      // Shopping
+      'amazon': 'Shopping', 'target': 'Shopping', 'walmart': 'Shopping',
+      'best buy': 'Shopping', 'macys': 'Shopping', 'online shopping': 'Shopping',
+      'retail': 'Shopping',
+
+      // Education
+      'tuition': 'Education', 'student loan': 'Education', 'coursera': 'Education',
+      'udemy': 'Education', 'books': 'Education',
+
+      // Home Improvement
+      'home depot': 'Home Improvement', 'lowes': 'Home Improvement', 'ace hardware': 'Home Improvement',
+      
+      // Personal Care
+      'salon': 'Personal Care', 'barber': 'Personal Care', 'haircut': 'Personal Care', 'spa': 'Personal Care',
+
+      // Insurance (General, if not healthcare)
+      'state farm': 'Insurance', 'geico': 'Insurance', 'progressive': 'Insurance',
+      'allstate': 'Insurance', 'insurance premium': 'Insurance', 'car insurance': 'Insurance',
+      'home insurance': 'Insurance', // Note: 'health insurance' is under Healthcare
+
+      // Childcare
+      'daycare': 'Childcare', 'preschool': 'Childcare', 'babysitter': 'Childcare',
+
+      // Pet Care
+      'petco': 'Pet Care', 'petsmart': 'Pet Care', 'vet': 'Pet Care', 'veterinarian': 'Pet Care',
+      'pet food': 'Pet Care',
+
+      // Gifts & Donations
+      'gift': 'Gifts & Donations', 'donation': 'Gifts & Donations', 'charity': 'Gifts & Donations',
+      'church': 'Gifts & Donations', // Could also be its own category if payments are regular
     };
 
     for (const [key, category] of Object.entries(categoryMappings)) {
-      if (lowerDesc.includes(key)) {
+      // Use word boundaries for more precise matching
+      const regex = new RegExp(`\\b${key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+      if (regex.test(lowerDesc)) {
         return category;
       }
     }
 
-    // If it contains 'ach pmt' and hasn't been categorized yet, it's likely a credit card payment
-    if (lowerDesc.includes('ach pmt')) {
-      return 'Credit Card Payment';
+    // Improved Credit Card Payment Logic
+    const ccPaymentKeywords = ['payment to chase card', 'amex e-payment', 'bill pay to citi card', 'credit card pmt', 'online payment thank you'];
+    for (const kw of ccPaymentKeywords) {
+        const regex = new RegExp(`\\b${kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+        if (regex.test(lowerDesc)) {
+            return 'Credit Card Payment';
+        }
     }
-
+    // Fallback for 'ach pmt' if it's likely a credit card payment and not caught by other categories
+    if (/\bach pmt\b/i.test(lowerDesc) && !lowerDesc.includes('rent') && !lowerDesc.includes('utility')) {
+        // Avoid misclassifying ACH payments for rent/utilities as CC payments
+        return 'Credit Card Payment';
+    }
+    
     return 'Other Expenses';
   }
 
@@ -546,44 +956,71 @@ class PDFService {
    * @returns The validated and possibly corrected transaction date.
    */
   private validateAndCorrectDate(
-    transactionDate: Date,
-    currentDate: Date,
-    statementPeriod?: { startDate: Date; endDate: Date }
+    transactionDateInput: Date, // The date parsed from OCR, potentially with a default/current year
+    currentDate: Date, // Typically the date of processing
+    statementPeriod?: { startDate: Date; endDate: Date },
+    // documentDate?: Date // Consider how to best integrate this if needed, e.g. by pre-setting year in processPDF
   ): Date {
-    // Create a new Date object to avoid modifying the original
-    const correctedDate = new Date(transactionDate);
+    const correctedDate = new Date(transactionDateInput); // Work with a copy
+    const originalParsedYear = correctedDate.getFullYear();
+    const currentProcessingYear = currentDate.getFullYear();
 
-    // If we have a statement period, use it to determine the correct year
-    if (statementPeriod) {
-      const statementYear = statementPeriod.startDate.getFullYear();
-      
-      // Set the year to match the statement period
-      correctedDate.setFullYear(statementYear);
-      
-      // If the date is still outside the statement period, try adjusting
-      if (correctedDate < statementPeriod.startDate || correctedDate > statementPeriod.endDate) {
-        // If the date is before the start, it might be from the next month
-        if (correctedDate < statementPeriod.startDate) {
-          correctedDate.setMonth(correctedDate.getMonth() + 1);
+    if (statementPeriod && statementPeriod.startDate && statementPeriod.endDate) {
+      const startYear = statementPeriod.startDate.getFullYear();
+      const endYear = statementPeriod.endDate.getFullYear();
+      const transactionMonth = correctedDate.getMonth(); // 0-11
+
+      let inferredYear = originalParsedYear;
+
+      // If the parsed date's year is the current processing year,
+      // it's a strong candidate for year inference, especially if it was parsed from MM/DD.
+      if (originalParsedYear === currentProcessingYear || originalParsedYear === currentProcessingYear -1 || originalParsedYear === currentProcessingYear + 1) { // Check if year is around current year
+        if (startYear === endYear) {
+          inferredYear = startYear;
+        } else { // Statement spans two years (e.g., Dec 2023 - Jan 2024)
+          // If transaction month is in the endYear's part of the statement
+          if (transactionMonth <= statementPeriod.endDate.getMonth()) { // e.g. Jan (0) <= Jan (0)
+            inferredYear = endYear;
+          } else { // Transaction month is in the startYear's part of the statement
+            inferredYear = startYear;
+          }
         }
-        // If the date is after the end, it might be from the previous month
-        else if (correctedDate > statementPeriod.endDate) {
-          correctedDate.setMonth(correctedDate.getMonth() - 1);
+        
+        if (inferredYear !== originalParsedYear) {
+            logger.warn(`Adjusting transaction year from ${originalParsedYear} to ${inferredYear} based on statement period: ${statementPeriod.startDate.toLocaleDateString()} - ${statementPeriod.endDate.toLocaleDateString()} for date ${transactionDateInput.toLocaleDateString()}`);
+            correctedDate.setFullYear(inferredYear);
         }
       }
+      
+      // Final check: if after year correction, the date is still wildly out of period (e.g. wrong month for single-year period), log it.
+      // This avoids aggressive month/day changes but flags potential issues.
+      // We define "wildly out" as not falling between start of startPeriod.month and end of endPeriod.month, considering the inferred year.
+      const tempStartDate = new Date(correctedDate.getFullYear(), statementPeriod.startDate.getMonth(), 1);
+      const tempEndDate = new Date(correctedDate.getFullYear(), statementPeriod.endDate.getMonth() + 1, 0); // End of month
 
-      // Log if the date is still outside the statement period
-      if (correctedDate < statementPeriod.startDate || correctedDate > statementPeriod.endDate) {
-        logger.warn(`Transaction date ${correctedDate.toDateString()} is outside the statement period.`);
+      if (correctedDate < tempStartDate || correctedDate > tempEndDate) {
+         // Further check: if statement is Dec-Jan, and date is Dec, year should be startYear. If Jan, year should be endYear.
+         if (startYear !== endYear) {
+            if (transactionMonth === statementPeriod.startDate.getMonth() && correctedDate.getFullYear() !== startYear) {
+                logger.warn(`Correcting year to ${startYear} for month ${transactionMonth+1} based on multi-year statement period start.`);
+                correctedDate.setFullYear(startYear);
+            } else if (transactionMonth === statementPeriod.endDate.getMonth() && correctedDate.getFullYear() !== endYear) {
+                logger.warn(`Correcting year to ${endYear} for month ${transactionMonth+1} based on multi-year statement period end.`);
+                correctedDate.setFullYear(endYear);
+            }
+         }
       }
-    } else {
-      // If no statement period, use current date as reference
-      if (correctedDate > currentDate) {
-        correctedDate.setFullYear(correctedDate.getFullYear() - 1);
-        logger.warn(`Adjusted transaction date to previous year: ${correctedDate}`);
+       if (correctedDate < statementPeriod.startDate || correctedDate > statementPeriod.endDate) {
+           logger.warn(`Transaction date ${correctedDate.toLocaleDateString()} is outside the statement period [${statementPeriod.startDate.toLocaleDateString()} - ${statementPeriod.endDate.toLocaleDateString()}] after year correction.`);
+       }
+
+    } else { // No statement period, fallback to current date comparison
+      if (correctedDate.getFullYear() === currentProcessingYear && correctedDate > currentDate) {
+        // If year is current, but date is in future, assume previous year
+        logger.warn(`Transaction date ${correctedDate.toLocaleDateString()} is in the future. Assuming previous year ${currentProcessingYear - 1}.`);
+        correctedDate.setFullYear(currentProcessingYear - 1);
       }
     }
-
     return correctedDate;
   }
 
