@@ -169,7 +169,7 @@ const DEFAULT_CATEGORIES: BudgetDB['categories']['value'][] = [
 class DatabaseService {
   private db: IDBPDatabase<BudgetDB> | null = null;
   private readonly DB_NAME = 'budget-planner';
-  private readonly VERSION = 3;
+  private readonly VERSION = 4;
 
   async initialize(): Promise<void> {
     try {
@@ -183,10 +183,13 @@ class DatabaseService {
   }
 
   private async upgrade(db: IDBPDatabase<BudgetDB>) {
+    console.log('Database upgrade started. Current stores:', Array.from(db.objectStoreNames));
+    
     // Create stores if they don't exist
     if (!db.objectStoreNames.contains('transactions')) {
       const transactionStore = db.createObjectStore('transactions', { keyPath: 'id' });
       transactionStore.createIndex('by-date', 'date');
+      console.log('Created transactions store');
     }
 
     if (!db.objectStoreNames.contains('categories')) {
@@ -205,6 +208,7 @@ class DatabaseService {
       for (const category of defaultCategories) {
         categoryStore.add(category);
       }
+      console.log('Created categories store with default data');
     }
 
     if (!db.objectStoreNames.contains('pdfs')) {
@@ -212,25 +216,28 @@ class DatabaseService {
       pdfStore.createIndex('by-hash', 'contentHash', { unique: true });
       pdfStore.createIndex('by-statement-start', 'statementPeriod.startDate');
       pdfStore.createIndex('by-statement-end', 'statementPeriod.endDate');
+      console.log('Created pdfs store');
     }
 
     // Add recurringPreferences object store
     if (!db.objectStoreNames.contains('recurringPreferences')) {
       db.createObjectStore('recurringPreferences', { keyPath: 'id' });
-      console.info('Created recurringPreferences object store'); // Using console.info as logger is not in scope here
+      console.log('Created recurringPreferences object store');
     }
 
     // Add assets object store
     if (!db.objectStoreNames.contains('assets')) {
       db.createObjectStore('assets', { keyPath: 'id' });
-      console.info('Created assets object store');
+      console.log('Created assets object store');
     }
 
     // Add liabilities object store
     if (!db.objectStoreNames.contains('liabilities')) {
       db.createObjectStore('liabilities', { keyPath: 'id' });
-      console.info('Created liabilities object store');
+      console.log('Created liabilities object store');
     }
+
+    console.log('Database upgrade completed. Final stores:', Array.from(db.objectStoreNames));
   }
 
   async addTransaction(transaction: BudgetDB['transactions']['value']): Promise<string> {
