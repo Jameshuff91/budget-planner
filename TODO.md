@@ -5,6 +5,7 @@
 - [x] Set up development environment
 - [x] Pull and merge Jules' improve-pdf-date-logging branch
 - [x] Optimize OpenCV.js integration and logging
+- [x] Fix spending by category showing $0.00 - added default transactions to database initialization
 - [ ] Create recommender-architecture.md for feature planning
 - [ ] Implement the recommender feature
 
