@@ -62,6 +62,7 @@ export interface ExtractedData {
 }
 
 class PDFService {
+  private openCvAvailable: boolean | null = null;
   /**
    * Extracts date from filename in various formats like:
    * - YYYYMMDD-description.pdf (e.g., 20241219-statements-8731-.pdf)
@@ -148,9 +149,13 @@ class PDFService {
    * @returns The preprocessed ImageData.
    */
   private preprocessImage(imageData: ImageData): ImageData {
-    // Assuming OpenCV (cv) is loaded and available globally
+    // Check if OpenCV (cv) is loaded and available globally
     if (typeof cv === 'undefined') {
-      logger.error('OpenCV (cv) is not loaded. Skipping advanced preprocessing.');
+      // Only log this once to avoid spam
+      if (this.openCvAvailable === null) {
+        logger.info('OpenCV.js not detected. Using basic image preprocessing. For enhanced OCR accuracy with skewed documents, consider loading OpenCV.js.');
+        this.openCvAvailable = false;
+      }
       // Fallback to basic preprocessing if OpenCV is not available
       const data = imageData.data;
       for (let i = 0; i < data.length; i += 4) {
@@ -173,6 +178,12 @@ class PDFService {
     let adaptThresh: any = null;
 
     try {
+      // Mark OpenCV as available on first successful use
+      if (this.openCvAvailable === null) {
+        logger.info('OpenCV.js detected and working. Using advanced image preprocessing.');
+        this.openCvAvailable = true;
+      }
+      
       src = cv.matFromImageData(imageData);
       gray = new cv.Mat();
       deskewed = src.clone(); // Initialize deskewed with src, apply operations if skew is detected
