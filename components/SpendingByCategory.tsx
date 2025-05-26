@@ -1,29 +1,121 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Cell, Pie, PieChart, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 
 import { Input } from '@components/ui/input';
 import { Label } from '@components/ui/label';
+import { Button } from '@components/ui/button';
 import { ScrollArea } from '@components/ui/scroll-area';
 import { useAnalytics } from '@hooks/useAnalytics';
+import { useDBContext } from '@context/DatabaseContext'; // Added
+import { useToast } from '@components/ui/use-toast'; // Added
 import { formatCurrency } from '@utils/helpers';
-import { Card, CardContent, CardHeader, CardTitle } from 'components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@components/ui/card';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#FF6B6B'];
 
 export default function SpendingByCategory() {
-  const { categorySpending, detailedCategorySpending, monthlyTrends } = useAnalytics();
+  const [currentTimeRange, setCurrentTimeRange] = useState<{ startDate: Date; endDate: Date }>(() => {
+    const today = new Date();
+    const startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+    startDate.setHours(0,0,0,0);
+    const endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+    endDate.setHours(23,59,59,999);
+    return { startDate, endDate };
+  });
+
+  const { categorySpending, detailedCategorySpending, monthlyTrends } = useAnalytics(currentTimeRange);
+  const { updateCategoryBudget, categories: allCategories } = useDBContext(); // Added
+  const { toast } = useToast(); // Added
+
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [budgetInputs, setBudgetInputs] = useState<Record<string, number>>({});
+  const [budgetInputs, setBudgetInputs] = useState<Record<string, string>>({}); // Changed to string
   const trends = monthlyTrends;
 
-  const handleBudgetChange = (category: string, value: string) => {
-    const numValue = parseFloat(value) || 0;
-    setBudgetInputs((prev) => ({
+  useEffect(() => {
+    const initialBudgets: Record<string, string> = {};
+    categorySpending.forEach(cat => {
+      initialBudgets[cat.name] = (cat.target || '').toString();
+    });
+    setBudgetInputs(initialBudgets);
+  }, [categorySpending]);
+
+
+  const handleSetCurrentMonth = () => {
+    const today = new Date();
+    const startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+    startDate.setHours(0,0,0,0);
+    const endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+    endDate.setHours(23,59,59,999);
+    setCurrentTimeRange({ startDate, endDate });
+  };
+
+  const handleSetLast3Months = () => {
+    const today = new Date();
+    const endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0); // End of current month
+    endDate.setHours(23,59,59,999);
+    const startDate = new Date(today.getFullYear(), today.getMonth() - 2, 1); // Start of month 2 months ago
+    startDate.setHours(0,0,0,0);
+    setCurrentTimeRange({ startDate, endDate });
+  };
+
+  const handleSetYearToDate = () => {
+    const today = new Date();
+    const startDate = new Date(today.getFullYear(), 0, 1); // First day of current year
+    startDate.setHours(0,0,0,0);
+    const endDate = new Date(today.getFullYear(), today.getMonth(), today.getDate()); // Current date as end date
+    endDate.setHours(23,59,59,999); // End of current day
+    setCurrentTimeRange({ startDate, endDate });
+  };
+
+  const handleBudgetInputChange = (categoryName: string, value: string) => {
+    setBudgetInputs(prev => ({
       ...prev,
-      [category]: numValue,
+      [categoryName]: value,
     }));
+  };
+
+  const handleSaveBudget = async (categoryName: string) => {
+    const budgetValueStr = budgetInputs[categoryName];
+    if (budgetValueStr === undefined) return; // Should not happen if input is used
+
+    let numValue: number;
+    if (budgetValueStr.trim() === '') {
+      numValue = 0; // Treat empty string as 0 budget
+    } else {
+      numValue = parseFloat(budgetValueStr);
+      if (isNaN(numValue)) {
+        toast({ title: "Invalid Input", description: "Budget value must be a number.", variant: "destructive" });
+        // Optionally revert input to original value
+        const originalCategory = categorySpending.find(cat => cat.name === categoryName);
+        setBudgetInputs(prev => ({ ...prev, [categoryName]: (originalCategory?.target || '').toString() }));
+        return;
+      }
+    }
+    
+    if (numValue < 0) {
+        toast({ title: "Invalid Input", description: "Budget value cannot be negative.", variant: "destructive" });
+        const originalCategory = categorySpending.find(cat => cat.name === categoryName);
+        setBudgetInputs(prev => ({ ...prev, [categoryName]: (originalCategory?.target || '').toString() }));
+        return;
+    }
+
+
+    const categoryToUpdate = allCategories.find(cat => cat.name === categoryName);
+    if (!categoryToUpdate) {
+      toast({ title: "Error", description: `Category ${categoryName} not found.`, variant: "destructive" });
+      return;
+    }
+    const categoryId = categoryToUpdate.id;
+
+    try {
+      await updateCategoryBudget(categoryId, numValue);
+      toast({ title: "Budget Updated", description: `Budget for ${categoryName} set to ${formatCurrency(numValue)}.` });
+      // Data will refresh via context, which updates categorySpending, then useEffect updates budgetInputs.
+    } catch (error: any) {
+      toast({ title: "Error Updating Budget", description: error.message || "Could not update budget.", variant: "destructive" });
+    }
   };
 
   const getDetailedSpending = (category: string) => {
@@ -45,7 +137,14 @@ export default function SpendingByCategory() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Spending by Category</CardTitle>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
+          <CardTitle>Spending by Category</CardTitle>
+          <div className="mt-2 sm:mt-0 space-x-2">
+            <Button variant="outline" size="sm" onClick={handleSetCurrentMonth}>Current Month</Button>
+            <Button variant="outline" size="sm" onClick={handleSetLast3Months}>Last 3 Months</Button>
+            <Button variant="outline" size="sm" onClick={handleSetYearToDate}>Year to Date</Button>
+          </div>
+        </div>
       </CardHeader>
       <CardContent>
         <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
@@ -106,16 +205,55 @@ export default function SpendingByCategory() {
                           <Input
                             id={`budget-${category.name}`}
                             type='number'
-                            value={budgetInputs[category.name] || ''}
-                            onChange={(e) => handleBudgetChange(category.name, e.target.value)}
+                            value={budgetInputs[category.name] !== undefined ? budgetInputs[category.name] : (category.target || '').toString()}
+                            onChange={(e) => handleBudgetInputChange(category.name, e.target.value)}
+                            onBlur={() => handleSaveBudget(category.name)}
                             className='w-[120px] font-medium'
                           />
                         </div>
                       </div>
+{(() => {
+                        // Calculate and render budget info
+                        const spending = category.value;
+                        const budget = category.target || 0;
+                        let percentageConsumed = 0;
+                        let percentageText = '0% of budget used';
+                        let progressBarColor = 'bg-blue-600'; // Default color
+
+                        if (budget > 0) {
+                          percentageConsumed = (spending / budget) * 100;
+                          percentageText = `${Math.abs(percentageConsumed).toFixed(1)}% of budget used`;
+                          if (percentageConsumed > 100) {
+                            progressBarColor = 'bg-red-500';
+                          } else if (percentageConsumed > 75) {
+                            progressBarColor = 'bg-yellow-500';
+                          }
+                        } else if (spending > 0) {
+                          percentageText = 'Over budget (no budget set)';
+                          percentageConsumed = 101; // To indicate over budget visually
+                          progressBarColor = 'bg-red-500';
+                        } else if (budget === 0 && spending === 0) {
+                           percentageText = 'No spending, no budget';
+                           percentageConsumed = 0;
+                        }
+
+                        return (
+                          <div className="mt-2">
+                            <p className="text-xs text-gray-600 mb-1">{percentageText}</p>
+                            <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
+                              <div 
+                                className={`${progressBarColor} h-2.5 rounded-full`} 
+                                style={{ width: `${Math.min(Math.abs(percentageConsumed), 100)}%` }}
+                              ></div>
+                            </div>
+                          </div>
+                        );
+                      })()}
                       {selectedCategory === category.name && (
-                        <div className='mt-2 space-y-1'>
+                        <div className='mt-3 pt-2 border-t border-gray-200 space-y-1'>
+                          <h4 className="text-sm font-semibold">Details:</h4>
                           {getDetailedSpending(category.name).map((item, index) => (
-                            <div key={index} className='text-sm flex justify-between'>
+                            <div key={index} className='text-xs flex justify-between text-gray-700'>
                               <span>{item.name}</span>
                               <span>{formatCurrency(item.value)}</span>
                             </div>

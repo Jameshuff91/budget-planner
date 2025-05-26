@@ -9,7 +9,7 @@ import {
   useEffect,
   useMemo,
 } from 'react';
-import { dbService } from '../services/db';
+import { dbService, Asset, Liability } from '../services/db'; // Import Asset and Liability
 import { logger } from '../services/logger';
 import { generateUUID } from '../utils/helpers';
 import { pdfService } from '../services/pdfService'; // Fix import path
@@ -42,6 +42,18 @@ interface DatabaseContextType {
   deleteTransaction: (id: string) => Promise<void>;
   clearTransactions: () => Promise<void>;
   addCategory: (category: Omit<Category, 'id'>) => Promise<string>;
+  updateCategoryBudget: (categoryId: string, budget: number) => Promise<void>;
+  recurringPreferences: Record<string, 'confirmed' | 'dismissed'>;
+  setRecurringPreference: (candidateId: string, status: 'confirmed' | 'dismissed') => Promise<void>;
+  deleteRecurringPreference: (candidateId: string) => Promise<void>;
+  assets: Asset[]; // Added
+  liabilities: Liability[]; // Added
+  addAsset: (assetData: Omit<Asset, 'id'>) => Promise<string>; // Added
+  updateAsset: (asset: Asset) => Promise<void>; // Added
+  deleteAsset: (assetId: string) => Promise<void>; // Added
+  addLiability: (liabilityData: Omit<Liability, 'id'>) => Promise<string>; // Added
+  updateLiability: (liability: Liability) => Promise<void>; // Added
+  deleteLiability: (liabilityId: string) => Promise<void>; // Added
   refreshData: () => Promise<void>;
   getTransactionsByMonth: (date: Date) => Promise<Transaction[]>;
 }
@@ -51,18 +63,33 @@ const DatabaseContext = createContext<DatabaseContextType | undefined>(undefined
 export function DatabaseProvider({ children }: { children: ReactNode }) {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [recurringPreferences, setRecurringPreferences] = useState<Record<string, 'confirmed' | 'dismissed'>>({});
+  const [assets, setAssets] = useState<Asset[]>([]); // Added
+  const [liabilities, setLiabilities] = useState<Liability[]>([]); // Added
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
   const loadData = useCallback(async () => {
     try {
       setLoading(true);
-      const [loadedTransactions, loadedCategories] = await Promise.all([
+      const [
+        loadedTransactions, 
+        loadedCategories, 
+        loadedRecurringPrefs,
+        loadedAssets, // New
+        loadedLiabilities, // New
+      ] = await Promise.all([
         dbService.getTransactions(),
         dbService.getCategories(),
+        dbService.getAllRecurringPreferences(),
+        dbService.getAllAssets(), // New call
+        dbService.getAllLiabilities(), // New call
       ]);
       setTransactions(loadedTransactions);
       setCategories(loadedCategories);
+      setRecurringPreferences(loadedRecurringPrefs);
+      setAssets(loadedAssets); // New
+      setLiabilities(loadedLiabilities); // New
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Failed to load data'));
@@ -114,6 +141,133 @@ export function DatabaseProvider({ children }: { children: ReactNode }) {
         return id;
       } catch (err) {
         logger.error('Error adding transaction:', err);
+        throw err;
+      }
+    },
+    [loadData],
+  );
+
+  // --- Asset Context Functions ---
+  const addAsset = useCallback(
+    async (assetData: Omit<Asset, 'id'>) => {
+      try {
+        const id = await dbService.addAsset(assetData);
+        await loadData();
+        logger.info(`Asset added in context: ${id}`);
+        return id;
+      } catch (err) {
+        logger.error('Error adding asset in context:', err);
+        throw err;
+      }
+    },
+    [loadData],
+  );
+
+  const updateAsset = useCallback(
+    async (asset: Asset) => {
+      try {
+        await dbService.updateAsset(asset);
+        await loadData();
+        logger.info(`Asset updated in context: ${asset.id}`);
+      } catch (err) {
+        logger.error('Error updating asset in context:', err);
+        throw err;
+      }
+    },
+    [loadData],
+  );
+
+  const deleteAsset = useCallback(
+    async (assetId: string) => {
+      try {
+        await dbService.deleteAsset(assetId);
+        await loadData();
+        logger.info(`Asset deleted in context: ${assetId}`);
+      } catch (err) {
+        logger.error('Error deleting asset in context:', err);
+        throw err;
+      }
+    },
+    [loadData],
+  );
+
+  // --- Liability Context Functions ---
+  const addLiability = useCallback(
+    async (liabilityData: Omit<Liability, 'id'>) => {
+      try {
+        const id = await dbService.addLiability(liabilityData);
+        await loadData();
+        logger.info(`Liability added in context: ${id}`);
+        return id;
+      } catch (err) {
+        logger.error('Error adding liability in context:', err);
+        throw err;
+      }
+    },
+    [loadData],
+  );
+
+  const updateLiability = useCallback(
+    async (liability: Liability) => {
+      try {
+        await dbService.updateLiability(liability);
+        await loadData();
+        logger.info(`Liability updated in context: ${liability.id}`);
+      } catch (err) {
+        logger.error('Error updating liability in context:', err);
+        throw err;
+      }
+    },
+    [loadData],
+  );
+
+  const deleteLiability = useCallback(
+    async (liabilityId: string) => {
+      try {
+        await dbService.deleteLiability(liabilityId);
+        await loadData();
+        logger.info(`Liability deleted in context: ${liabilityId}`);
+      } catch (err) {
+        logger.error('Error deleting liability in context:', err);
+        throw err;
+      }
+    },
+    [loadData],
+  );
+
+  const setRecurringPreference = useCallback(
+    async (candidateId: string, status: 'confirmed' | 'dismissed') => {
+      try {
+        await dbService.setRecurringPreference(candidateId, status);
+        await loadData(); // Refresh data
+      } catch (err) {
+        logger.error('Error setting recurring preference in context:', err);
+        throw err;
+      }
+    },
+    [loadData],
+  );
+
+  const deleteRecurringPreference = useCallback(
+    async (candidateId: string) => {
+      try {
+        await dbService.deleteRecurringPreference(candidateId);
+        await loadData(); // Refresh data
+      } catch (err) {
+        logger.error('Error deleting recurring preference in context:', err);
+        throw err;
+      }
+    },
+    [loadData],
+  );
+
+  const updateCategoryBudget = useCallback(
+    async (categoryId: string, budget: number) => {
+      try {
+        await dbService.updateCategoryBudget(categoryId, budget);
+        await loadData(); // Refresh data after updating category budget
+      } catch (err) {
+        logger.error('Error updating category budget in context:', err);
         throw err;
       }
     },
@@ -239,6 +393,18 @@ export function DatabaseProvider({ children }: { children: ReactNode }) {
       deleteTransaction,
       clearTransactions,
       addCategory,
+      updateCategoryBudget,
+      recurringPreferences, 
+      setRecurringPreference, 
+      deleteRecurringPreference,
+      assets, // Added
+      liabilities, // Added
+      addAsset, // Added
+      updateAsset, // Added
+      deleteAsset, // Added
+      addLiability, // Added
+      updateLiability, // Added
+      deleteLiability, // Added
       refreshData,
       getTransactionsByMonth,
     }),
@@ -252,6 +418,18 @@ export function DatabaseProvider({ children }: { children: ReactNode }) {
       deleteTransaction,
       clearTransactions,
       addCategory,
+      updateCategoryBudget,
+      recurringPreferences,
+      setRecurringPreference,
+      deleteRecurringPreference,
+      assets, // Added
+      liabilities, // Added
+      addAsset, // Added
+      updateAsset, // Added
+      deleteAsset, // Added
+      addLiability, // Added
+      updateLiability, // Added
+      deleteLiability, // Added
       refreshData,
       getTransactionsByMonth,
     ],
