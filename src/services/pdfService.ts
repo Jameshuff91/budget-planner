@@ -65,6 +65,7 @@ class PDFService {
    * @returns Date object if successfully parsed, null otherwise
    */
   private parseDateFromFilename(filename: string): Date | null {
+    logger.info(`Parsing date from filename: ${filename}`);
     try {
       // Match YYYYMMDD format (e.g., 20241219-statements-8731-.pdf)
       const yyyymmddMatch = filename.match(/^(\d{4})(\d{2})(\d{2})/);
@@ -72,6 +73,7 @@ class PDFService {
         const [_, year, month, day] = yyyymmddMatch;
         const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
         if (!isNaN(date.getTime())) {
+          logger.info(`Matched YYYYMMDD pattern. Parsed date: ${date}`, { filename });
           return date;
         }
       }
@@ -82,13 +84,15 @@ class PDFService {
         const [_, year, month, day] = isoMatch;
         const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
         if (!isNaN(date.getTime())) {
+          logger.info(`Matched YYYY-MM-DD pattern. Parsed date: ${date}`, { filename });
           return date;
         }
       }
 
+      logger.info(`No date pattern matched for filename: ${filename}`);
       return null;
     } catch (error) {
-      logger.error('Error parsing date from filename:', error);
+      logger.error(`Error parsing date from filename: ${filename}`, error);
       return null;
     }
   }
@@ -555,6 +559,7 @@ class PDFService {
       logger.warn(`Invalid date string provided: ${dateStr}`);
       return null;
     }
+    logger.info(`Attempting to parse date string: '${dateStr}'`);
     const cleanedDateStr = dateStr.trim().replace(/[,.]/g, m => (m === ',' && dateStr.includes('.') ? '' : m)); // Remove commas unless it's the only separator, then keep for EU style dot later
 
     const monthMap: { [key: string]: number } = {
@@ -577,7 +582,11 @@ class PDFService {
         regex: /^(\d{4})[-/. ](\d{1,2})[-/. ](\d{1,2})$/,
         parser: (match) => {
           const [, year, month, day] = match.map(Number);
-          return isValidDate(year, month - 1, day) ? new Date(year, month - 1, day) : null;
+          if (!isValidDate(year, month - 1, day)) {
+            logger.warn(`Invalid date components for format ${dateFormats[0].regex.toString()}: year=${year}, month=${month}, day=${day}. Input: "${dateStr}"`);
+            return null;
+          }
+          return new Date(year, month - 1, day);
         },
       },
       // MM/DD/YYYY or MM-DD-YYYY or MM.DD.YYYY (also M/D/YYYY)
@@ -585,7 +594,11 @@ class PDFService {
         regex: /^(\d{1,2})[-/. ](\d{1,2})[-/. ](\d{4})$/,
         parser: (match) => {
           const [, month, day, year] = match.map(Number);
-          return isValidDate(year, month - 1, day) ? new Date(year, month - 1, day) : null;
+          if (!isValidDate(year, month - 1, day)) {
+            logger.warn(`Invalid date components for format ${dateFormats[1].regex.toString()}: year=${year}, month=${month}, day=${day}. Input: "${dateStr}"`);
+            return null;
+          }
+          return new Date(year, month - 1, day);
         },
       },
       // MM/DD/YY or MM-DD-YY or MM.DD.YY (also M/D/YY)
@@ -594,7 +607,11 @@ class PDFService {
         parser: (match) => {
           const [, month, day, yearShort] = match.map(Number);
           const year = 2000 + yearShort; // Assume 20xx
-          return isValidDate(year, month - 1, day) ? new Date(year, month - 1, day) : null;
+          if (!isValidDate(year, month - 1, day)) {
+            logger.warn(`Invalid date components for format ${dateFormats[2].regex.toString()}: year=${year}, month=${month}, day=${day} (short year ${yearShort}). Input: "${dateStr}"`);
+            return null;
+          }
+          return new Date(year, month - 1, day);
         },
       },
       // Month DD, YYYY (e.g., Jan 01, 2023, January 01, 2023, Jan. 01 2023)
@@ -605,10 +622,11 @@ class PDFService {
           const month = monthMap[monthStr.toLowerCase()];
           const day = parseInt(dayStr, 10);
           const year = parseInt(yearStr, 10);
-          if (month !== undefined && isValidDate(year, month, day)) {
-            return new Date(year, month, day);
+          if (month === undefined || !isValidDate(year, month, day)) {
+            logger.warn(`Invalid date components for format ${dateFormats[3].regex.toString()}: year=${year}, monthStr=${monthStr}(parsedMonth=${month}), day=${day}. Input: "${dateStr}"`);
+            return null;
           }
-          return null;
+          return new Date(year, month, day);
         },
       },
       // DD Month YYYY (e.g., 01 Jan 2023, 1 January 2023, 01 Jan. 2023)
@@ -619,10 +637,11 @@ class PDFService {
           const day = parseInt(dayStr, 10);
           const month = monthMap[monthStr.toLowerCase()];
           const year = parseInt(yearStr, 10);
-          if (month !== undefined && isValidDate(year, month, day)) {
-            return new Date(year, month, day);
+          if (month === undefined || !isValidDate(year, month, day)) {
+            logger.warn(`Invalid date components for format ${dateFormats[4].regex.toString()}: year=${year}, monthStr=${monthStr}(parsedMonth=${month}), day=${day}. Input: "${dateStr}"`);
+            return null;
           }
-          return null;
+          return new Date(year, month, day);
         },
       },
        // MM/DD or M/D (assuming current year, common in statements)
@@ -631,7 +650,11 @@ class PDFService {
         parser: (match) => {
           const [, month, day] = match.map(Number);
           // Year will be set by validateAndCorrectDate based on context
-          return isValidDate(currentYear, month - 1, day) ? new Date(currentYear, month - 1, day) : null;
+          if (!isValidDate(currentYear, month - 1, day)) {
+            logger.warn(`Invalid date components for format ${dateFormats[5].regex.toString()} (assuming current year ${currentYear}): month=${month}, day=${day}. Input: "${dateStr}"`);
+            return null;
+          }
+          return new Date(currentYear, month - 1, day);
         },
       },
     ];
@@ -739,14 +762,17 @@ class PDFService {
     ];
 
     for (const patternInfo of primaryPeriodPatterns) {
+      logger.info(`Attempting to match statement period with pattern: ${patternInfo.regex.toString()}`);
       const match = text.match(patternInfo.regex);
       if (match) {
         const startDateStr = match[patternInfo.startGroup];
         const endDateStr = match[patternInfo.endGroup];
+        logger.info(`Matched period strings: Start='${startDateStr}', End='${endDateStr}'`);
         
         if (startDateStr && endDateStr) {
           const startDate = this.parseDate(startDateStr);
           const endDate = this.parseDate(endDateStr);
+          logger.info(`Parsed period dates: Start=${startDate?.toISOString()}, End=${endDate?.toISOString()}`);
 
           if (startDate && endDate) {
             if (startDate.getTime() <= endDate.getTime()) {
@@ -760,7 +786,7 @@ class PDFService {
       }
     }
 
-    logger.info('No statement period found via primary patterns. Attempting fallback logic.');
+    logger.info('Primary statement period patterns failed. Attempting fallback logic.');
 
     // Fallback logic: Find all parsable dates in the text
     // This regex aims to capture various date-like structures broadly.
@@ -778,6 +804,7 @@ class PDFService {
     // Remove duplicate dates by converting to time value
     const uniqueDateTimes = new Set(potentialDates.map(d => d.getTime()));
     const uniqueDates = Array.from(uniqueDateTimes).map(time => new Date(time));
+    logger.info(`Unique dates found for fallback: ${uniqueDates.map(d => d.toISOString())}`);
 
 
     if (uniqueDates.length >= 2) {
@@ -786,15 +813,18 @@ class PDFService {
       const endDate = uniqueDates[uniqueDates.length - 1];
 
       if (startDate.getTime() < endDate.getTime()) { // Ensure start is strictly before end for a period
-        logger.info(`Statement period derived from fallback logic: ${startDate.toLocaleDateString()} - ${endDate.toLocaleDateString()} (from ${uniqueDates.length} unique dates)`);
+        logger.info(`Statement period derived from fallback logic: Start=${startDate.toISOString()}, End=${endDate.toISOString()} (from ${uniqueDates.length} unique dates)`);
         return { startDate, endDate };
       } else {
          logger.warn(`Fallback logic resulted in start date not before end date or only one unique date value. Start: ${startDate.toLocaleDateString()}, End: ${endDate.toLocaleDateString()}.`);
+         // Explicitly return null here as per subtask, though the original code would also return null later.
+         // This ensures the final warning is only hit if this path also fails.
+         logger.warn('Could not determine statement period from text after all attempts.');
          return null;
       }
     }
 
-    logger.warn('Could not determine statement period from text after fallback.');
+    logger.warn('Could not determine statement period from text after all attempts.');
     return null;
   }
 
@@ -961,11 +991,14 @@ class PDFService {
     statementPeriod?: { startDate: Date; endDate: Date },
     // documentDate?: Date // Consider how to best integrate this if needed, e.g. by pre-setting year in processPDF
   ): Date {
+    logger.info(`Validating and correcting date. Input Date: ${transactionDateInput.toISOString()}, Current Date: ${currentDate.toISOString()}, Statement Period: ${statementPeriod ? `${statementPeriod.startDate.toISOString()} - ${statementPeriod.endDate.toISOString()}` : 'N/A'}`);
+    const originalTransactionDateISO = transactionDateInput.toISOString(); // For logging future date adjustments
     const correctedDate = new Date(transactionDateInput); // Work with a copy
     const originalParsedYear = correctedDate.getFullYear();
     const currentProcessingYear = currentDate.getFullYear();
 
     if (statementPeriod && statementPeriod.startDate && statementPeriod.endDate) {
+      logger.info(`Original Parsed Year: ${originalParsedYear}, Current Processing Year: ${currentProcessingYear}`);
       const startYear = statementPeriod.startDate.getFullYear();
       const endYear = statementPeriod.endDate.getFullYear();
       const transactionMonth = correctedDate.getMonth(); // 0-11
@@ -987,8 +1020,9 @@ class PDFService {
         }
         
         if (inferredYear !== originalParsedYear) {
-            logger.warn(`Adjusting transaction year from ${originalParsedYear} to ${inferredYear} based on statement period: ${statementPeriod.startDate.toLocaleDateString()} - ${statementPeriod.endDate.toLocaleDateString()} for date ${transactionDateInput.toLocaleDateString()}`);
+            logger.warn(`Adjusting transaction year from ${originalParsedYear} to ${inferredYear} based on statement period (${statementPeriod.startDate.toISOString()} - ${statementPeriod.endDate.toISOString()}) for input date ${transactionDateInput.toISOString()}.`);
             correctedDate.setFullYear(inferredYear);
+            logger.info(`Date after year adjustment based on statement period: ${correctedDate.toISOString()}`);
         }
       }
       
@@ -1002,25 +1036,33 @@ class PDFService {
          // Further check: if statement is Dec-Jan, and date is Dec, year should be startYear. If Jan, year should be endYear.
          if (startYear !== endYear) {
             if (transactionMonth === statementPeriod.startDate.getMonth() && correctedDate.getFullYear() !== startYear) {
-                logger.warn(`Correcting year to ${startYear} for month ${transactionMonth+1} based on multi-year statement period start.`);
+                logger.warn(`Correcting year to ${startYear} for month ${transactionMonth + 1} (transaction month matches statement start month) based on multi-year statement period (${statementPeriod.startDate.toISOString()} - ${statementPeriod.endDate.toISOString()}). Original date: ${originalTransactionDateISO}`);
                 correctedDate.setFullYear(startYear);
+                logger.info(`Date after multi-year (start month) adjustment: ${correctedDate.toISOString()}`);
             } else if (transactionMonth === statementPeriod.endDate.getMonth() && correctedDate.getFullYear() !== endYear) {
-                logger.warn(`Correcting year to ${endYear} for month ${transactionMonth+1} based on multi-year statement period end.`);
+                logger.warn(`Correcting year to ${endYear} for month ${transactionMonth + 1} (transaction month matches statement end month) based on multi-year statement period (${statementPeriod.startDate.toISOString()} - ${statementPeriod.endDate.toISOString()}). Original date: ${originalTransactionDateISO}`);
                 correctedDate.setFullYear(endYear);
+                logger.info(`Date after multi-year (end month) adjustment: ${correctedDate.toISOString()}`);
             }
          }
       }
-       if (correctedDate < statementPeriod.startDate || correctedDate > statementPeriod.endDate) {
-           logger.warn(`Transaction date ${correctedDate.toLocaleDateString()} is outside the statement period [${statementPeriod.startDate.toLocaleDateString()} - ${statementPeriod.endDate.toLocaleDateString()}] after year correction.`);
-       }
+      // This specific warning about being outside the period after year correction is now handled by the final check at the end of the function.
+      // However, we keep the general structure in case other logic is added here later.
 
     } else { // No statement period, fallback to current date comparison
       if (correctedDate.getFullYear() === currentProcessingYear && correctedDate > currentDate) {
         // If year is current, but date is in future, assume previous year
-        logger.warn(`Transaction date ${correctedDate.toLocaleDateString()} is in the future. Assuming previous year ${currentProcessingYear - 1}.`);
+        logger.warn(`Transaction date ${originalTransactionDateISO} is in the future. Current date: ${currentDate.toISOString()}. Assuming previous year ${currentProcessingYear - 1}.`);
         correctedDate.setFullYear(currentProcessingYear - 1);
+        logger.info(`Date after future date adjustment: ${correctedDate.toISOString()}`);
       }
     }
+
+    if (statementPeriod && statementPeriod.startDate && statementPeriod.endDate && (correctedDate < statementPeriod.startDate || correctedDate > statementPeriod.endDate)) {
+      logger.warn(`Final corrected date ${correctedDate.toISOString()} is OUTSIDE the statement period: [${statementPeriod.startDate.toISOString()} - ${statementPeriod.endDate.toISOString()}]`);
+    }
+
+    logger.info(`Returning validated/corrected date: ${correctedDate.toISOString()}`);
     return correctedDate;
   }
 
