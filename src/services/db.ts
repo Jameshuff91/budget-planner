@@ -118,7 +118,7 @@ const DEFAULT_TRANSACTIONS: BudgetDB['transactions']['value'][] = [
   {
     id: 'default-expense-4',
     amount: 200,
-    category: 'Transport',
+    category: 'Transportation',
     description: 'Monthly Transport',
     date: new Date(),
     type: 'expense' as const,
@@ -126,10 +126,10 @@ const DEFAULT_TRANSACTIONS: BudgetDB['transactions']['value'][] = [
   {
     id: 'default-expense-5',
     amount: 100,
-    category: 'Entertainment',
-    description: 'Movie Tickets',
+    category: 'Other Income',
+    description: 'Freelance Work',
     date: new Date(),
-    type: 'expense' as const,
+    type: 'income' as const,
   },
 ];
 
@@ -169,7 +169,7 @@ const DEFAULT_CATEGORIES: BudgetDB['categories']['value'][] = [
 class DatabaseService {
   private db: IDBPDatabase<BudgetDB> | null = null;
   private readonly DB_NAME = 'budget-planner';
-  private readonly VERSION = 4;
+  private readonly VERSION = 5;
 
   async initialize(): Promise<void> {
     try {
@@ -189,7 +189,12 @@ class DatabaseService {
     if (!db.objectStoreNames.contains('transactions')) {
       const transactionStore = db.createObjectStore('transactions', { keyPath: 'id' });
       transactionStore.createIndex('by-date', 'date');
-      console.log('Created transactions store');
+      
+      // Add default transactions within the same transaction
+      for (const transaction of DEFAULT_TRANSACTIONS) {
+        transactionStore.add(transaction);
+      }
+      console.log('Created transactions store with default data');
     }
 
     if (!db.objectStoreNames.contains('categories')) {
