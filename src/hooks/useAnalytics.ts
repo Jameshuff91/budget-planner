@@ -502,6 +502,42 @@ export const useAnalytics = (timeRange?: { startDate?: Date; endDate?: Date }) =
     }
   }, [transactions, categories]);
 
+  const merchantSpending = useMemo((): MerchantSpendingData[] => {
+    try {
+      const merchantTotals = new Map<string, { value: number; transactionCount: number }>();
+
+      // Use startDate and endDate from hook parameters (or defaults)
+      logger.info(`Calculating merchant spending for period: ${startDate.toISOString()} - ${endDate.toISOString()}`);
+
+      const filteredTransactions = transactions.filter(transaction => {
+        const transactionDate = new Date(transaction.date);
+        return transactionDate >= startDate && transactionDate <= endDate && transaction.type === 'expense';
+      });
+
+      filteredTransactions.forEach((transaction) => {
+        const merchantName = transaction.description;
+        const current = merchantTotals.get(merchantName) || { value: 0, transactionCount: 0 };
+        current.value += Math.abs(transaction.amount);
+        current.transactionCount += 1;
+        merchantTotals.set(merchantName, current);
+      });
+
+      const result = Array.from(merchantTotals.entries())
+        .map(([name, data]) => ({
+          name,
+          value: data.value,
+          transactionCount: data.transactionCount,
+        }))
+        .sort((a, b) => b.value - a.value); // Sort by spending amount descending
+
+      logger.info('Merchant spending result:', result);
+      return result;
+    } catch (error) {
+      logger.error('Error calculating merchant spending:', error);
+      return DEFAULT_VALUES.merchantSpending;
+    }
+  }, [transactions, startDate, endDate]);
+
   const potentialRecurringTransactions = useMemo((): RecurringTransactionCandidate[] => {
     logger.info('Calculating potential recurring transactions...');
     const candidates: RecurringTransactionCandidate[] = [];

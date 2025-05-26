@@ -78,8 +78,8 @@ export default function SpendingOverview() {
               </div>
               <div>
                 <p className='text-sm font-medium text-muted-foreground'>Savings</p>
-                <p className='text-2xl font-bold'>{formatCurrency(trends.savings.current)}</p>
-                <TrendIndicator value={trends.savings.percentageChange} />
+                <p className='text-2xl font-bold'>{formatCurrency(trends.netSavings.current)}</p>
+                <TrendIndicator value={trends.netSavings.percentageChange} />
               </div>
             </div>
           </div>
@@ -92,7 +92,7 @@ export default function SpendingOverview() {
               </div>
               <div>
                 <p className='text-sm font-medium text-muted-foreground'>Savings</p>
-                <p className='text-2xl font-bold'>{formatCurrency(trends.savings.previous)}</p>
+                <p className='text-2xl font-bold'>{formatCurrency(trends.netSavings.previous)}</p>
               </div>
             </div>
           </div>
@@ -149,10 +149,10 @@ export default function SpendingOverview() {
                       <div className='bg-white p-4 rounded-lg shadow-lg border'>
                         <p className='text-sm text-gray-600'>{payload[0].payload.name} {payload[0].payload.year}</p>
                         <p className='font-semibold text-red-600'>
-                          Spending: {formatCurrency(payload[0].payload.spending)}
+                          Spending: {formatCurrency(payload[0].payload.totalSpending)}
                         </p>
                         <p className='font-semibold text-green-600'>
-                          Savings: {formatCurrency(payload[0].payload.savings)}
+                          Income: {formatCurrency(payload[0].payload.totalIncome)}
                         </p>
                       </div>
                     );
@@ -163,15 +163,16 @@ export default function SpendingOverview() {
               <Legend />
               <CartesianGrid strokeDasharray="3 3" className="grid grid-gray-100" />
               <Bar 
-                dataKey='spending' 
+                dataKey='totalSpending' 
+                name='Spending'
                 fill='#ef4444' 
                 radius={[4, 4, 0, 0]} 
                 onClick={handleBarClick}
                 className='cursor-pointer'
               />
               <Bar
-                dataKey='savings'
-                name='Savings'
+                dataKey='totalIncome'
+                name='Income'
                 fill='#16a34a'
                 radius={[4, 4, 0, 0]}
                 onClick={handleBarClick}
@@ -183,10 +184,10 @@ export default function SpendingOverview() {
       </CardContent>
       {selectedMonth && (
         <ExpenseDetailsModal
-          month={selectedMonth.name}
+          month={selectedMonth.month}
           year={selectedMonth.year}
-          spending={selectedMonth.spending}
-          savings={selectedMonth.savings}
+          spending={selectedMonth.totalSpending}
+          savings={selectedMonth.totalIncome - selectedMonth.totalSpending}
           onClose={() => setSelectedMonth(null)}
         />
       )}

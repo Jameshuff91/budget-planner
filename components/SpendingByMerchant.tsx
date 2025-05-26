@@ -30,7 +30,7 @@ export default function SpendingByMerchant() {
         {isDataAvailable && (
           <ScrollArea className="h-[350px] pr-4"> {/* Adjust height as needed */}
             <div className="space-y-2">
-              {merchantSpending.map((merchant, index) => (
+              {merchantSpending.map((merchant: { name: string; value: number; transactionCount: number }, index: number) => (
                 <div 
                   key={index} 
                   className="flex justify-between items-center py-3 border-b last:border-b-0 hover:bg-gray-50 p-2 rounded-md"

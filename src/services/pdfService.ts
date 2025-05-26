@@ -5,6 +5,11 @@ import { logger } from './logger';
 import * as pdfjs from 'pdfjs-dist';
 import { createWorker, WorkerOptions } from 'tesseract.js';
 
+// Type declaration for OpenCV global variable
+declare global {
+  var cv: any;
+}
+
 // Set worker path before any PDF operations
 if (typeof window !== 'undefined') {
   pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
@@ -159,13 +164,13 @@ class PDFService {
       return imageData;
     }
 
-    let src = null;
-    let gray = null;
-    let edges = null;
-    let lines = null;
-    let deskewed = null;
-    let blurred = null;
-    let adaptThresh = null;
+    let src: any = null;
+    let gray: any = null;
+    let edges: any = null;
+    let lines: any = null;
+    let deskewed: any = null;
+    let blurred: any = null;
+    let adaptThresh: any = null;
 
     try {
       src = cv.matFromImageData(imageData);

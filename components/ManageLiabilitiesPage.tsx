@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { useDBContext, Liability as LiabilityItem } from '@context/DatabaseContext'; // Renamed Liability to LiabilityItem
+import { useDBContext } from '@context/DatabaseContext';
+import { Liability as LiabilityItem } from '@services/db'; // Import Liability type from db service
 import { useToast } from '@components/ui/use-toast';
 import { Button } from '@components/ui/button';
 import { Input } from '@components/ui/input';
@@ -32,7 +33,7 @@ import {
 } from '@components/ui/table';
 import { Label } from '@components/ui/label';
 import { ScrollArea } from '@components/ui/scroll-area';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@components/ui/select';
+// Note: Select component not available, using native select for liability type
 import { Trash2, Edit, PlusCircle } from 'lucide-react';
 import { formatCurrency } from '@utils/helpers';
 import { logger } from '@services/logger';
@@ -222,16 +223,17 @@ export default function ManageLiabilitiesPage() {
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="type" className="text-right">Type</Label>
-              <Select name="type" value={formData.type} onValueChange={(value: LiabilityType) => handleTypeChange(value)}>
-                <SelectTrigger className="col-span-3">
-                  <SelectValue placeholder="Select liability type" />
-                </SelectTrigger>
-                <SelectContent>
-                  {LIABILITY_TYPES.map(type => (
-                    <SelectItem key={type} value={type}>{type}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <select 
+                id="type" 
+                name="type" 
+                value={formData.type} 
+                onChange={(e) => handleTypeChange(e.target.value as LiabilityType)}
+                className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {LIABILITY_TYPES.map(type => (
+                  <option key={type} value={type}>{type}</option>
+                ))}
+              </select>
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="currentBalance" className="text-right">Current Balance</Label>

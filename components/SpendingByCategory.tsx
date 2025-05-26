@@ -1,9 +1,6 @@
 'use client';
 
-import { useState } from 'react';
-import { Cell, Pie, PieChart, ResponsiveContainer, Legend, Tooltip } from 'recharts';
-
-import { useState, useEffect } from 'react'; // Added useEffect
+import { useState, useEffect } from 'react';
 import { Cell, Pie, PieChart, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 
 import { Input } from '@components/ui/input';
@@ -14,7 +11,7 @@ import { useAnalytics } from '@hooks/useAnalytics';
 import { useDBContext } from '@context/DatabaseContext'; // Added
 import { useToast } from '@components/ui/use-toast'; // Added
 import { formatCurrency } from '@utils/helpers';
-import { Card, CardContent, CardHeader, CardTitle } from 'components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@components/ui/card';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#FF6B6B'];
 
@@ -215,7 +212,8 @@ export default function SpendingByCategory() {
                           />
                         </div>
                       </div>
-                      {() => { // Self-invoking function to calculate and render budget info
+{(() => {
+                        // Calculate and render budget info
                         const spending = category.value;
                         const budget = category.target || 0;
                         let percentageConsumed = 0;
@@ -239,7 +237,6 @@ export default function SpendingByCategory() {
                            percentageConsumed = 0;
                         }
 
-
                         return (
                           <div className="mt-2">
                             <p className="text-xs text-gray-600 mb-1">{percentageText}</p>
@@ -251,7 +248,7 @@ export default function SpendingByCategory() {
                             </div>
                           </div>
                         );
-                      }()}
+                      })()}
                       {selectedCategory === category.name && (
                         <div className='mt-3 pt-2 border-t border-gray-200 space-y-1'>
                           <h4 className="text-sm font-semibold">Details:</h4>
