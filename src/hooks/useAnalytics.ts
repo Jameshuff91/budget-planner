@@ -158,22 +158,34 @@ export const useAnalytics = (timeRange?: { startDate?: Date; endDate?: Date }) =
         'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
       ];
 
-      // Get current date and calculate date range
+      // Get current date and calculate date range based on actual transaction data
       const today = new Date();
-      const startDate = new Date(today.getFullYear(), today.getMonth() - 11, 1); // 12 months ago
+      let trendStartDate: Date;
+      let trendEndDate = today;
 
-      // Initialize all months with 0
-      for (let i = 0; i < 12; i++) {
-        const date = new Date(startDate.getFullYear(), startDate.getMonth() + i, 1);
-        const monthKey = `${months[date.getMonth()]} ${date.getFullYear()}`;
-        monthlySpending.set(monthKey, 0);
+      if (transactions.length > 0) {
+        // Find the earliest transaction date
+        const dates = transactions.map(t => new Date(t.date));
+        const earliestDate = new Date(Math.min(...dates.map(d => d.getTime())));
+        trendStartDate = new Date(earliestDate.getFullYear(), earliestDate.getMonth(), 1);
+      } else {
+        // Fallback to last 12 months if no transactions
+        trendStartDate = new Date(today.getFullYear(), today.getMonth() - 11, 1);
       }
 
-      // Process transactions within date range
+      // Initialize all months from earliest transaction to current month with 0
+      let currentMonth = new Date(trendStartDate);
+      while (currentMonth <= trendEndDate) {
+        const monthKey = `${months[currentMonth.getMonth()]} ${currentMonth.getFullYear()}`;
+        monthlySpending.set(monthKey, 0);
+        currentMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1);
+      }
+
+      // Process all transactions within the determined range
       transactions.forEach((transaction) => {
         const date = new Date(transaction.date);
-        // Only process transactions within last 12 months
-        if (date >= startDate && date <= today) {
+        // Process transactions within the calculated range
+        if (date >= trendStartDate && date <= trendEndDate) {
           const monthKey = `${months[date.getMonth()]} ${date.getFullYear()}`;
           // Include both income and expense transactions
           const currentAmount = monthlySpending.get(monthKey) || 0;
@@ -215,22 +227,18 @@ export const useAnalytics = (timeRange?: { startDate?: Date; endDate?: Date }) =
         'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
       ];
 
-      // Determine the date range for the overview
-      // Default to the last 12 full months including the current month.
-      let rangeStartDate = new Date(today.getFullYear(), today.getMonth() - 11, 1);
+      // Determine the date range for the overview based on actual transaction data
+      let rangeStartDate: Date;
       let rangeEndDate = new Date(today.getFullYear(), today.getMonth() + 1, 0); // End of current month
 
       if (transactions.length > 0) {
-        let firstTxDate = new Date(transactions[0].date);
-        transactions.forEach(transaction => {
-          const date = new Date(transaction.date);
-          if (date < firstTxDate) firstTxDate = date;
-        });
-        // If the earliest transaction is more recent than our default 12-month start,
-        // adjust the rangeStartDate to the month of the first transaction.
-        if (firstTxDate > rangeStartDate) {
-          rangeStartDate = new Date(firstTxDate.getFullYear(), firstTxDate.getMonth(), 1);
-        }
+        // Find the earliest transaction date
+        const dates = transactions.map(t => new Date(t.date));
+        const firstTxDate = new Date(Math.min(...dates.map(d => d.getTime())));
+        rangeStartDate = new Date(firstTxDate.getFullYear(), firstTxDate.getMonth(), 1);
+      } else {
+        // Fallback to last 12 months if no transactions
+        rangeStartDate = new Date(today.getFullYear(), today.getMonth() - 11, 1);
       }
 
       // Initialize all months within the determined range

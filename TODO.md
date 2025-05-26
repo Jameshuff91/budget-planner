@@ -4,6 +4,7 @@
 - [x] Clone budget-planner repository
 - [x] Set up development environment
 - [x] Pull and merge Jules' improve-pdf-date-logging branch
+- [x] Optimize OpenCV.js integration and logging
 - [ ] Create recommender-architecture.md for feature planning
 - [ ] Implement the recommender feature
 
@@ -22,6 +23,8 @@
   - [x] Improved statement period detection
   - [x] Better transaction validation and duplicate prevention
   - [x] Advanced OpenCV image preprocessing for OCR
+  - [x] Intelligent OpenCV availability detection with fallback
+  - [x] Reduced logging noise and improved user experience
 - [x] **Database and Context Enhancements**
   - [x] Extended DatabaseContext with asset/liability support
   - [x] Enhanced db.ts with new data models

@@ -25,13 +25,40 @@ export default function MonthSelector() {
     };
   }>({});
   const [isLoading, setIsLoading] = useState(true);
-  const { getTransactionsByMonth } = useDBContext();
+  const { getTransactionsByMonth, transactions } = useDBContext();
 
-  // Generate last 12 months
-  const months = Array.from({ length: 12 }, (_, i) => {
-    const date = subMonths(new Date(), i);
-    return startOfMonth(date);
-  }).reverse();
+  // Generate months based on available transaction data
+  const months = useMemo(() => {
+    // Get all transactions to determine date range
+    
+    if (!transactions || transactions.length === 0) {
+      // Fallback to last 12 months if no transactions
+      return Array.from({ length: 12 }, (_, i) => {
+        const date = subMonths(new Date(), i);
+        return startOfMonth(date);
+      }).reverse();
+    }
+
+    // Find the earliest and latest transaction dates
+    const dates = transactions.map(t => new Date(t.date));
+    const earliestDate = new Date(Math.min(...dates.map(d => d.getTime())));
+    const latestDate = new Date(Math.max(...dates.map(d => d.getTime())));
+    
+    // Generate months from earliest to latest (plus current month if needed)
+    const startMonth = startOfMonth(earliestDate);
+    const endMonth = startOfMonth(new Date()); // Include current month
+    const finalEndMonth = latestDate > endMonth ? startOfMonth(latestDate) : endMonth;
+    
+    const monthsArray: Date[] = [];
+    let currentMonth = startMonth;
+    
+    while (currentMonth <= finalEndMonth) {
+      monthsArray.push(new Date(currentMonth));
+      currentMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1);
+    }
+    
+    return monthsArray.reverse(); // Most recent first
+  }, [transactions]);
 
   const spendingTrend = useMemo((): SpendingTrendData[] => {
     try {
@@ -72,58 +99,58 @@ export default function MonthSelector() {
   }, [monthlyData]);
 
   useEffect(() => {
-    loadMonthlyData();
-  }, []);
+    const loadMonthlyData = async () => {
+      try {
+        setIsLoading(true);
+        const monthlyStats: {
+          [key: string]: {
+            income: number;
+            expenses: number;
+            summaryTransactions: any[];
+            individualTransactions: any[];
+          };
+        } = {};
 
-  const loadMonthlyData = async () => {
-    try {
-      setIsLoading(true);
-      const monthlyStats: {
-        [key: string]: {
-          income: number;
-          expenses: number;
-          summaryTransactions: any[];
-          individualTransactions: any[];
-        };
-      } = {};
+        for (const month of months) {
+          const transactions = await getTransactionsByMonth(month);
+          const monthKey = format(month, 'MMM yyyy');
 
-      for (const month of months) {
-        const transactions = await getTransactionsByMonth(month);
-        const monthKey = format(month, 'MMM yyyy');
+          const summaryTransactions = transactions.filter((t) => t.isMonthSummary);
+          const individualTransactions = transactions.filter((t) => !t.isMonthSummary);
 
-        const summaryTransactions = transactions.filter((t) => t.isMonthSummary);
-        const individualTransactions = transactions.filter((t) => !t.isMonthSummary);
+          monthlyStats[monthKey] = {
+            income: transactions.reduce((sum, t) => (t.type === 'income' ? sum + t.amount : sum), 0),
+            expenses: transactions.reduce(
+              (sum, t) => (t.type === 'expense' ? sum + t.amount : sum),
+              0
+            ),
+            summaryTransactions,
+            individualTransactions,
+          };
+        }
 
-        monthlyStats[monthKey] = {
-          income: transactions.reduce((sum, t) => (t.type === 'income' ? sum + t.amount : sum), 0),
-          expenses: transactions.reduce(
-            (sum, t) => (t.type === 'expense' ? sum + t.amount : sum),
-            0
-          ),
-          summaryTransactions,
-          individualTransactions,
-        };
+        setMonthlyData(monthlyStats);
+
+        // Emit spending trend data
+        const spendingTrendData = Object.entries(monthlyStats).map(([name, data]) => ({
+          name,
+          spending: data.expenses
+        }));
+
+        const spendingTrendEvent = new CustomEvent('spendingTrendUpdated', {
+          detail: spendingTrendData
+        });
+        window.dispatchEvent(spendingTrendEvent);
+
+      } catch (error) {
+        console.error('Error loading monthly data:', error);
+      } finally {
+        setIsLoading(false);
       }
+    };
 
-      setMonthlyData(monthlyStats);
-
-      // Emit spending trend data
-      const spendingTrendData = Object.entries(monthlyStats).map(([name, data]) => ({
-        name,
-        spending: data.expenses
-      }));
-
-      const spendingTrendEvent = new CustomEvent('spendingTrendUpdated', {
-        detail: spendingTrendData
-      });
-      window.dispatchEvent(spendingTrendEvent);
-
-    } catch (error) {
-      console.error('Error loading monthly data:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    loadMonthlyData();
+  }, [months, getTransactionsByMonth]);
 
   const handleMonthSelect = (date: Date) => {
     setSelectedMonth(date);
