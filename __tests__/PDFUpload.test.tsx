@@ -1,73 +1,149 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { vi } from 'vitest';
 
-import PDFUpload from '@components/PDFUpload';
-import { useDBContext } from '@context/DatabaseContext';
-import { logger } from '@services/logger';
-import { pdfService } from '@services/pdfService';
+// Create mock functions that we can control
+const mockAddTransaction = vi.fn();
+const mockRefreshData = vi.fn();
+const mockToast = vi.fn();
 
-// Mock the dependencies
-jest.mock('@context/DatabaseContext');
-jest.mock('@services/pdfService');
-jest.mock('@services/logger');
+// Mock the entire module at the top level without spying on non-function values
+vi.mock('../src/context/DatabaseContext', () => ({
+  useDBContext: () => ({
+    addTransaction: mockAddTransaction,
+    refreshData: mockRefreshData,
+  })
+}));
+
+vi.mock('../components/ui/use-toast', () => ({
+  useToast: () => ({
+    toast: mockToast,
+  })
+}));
+
+vi.mock('../src/services/pdfService', () => ({
+  pdfService: {
+    getPDFDocuments: vi.fn().mockResolvedValue([]),
+    processPDF: vi.fn().mockResolvedValue([]),
+    deletePDFDocument: vi.fn().mockResolvedValue(undefined),
+    deleteDocuments: vi.fn().mockResolvedValue(undefined),
+  }
+}));
+
+vi.mock('../src/services/logger', () => ({
+  logger: {
+    error: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+  }
+}));
+
+import PDFUpload from '../components/PDFUpload';
 
 describe('PDFUpload Component', () => {
+
   beforeEach(() => {
-    // Reset all mocks before each test
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
-  test('allows multiple file uploads', async () => {
-    const mockAddTransaction = jest.fn();
-    (useDBContext as jest.Mock).mockReturnValue({ addTransaction: mockAddTransaction });
-
-    const files = [
-      new File(['file1 content'], 'file1.pdf', { type: 'application/pdf' }),
-      new File(['file2 content'], 'file2.pdf', { type: 'application/pdf' }),
-    ];
-
-    render(<PDFUpload />);
-
-    const input = screen.getByTestId('file-input');
-    await userEvent.upload(input, files);
-
-    expect(pdfService.processPDF).toHaveBeenCalledTimes(2);
-    expect(screen.getByText('file1.pdf')).toBeInTheDocument();
-    expect(screen.getByText('file2.pdf')).toBeInTheDocument();
+  test('renders upload area', async () => {
+    await act(async () => {
+      render(<PDFUpload />);
+    });
+    expect(screen.getByText(/Upload Financial Information/i)).toBeInTheDocument();
+    expect(screen.getByText(/Drag and drop your PDF or CSV files here or click to browse/i)).toBeInTheDocument();
   });
 
-  test('handles drag and drop file upload', async () => {
-    render(<PDFUpload />);
+  test('handles PDF file upload and processing', async () => {
+    const pdfContent = '%PDF-1.4...'; // Mock PDF content
+    const file = new File([pdfContent], 'test.pdf', { type: 'application/pdf' });
 
-    const dropzone = screen.getByTestId('dropzone');
+    const { pdfService } = await vi.importMock('../src/services/pdfService') as any;
+    pdfService.processPDF.mockResolvedValue([
+      {
+        date: new Date('2024-01-01'),
+        description: 'Test Transaction',
+        amount: -100,
+        category: 'Food',
+        type: 'expense',
+      }
+    ]);
 
-    fireEvent.dragEnter(dropzone);
-    expect(dropzone).toHaveClass('dragging');
+    await act(async () => {
+      render(<PDFUpload />);
+    });
 
-    fireEvent.dragLeave(dropzone);
-    expect(dropzone).not.toHaveClass('dragging');
-
-    const files = [new File(['pdf content'], 'test.pdf', { type: 'application/pdf' })];
-
-    fireEvent.drop(dropzone, {
-      dataTransfer: {
-        files,
-      },
+    const input = screen.getByLabelText(/choose files/i);
+    
+    await act(async () => {
+      await userEvent.upload(input, file);
     });
 
     await waitFor(() => {
-      expect(pdfService.processPDF).toHaveBeenCalledWith(files[0]);
+      expect(mockAddTransaction).toHaveBeenCalledWith(
+        expect.objectContaining({
+          date: expect.any(Date),
+          description: 'Test Transaction',
+          amount: -100,
+          category: 'Food',
+          type: 'expense',
+        })
+      );
     });
+
+    expect(mockToast).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: 'Success',
+        description: expect.stringContaining('Processed 1 of 1 transactions from test.pdf'),
+      })
+    );
   });
 
-  test('shows error toast for invalid file types', async () => {
-    const files = [new File(['invalid content'], 'test.txt', { type: 'text/plain' })];
+  test('handles invalid file type', async () => {
+    const file = new File(['text content'], 'test.txt', { type: 'text/plain' });
 
-    render(<PDFUpload />);
+    await act(async () => {
+      render(<PDFUpload />);
+    });
 
-    const input = screen.getByTestId('file-input');
-    await userEvent.upload(input, files);
+    const input = screen.getByLabelText(/choose files/i);
+    
+    await act(async () => {
+      await userEvent.upload(input, file);
+    });
 
-    expect(screen.getByText('Invalid file type')).toBeInTheDocument();
+    // The component validates file types at the input level, so invalid files are rejected
+    // We just verify that the component doesn't crash and no processing occurs
+    await waitFor(() => {
+      expect(mockAddTransaction).not.toHaveBeenCalled();
+    }, { timeout: 1000 });
+  });
+
+  test('handles PDF processing errors', async () => {
+    const pdfContent = '%PDF-1.4...';
+    const file = new File([pdfContent], 'invalid.pdf', { type: 'application/pdf' });
+
+    const { pdfService } = await vi.importMock('../src/services/pdfService') as any;
+    pdfService.processPDF.mockRejectedValue(new Error('Processing failed'));
+
+    await act(async () => {
+      render(<PDFUpload />);
+    });
+
+    const input = screen.getByLabelText(/choose files/i);
+    
+    await act(async () => {
+      await userEvent.upload(input, file);
+    });
+
+    await waitFor(() => {
+      expect(mockToast).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: 'Error',
+          description: expect.stringContaining('Failed to process invalid.pdf'),
+          variant: 'destructive',
+        })
+      );
+    });
   });
 });

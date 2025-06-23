@@ -4,19 +4,19 @@ import { Upload, FileType2, Trash2, RefreshCw, CheckCircle, XCircle, ChevronDown
 import Papa from 'papaparse';
 import { useState, useEffect } from 'react';
 
-import { Button } from 'components/ui/button';
-import { Input } from 'components/ui/input';
-import { useToast } from 'components/ui/use-toast';
-import { useDBContext } from 'src/context/DatabaseContext';
-import { logger } from 'src/services/logger';
-import { pdfService } from 'src/services/pdfService';
-import type { PDFDocument } from 'src/services/pdfService';
+import { Button } from './ui/button';
+import { Input } from './ui/input';
+import { useToast } from './ui/use-toast';
+import { useDBContext } from '../src/context/DatabaseContext';
+import { logger } from '../src/services/logger';
+import { pdfService } from '../src/services/pdfService';
+import type { PDFDocument } from '../src/services/pdfService';
 
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from 'components/ui/collapsible';
+} from './ui/collapsible';
 
 interface CSVTransaction {
   date: Date;

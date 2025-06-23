@@ -1,70 +1,60 @@
-import { beforeEach, describe, test } from '@jest/globals';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
+import { vi } from 'vitest';
 
-import BudgetAnalysis from '@components/SpendingByCategory';
-import { useDBContext } from '@context/DatabaseContext';
+import BudgetAnalysis from '../components/BudgetGoal';
 
-jest.mock('@context/DatabaseContext');
+// Mock the entire module at the top level without spying on non-function values
+vi.mock('../src/context/DatabaseContext', () => ({
+  useDBContext: () => ({
+    transactions: [],
+    categories: [],
+  })
+}));
 
 describe('BudgetAnalysis Component', () => {
   const mockTransactions = [
-    { amount: 100, category: 'Food', date: '2024-01-01' },
-    { amount: 200, category: 'Rent', date: '2024-01-01' },
-    { amount: 50, category: 'Transport', date: '2024-01-01' },
+    { amount: -100, category: 'Food', date: new Date('2024-01-01') },
+    { amount: -200, category: 'Rent', date: new Date('2024-01-02') },
+    { amount: 500, category: 'Salary', date: new Date('2024-01-03'), type: 'income' },
   ];
 
-  beforeEach((): void => {
-    (useDBContext as jest.Mock).mockReturnValue({
-      transactions: mockTransactions,
-    });
+  const mockCategories = [
+    { id: '1', name: 'Food', budget: 150, warningThreshold: 120 },
+    { id: '2', name: 'Rent', budget: 1000, warningThreshold: 800 },
+  ];
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    // No need to mock again, as it's done at the top level
   });
 
-  test('renders budget breakdown pie chart correctly', async () => {
+  test('renders budget analysis with correct data', () => {
     render(<BudgetAnalysis />);
-
-    await waitFor(() => {
-      expect(screen.getByTestId('pie-chart')).toBeInTheDocument();
-    });
-
-    // Check if all categories are displayed
-    expect(screen.getByText('Food')).toBeInTheDocument();
-    expect(screen.getByText('Rent')).toBeInTheDocument();
-    expect(screen.getByText('Transport')).toBeInTheDocument();
+    expect(screen.getByText(/Budget Goals/i)).toBeInTheDocument();
+    expect(screen.getByText(/Food/i)).toBeInTheDocument();
+    expect(screen.getByText(/Rent/i)).toBeInTheDocument();
   });
 
-  test('calculates correct budget percentages', () => {
+  test('displays correct spending for each category', () => {
     render(<BudgetAnalysis />);
-
-    const total = 350; // 100 + 200 + 50
-    const foodPercentage = (100 / total) * 100;
-    const rentPercentage = (200 / total) * 100;
-    const transportPercentage = (50 / total) * 100;
-
-    expect(screen.getByText(`${foodPercentage.toFixed(1)}%`)).toBeInTheDocument();
-    expect(screen.getByText(`${rentPercentage.toFixed(1)}%`)).toBeInTheDocument();
-    expect(screen.getByText(`${transportPercentage.toFixed(1)}%`)).toBeInTheDocument();
+    expect(screen.getByText(/\$100/i)).toBeInTheDocument(); // Food
+    expect(screen.getByText(/\$200/i)).toBeInTheDocument(); // Rent
   });
 
-  test('displays realistic budget ranges', () => {
+  test('shows budget status correctly', () => {
     render(<BudgetAnalysis />);
+    expect(screen.getByText(/of \$150/i)).toBeInTheDocument(); // Food budget
+    expect(screen.getByText(/of \$1000/i)).toBeInTheDocument(); // Rent budget
+  });
 
-    // Check if the budget amounts are within realistic ranges
-    const rentElement = screen.getByText(/Rent/i).closest('div');
-    const rentAmountText = rentElement?.querySelector('.text-sm')?.textContent;
-    const rentAmount = rentAmountText
-      ? parseFloat(rentAmountText.match(/\$?([\d,]+(\.\d{2})?)/)?.[1]?.replace(',', '') || '0')
-      : 0;
-
-    expect(rentAmount).toBeGreaterThan(0);
-    expect(rentAmount).toBeLessThan(10000); // Assuming reasonable rent range
-
+  test('highlights categories over warning threshold', () => {
+    render(<BudgetAnalysis />);
     const foodElement = screen.getByText(/Food/i).closest('div');
-    const foodAmountText = foodElement?.querySelector('.text-sm')?.textContent;
-    const foodAmount = foodAmountText
-      ? parseFloat(foodAmountText.match(/\$?([\d,]+(\.\d{2})?)/)?.[1]?.replace(',', '') || '0')
-      : 0;
+    expect(foodElement).toHaveClass('text-red-500'); // Food over warning threshold (100 > 120)
+  });
 
-    expect(foodAmount).toBeGreaterThan(0);
-    expect(foodAmount).toBeLessThan(2000); // Assuming reasonable monthly food budget
+  test('handles empty transactions', () => {
+    render(<BudgetAnalysis />);
+    expect(screen.getByText(/\$0/i)).toBeInTheDocument();
   });
 });

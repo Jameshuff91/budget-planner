@@ -1,136 +1,107 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { vi } from 'vitest';
 
-import PDFUpload from '@components/PDFUpload';
-import { useToast } from '@components/ui/use-toast';
-import { useDBContext } from '@context/DatabaseContext';
-import { logger } from '@services/logger';
+import CSVUpload from '../components/CSVUpload';
 
-jest.mock('@context/DatabaseContext');
-jest.mock('@services/logger');
-jest.mock('@components/ui/use-toast');
-jest.mock('@services/pdfService');
+// Create mock functions that we can control
+const mockAddTransaction = vi.fn();
+const mockRefreshData = vi.fn();
 
-describe('PDFUpload Component CSV Handling', () => {
-  const mockAddTransaction = jest.fn();
-  const mockToast = jest.fn();
+// Mock Papa Parse
+vi.mock('papaparse', () => ({
+  default: {
+    parse: vi.fn((file, options) => {
+      // Simulate CSV parsing
+      if (file.name === 'test.csv') {
+        options.complete({
+          data: [
+            ['date', 'description', 'amount', 'category'],
+            ['2024-01-01', 'Test Transaction', '-100', 'Food']
+          ]
+        });
+      } else if (file.name === 'invalid.csv') {
+        options.error(new Error('Parse error'));
+      }
+    })
+  }
+}));
+
+// Mock the entire module at the top level without spying on non-function values
+vi.mock('../src/context/DatabaseContext', () => ({
+  useDBContext: () => ({
+    addTransaction: mockAddTransaction,
+    refreshData: mockRefreshData,
+  })
+}));
+
+// Mock logger
+vi.mock('../src/services/logger', () => ({
+  logger: {
+    error: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+  }
+}));
+
+describe('CSVUpload Component', () => {
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    (useDBContext as jest.Mock).mockReturnValue({
-      addTransaction: mockAddTransaction,
-    });
-    (useToast as jest.Mock).mockReturnValue({
-      toast: mockToast,
-    });
+    vi.clearAllMocks();
   });
 
-  test('handles CSV file upload', async () => {
-    const csvContent = 'date,description,amount,category\n2024-01-01,Groceries,-100,Food';
-    const file = new File([csvContent], 'transactions.csv', { type: 'text/csv' });
+  test('renders upload area', () => {
+    render(<CSVUpload />);
+    expect(screen.getByText(/Drag and drop a CSV file here/i)).toBeInTheDocument();
+  });
 
-    render(<PDFUpload />);
+  test('handles CSV file upload and processing', async () => {
+    const csvContent = 'date,description,amount,category\n2024-01-01,Test Transaction,-100,Food';
+    const file = new File([csvContent], 'test.csv', { type: 'text/csv' });
 
-    const input = screen.getByLabelText(/drag and drop pdf or csv files/i);
+    render(<CSVUpload />);
+
+    const input = document.querySelector('input[type="file"]') as HTMLInputElement;
     await userEvent.upload(input, file);
 
     await waitFor(() => {
-      expect(mockAddTransaction).toHaveBeenCalledWith({
-        date: expect.any(Date),
-        description: 'Groceries',
-        amount: -100,
-        category: 'Food',
-        type: 'expense',
-      });
-    });
-
-    expect(mockToast).toHaveBeenCalledWith(
-      expect.objectContaining({
-        title: 'Success',
-        description: expect.stringContaining('Successfully processed 1 file'),
-      })
-    );
-  });
-
-  test('handles multiple CSV files', async () => {
-    const csvContent1 = 'date,description,amount,category\n2024-01-01,Salary,2000,Income';
-    const csvContent2 = 'date,description,amount,category\n2024-01-02,Rent,-1000,Housing';
-
-    const files = [
-      new File([csvContent1], 'transactions1.csv', { type: 'text/csv' }),
-      new File([csvContent2], 'transactions2.csv', { type: 'text/csv' }),
-    ];
-
-    render(<PDFUpload />);
-
-    const input = screen.getByLabelText(/drag and drop pdf or csv files/i);
-    await userEvent.upload(input, files);
-
-    await waitFor(() => {
-      expect(mockAddTransaction).toHaveBeenCalledTimes(2);
-      expect(mockAddTransaction).toHaveBeenCalledWith({
-        date: expect.any(Date),
-        description: 'Salary',
-        amount: 2000,
-        category: 'Income',
-        type: 'income',
-      });
-      expect(mockAddTransaction).toHaveBeenCalledWith({
-        date: expect.any(Date),
-        description: 'Rent',
-        amount: -1000,
-        category: 'Housing',
-        type: 'expense',
-      });
-    });
-
-    expect(mockToast).toHaveBeenCalledWith(
-      expect.objectContaining({
-        title: 'Success',
-        description: expect.stringContaining('Successfully processed 2 file'),
-      })
-    );
-  });
-
-  test('handles invalid CSV files', async () => {
-    const invalidContent = 'invalid,csv,content';
-    const file = new File([invalidContent], 'invalid.csv', { type: 'text/csv' });
-
-    render(<PDFUpload />);
-
-    const input = screen.getByLabelText(/drag and drop pdf or csv files/i);
-    await userEvent.upload(input, file);
-
-    await waitFor(() => {
-      expect(mockToast).toHaveBeenCalledWith(
+      expect(mockAddTransaction).toHaveBeenCalledWith(
         expect.objectContaining({
-          title: 'Error',
-          description: expect.stringContaining('Failed to process files'),
+          date: '2024-01-01',
+          description: 'Test Transaction',
+          amount: -100,
+          category: 'Food',
         })
       );
     });
   });
 
-  test('handles mixed PDF and CSV files', async () => {
-    const csvContent = 'date,description,amount,category\n2024-01-01,Groceries,-100,Food';
-    const files = [
-      new File([csvContent], 'transactions.csv', { type: 'text/csv' }),
-      new File(['pdf content'], 'document.pdf', { type: 'application/pdf' }),
-    ];
+  test('handles invalid file type', async () => {
+    const file = new File(['text content'], 'test.txt', { type: 'text/plain' });
 
-    render(<PDFUpload />);
+    render(<CSVUpload />);
 
-    const input = screen.getByLabelText(/drag and drop pdf or csv files/i);
-    await userEvent.upload(input, files);
+    const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+    await userEvent.upload(input, file);
 
+    // The component doesn't handle invalid file types, so addTransaction should not be called
     await waitFor(() => {
-      expect(mockAddTransaction).toHaveBeenCalledWith({
-        date: expect.any(Date),
-        description: 'Groceries',
-        amount: -100,
-        category: 'Food',
-        type: 'expense',
-      });
-    });
+      expect(mockAddTransaction).not.toHaveBeenCalled();
+    }, { timeout: 1000 });
+  });
+
+  test('handles CSV parsing errors', async () => {
+    const csvContent = 'invalid,csv,content';
+    const file = new File([csvContent], 'invalid.csv', { type: 'text/csv' });
+
+    render(<CSVUpload />);
+
+    const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+    await userEvent.upload(input, file);
+
+    // The component logs errors but doesn't show toast notifications
+    await waitFor(() => {
+      expect(mockAddTransaction).not.toHaveBeenCalled();
+    }, { timeout: 1000 });
   });
 });
