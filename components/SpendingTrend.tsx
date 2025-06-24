@@ -49,14 +49,23 @@ const calculateTrendLine = (data: { x: number; y: number }[]): { slope: number; 
   return { slope, intercept };
 };
 
-export default function SpendingTrend() {
+interface SpendingTrendProps {
+  selectedYear?: number;
+}
+
+export default function SpendingTrend({ selectedYear }: SpendingTrendProps) {
   const [trendData, setTrendData] = useState<SpendingTrendData[]>([]);
   const { spendingOverview } = useAnalytics(); // Use the hook
 
   useEffect(() => {
     if (spendingOverview && spendingOverview.length > 0) {
+      // Filter data for selected year if provided
+      const filteredData = selectedYear 
+        ? spendingOverview.filter(item => item.year === selectedYear)
+        : spendingOverview;
+      
       // Transform spendingOverview data for the chart
-      const chartData: SpendingTrendData[] = spendingOverview.map(item => ({
+      const chartData: SpendingTrendData[] = filteredData.map(item => ({
         name: item.month, // Month name like "Jan", "Feb"
         year: item.year,
         Spending: item.totalSpending,
@@ -108,7 +117,7 @@ export default function SpendingTrend() {
     } else {
       setTrendData([]); // Clear data if spendingOverview is empty
     }
-  }, [spendingOverview]);
+  }, [spendingOverview, selectedYear]);
   
   const monthsAbbrev = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 

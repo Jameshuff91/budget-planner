@@ -1009,11 +1009,38 @@ class PDFService {
   private categorizeTransaction(description: string, amount: number): string {
     const type = this.classifyTransaction(description, amount);
     if (type === 'income') {
-      return 'Income';
+      return this.determineIncomeCategory(description);
     } else if (type === 'expense') {
       return this.determineExpenseCategory(description);
     }
     return 'Uncategorized';
+  }
+
+  private determineIncomeCategory(description: string): string {
+    const lowerDesc = description.toLowerCase();
+    
+    // Salary/Employment income
+    if (/\b(payroll|salary|direct deposit|dfas|employment|wages|biweekly|monthly pay)\b/i.test(lowerDesc)) {
+      return 'Salary';
+    }
+    
+    // Interest and investment income
+    if (/\b(interest|dividend|investment|vanguard|fidelity|schwab|401k|ira)\b/i.test(lowerDesc)) {
+      return 'Investment Income';
+    }
+    
+    // Cash deposits and transfers
+    if (/\b(cash deposit|mobile deposit|deposit from|transfer from)\b/i.test(lowerDesc)) {
+      return 'Other Income';
+    }
+    
+    // Refunds and reimbursements
+    if (/\b(refund|reimbursement|cashback|rebate)\b/i.test(lowerDesc)) {
+      return 'Refunds';
+    }
+    
+    // Default for other income types
+    return 'Other Income';
   }
 
   /**
@@ -1337,10 +1364,10 @@ class PDFService {
                 continue; // Skip this transaction
               }
 
-              // **[Improvement]**: Handle cases where description includes payment amount
-              // e.g., "Payment To Chase Card Ending IN 1867 -624.25"
-              const paymentMatch = cleanDesc.match(/payment to|pmt to|purchase/i);
-              const actualAmount = paymentMatch ? -Math.abs(amount) : (type === 'expense' ? -Math.abs(amount) : Math.abs(amount));
+              // Normalize amount based on transaction type for consistent processing
+              // Expenses should be positive in the database, income should be positive
+              // The dashboard will handle display logic
+              const actualAmount = Math.abs(amount);
 
               extractedData.push({
                 date: transactionDate,

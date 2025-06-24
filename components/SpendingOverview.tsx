@@ -11,10 +11,17 @@ import { formatCurrency } from '../src/utils/helpers';
 
 import { ExpenseDetailsModal } from './ExpenseDetailsModal';
 
-export default function SpendingOverview() {
+interface SpendingOverviewProps {
+  selectedYear?: number;
+}
+
+export default function SpendingOverview({ selectedYear: propSelectedYear }: SpendingOverviewProps) {
   const { spendingOverview, monthlyTrends } = useAnalytics();
   const [selectedMonth, setSelectedMonth] = useState<(typeof spendingOverview)[0] | null>(null);
-  const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
+  const [internalSelectedYear, setInternalSelectedYear] = useState<number>(new Date().getFullYear());
+  
+  // Use prop if provided, otherwise use internal state
+  const selectedYear = propSelectedYear ?? internalSelectedYear;
   const trends = monthlyTrends;
 
   // Get current date and month names dynamically
@@ -34,7 +41,7 @@ export default function SpendingOverview() {
   };
 
   const handleYearChange = (direction: 'next' | 'prev') => {
-    setSelectedYear(prev => direction === 'next' ? prev + 1 : prev - 1);
+    setInternalSelectedYear(prev => direction === 'next' ? prev + 1 : prev - 1);
   };
 
   // Get available years from the data
@@ -97,27 +104,29 @@ export default function SpendingOverview() {
             </div>
           </div>
         </div>
-        <div className='flex justify-between items-center mb-4'>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => handleYearChange('prev')}
-            disabled={!canNavigatePrev}
-          >
-            <ChevronLeft className="h-4 w-4 mr-1" />
-            Previous Year
-          </Button>
-          <div className='text-lg font-semibold'>{selectedYear}</div>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => handleYearChange('next')}
-            disabled={!canNavigateNext}
-          >
-            Next Year
-            <ChevronRight className="h-4 w-4 ml-1" />
-          </Button>
-        </div>
+        {!propSelectedYear && (
+          <div className='flex justify-between items-center mb-4'>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => handleYearChange('prev')}
+              disabled={!canNavigatePrev}
+            >
+              <ChevronLeft className="h-4 w-4 mr-1" />
+              Previous Year
+            </Button>
+            <div className='text-lg font-semibold'>{selectedYear}</div>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => handleYearChange('next')}
+              disabled={!canNavigateNext}
+            >
+              Next Year
+              <ChevronRight className="h-4 w-4 ml-1" />
+            </Button>
+          </div>
+        )}
         <div className='h-[300px] w-full'>
           <ResponsiveContainer width='100%' height='100%'>
             <BarChart 

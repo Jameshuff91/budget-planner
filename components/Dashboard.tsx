@@ -20,10 +20,11 @@ const DEFAULT_SAVINGS = 0;
 
 export default function Dashboard() {
   const [timeRange, setTimeRange] = useState('month');
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const { transactions, loading, error } = useDatabase();
   
   // Get current date information
-  const currentDate = new Date('2025-01-26T21:27:58-08:00'); // Using provided time
+  const currentDate = new Date(); // Use actual current date
   const currentYear = currentDate.getFullYear();
   const currentMonth = currentDate.getMonth();
   const previousMonth = (currentMonth - 1 + 12) % 12;
@@ -42,8 +43,14 @@ export default function Dashboard() {
       };
     }
 
-    // Group transactions by month
-    const monthlyData = transactions.reduce((acc, transaction) => {
+    // Filter transactions for selected year only
+    const selectedYearTransactions = transactions.filter(transaction => {
+      const transactionDate = new Date(transaction.date);
+      return transactionDate.getFullYear() === selectedYear;
+    });
+
+    // Group transactions by month for selected year only
+    const monthlyData = selectedYearTransactions.reduce((acc, transaction) => {
       const date = new Date(transaction.date);
       const monthKey = `${date.getFullYear()}-${date.getMonth() + 1}`;
       
@@ -70,17 +77,32 @@ export default function Dashboard() {
       totalSpending += spending;
     });
 
-    const totalSavings = totalIncome - Math.abs(totalSpending);
+    // Ensure spending is displayed as positive value
+    const displaySpending = Math.abs(totalSpending);
+    const totalSavings = totalIncome - displaySpending;
     const nonZeroIncome = totalIncome || 0.01; // Prevent division by zero
 
     return {
       income: totalIncome,
-      spending: totalSpending,
+      spending: displaySpending,
       savings: totalSavings,
-      spendingPercentage: ((totalSpending / nonZeroIncome) * 100).toFixed(2),
+      spendingPercentage: ((displaySpending / nonZeroIncome) * 100).toFixed(2),
       savingsPercentage: ((totalSavings / nonZeroIncome) * 100).toFixed(2),
       monthlyData
     };
+  }, [transactions, selectedYear]);
+
+  // Get available years from transactions
+  const availableYears = useMemo(() => {
+    if (!transactions || transactions.length === 0) return [new Date().getFullYear()];
+    
+    const years = new Set<number>();
+    transactions.forEach(transaction => {
+      const year = new Date(transaction.date).getFullYear();
+      years.add(year);
+    });
+    
+    return Array.from(years).sort((a, b) => b - a); // Sort descending (newest first)
   }, [transactions]);
 
   if (error) {
@@ -95,7 +117,19 @@ export default function Dashboard() {
     <div className='space-y-6'>
       <div className='flex justify-between items-center'>
         <h2 className='text-3xl font-bold text-gray-800'>Financial Dashboard</h2>
-        <div className='text-xl text-gray-600'>{currentYear}</div>
+        <div className='flex items-center gap-3'>
+          <label htmlFor="year-select" className='text-sm font-medium text-gray-600'>Year:</label>
+          <select
+            id="year-select"
+            value={selectedYear}
+            onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+            className='px-3 py-2 border border-gray-300 rounded-md text-sm font-medium bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+          >
+            {availableYears.map(year => (
+              <option key={year} value={year}>{year}</option>
+            ))}
+          </select>
+        </div>
       </div>
 
       <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-3'>
@@ -139,7 +173,7 @@ export default function Dashboard() {
           </div>
         </CardHeader>
         <CardContent className='pl-2'>
-          <SpendingOverview />
+          <SpendingOverview selectedYear={selectedYear} />
         </CardContent>
       </Card>
 
@@ -162,10 +196,10 @@ export default function Dashboard() {
           </div>
         </TabsContent>
         <TabsContent value='categories'>
-          <SpendingByCategory />
+          <SpendingByCategory selectedYear={selectedYear} />
         </TabsContent>
         <TabsContent value='trends'>
-          <SpendingTrend />
+          <SpendingTrend selectedYear={selectedYear} />
         </TabsContent>
       </Tabs>
     </div>

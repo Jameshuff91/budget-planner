@@ -15,14 +15,31 @@ import { Card, CardContent, CardHeader, CardTitle } from '@components/ui/card';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#FF6B6B'];
 
-export default function SpendingByCategory() {
+interface SpendingByCategoryProps {
+  selectedYear?: number;
+}
+
+export default function SpendingByCategory({ selectedYear }: SpendingByCategoryProps) {
   const [currentTimeRange, setCurrentTimeRange] = useState<{ startDate: Date; endDate: Date }>(() => {
     const today = new Date();
-    const startDate = new Date(today.getFullYear(), today.getMonth(), 1);
-    startDate.setHours(0,0,0,0);
-    const endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-    endDate.setHours(23,59,59,999);
-    return { startDate, endDate };
+    const year = selectedYear || today.getFullYear();
+    const currentYear = today.getFullYear();
+    
+    if (selectedYear && selectedYear !== currentYear) {
+      // For historical years, default to full year
+      const startDate = new Date(year, 0, 1);
+      startDate.setHours(0,0,0,0);
+      const endDate = new Date(year, 11, 31);
+      endDate.setHours(23,59,59,999);
+      return { startDate, endDate };
+    } else {
+      // For current year, default to current month
+      const startDate = new Date(year, today.getMonth(), 1);
+      startDate.setHours(0,0,0,0);
+      const endDate = new Date(year, today.getMonth() + 1, 0);
+      endDate.setHours(23,59,59,999);
+      return { startDate, endDate };
+    }
   });
 
   const { categorySpending, detailedCategorySpending, monthlyTrends } = useAnalytics(currentTimeRange);
@@ -41,31 +58,44 @@ export default function SpendingByCategory() {
     setBudgetInputs(initialBudgets);
   }, [categorySpending]);
 
+  // Update time range when selectedYear changes
+  useEffect(() => {
+    if (selectedYear) {
+      const currentYear = new Date().getFullYear();
+      if (selectedYear === currentYear) {
+        handleSetCurrentMonth(); // For current year, show current month
+      } else {
+        handleSetYearToDate(); // For historical years, show full year
+      }
+    }
+  }, [selectedYear]);
 
   const handleSetCurrentMonth = () => {
     const today = new Date();
-    const startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+    const year = selectedYear || today.getFullYear();
+    const startDate = new Date(year, today.getMonth(), 1);
     startDate.setHours(0,0,0,0);
-    const endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+    const endDate = new Date(year, today.getMonth() + 1, 0);
     endDate.setHours(23,59,59,999);
     setCurrentTimeRange({ startDate, endDate });
   };
 
   const handleSetLast3Months = () => {
     const today = new Date();
-    const endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0); // End of current month
+    const year = selectedYear || today.getFullYear();
+    const endDate = new Date(year, today.getMonth() + 1, 0); // End of current month
     endDate.setHours(23,59,59,999);
-    const startDate = new Date(today.getFullYear(), today.getMonth() - 2, 1); // Start of month 2 months ago
+    const startDate = new Date(year, today.getMonth() - 2, 1); // Start of month 2 months ago
     startDate.setHours(0,0,0,0);
     setCurrentTimeRange({ startDate, endDate });
   };
 
   const handleSetYearToDate = () => {
-    const today = new Date();
-    const startDate = new Date(today.getFullYear(), 0, 1); // First day of current year
+    const year = selectedYear || new Date().getFullYear();
+    const startDate = new Date(year, 0, 1); // First day of selected year
     startDate.setHours(0,0,0,0);
-    const endDate = new Date(today.getFullYear(), today.getMonth(), today.getDate()); // Current date as end date
-    endDate.setHours(23,59,59,999); // End of current day
+    const endDate = new Date(year, 11, 31); // End of selected year
+    endDate.setHours(23,59,59,999);
     setCurrentTimeRange({ startDate, endDate });
   };
 
@@ -149,34 +179,43 @@ export default function SpendingByCategory() {
       <CardContent>
         <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
           <div className='h-[300px] p-4 bg-gray-50 rounded-lg border border-gray-100'>
-            <ResponsiveContainer width='100%' height='100%'>
-              <PieChart>
-                <Pie
-                  data={categorySpending}
-                  cx='50%'
-                  cy='50%'
-                  innerRadius={60}
-                  outerRadius={80}
-                  paddingAngle={5}
-                  dataKey='value'
-                  onClick={(data) => setSelectedCategory(data.name)}
-                >
-                  {categorySpending.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip
-                  formatter={(value: number) => formatCurrency(value)}
-                  labelStyle={{ color: '#000' }}
-                  contentStyle={{
-                    backgroundColor: '#fff',
-                    border: '1px solid #ccc',
-                    borderRadius: '4px',
-                  }}
-                />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
+            {categorySpending.length > 0 && categorySpending.some(cat => cat.value > 0) ? (
+              <ResponsiveContainer width='100%' height='100%'>
+                <PieChart>
+                  <Pie
+                    data={categorySpending.filter(cat => cat.value > 0)}
+                    cx='50%'
+                    cy='50%'
+                    innerRadius={60}
+                    outerRadius={80}
+                    paddingAngle={5}
+                    dataKey='value'
+                    onClick={(data) => setSelectedCategory(data.name)}
+                  >
+                    {categorySpending.filter(cat => cat.value > 0).map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    formatter={(value: number) => formatCurrency(value)}
+                    labelStyle={{ color: '#000' }}
+                    contentStyle={{
+                      backgroundColor: '#fff',
+                      border: '1px solid #ccc',
+                      borderRadius: '4px',
+                    }}
+                  />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className='flex items-center justify-center h-full text-gray-500'>
+                <div className='text-center'>
+                  <p className='text-lg font-medium'>No spending data</p>
+                  <p className='text-sm'>No expenses found for the selected time period</p>
+                </div>
+              </div>
+            )}
           </div>
           <div className='space-y-4'>
             <div className='space-y-2'>
@@ -196,7 +235,7 @@ export default function SpendingByCategory() {
                           <p className='font-semibold text-gray-900'>{category.name}</p>
                           <p className='text-sm font-medium text-muted-foreground'>
                             {formatCurrency(category.value)} (
-                            {((category.value / totalSpending) * 100).toFixed(1)}%)
+                            {totalSpending > 0 ? ((category.value / totalSpending) * 100).toFixed(1) : '0.0'}%)
                           </p>
                           {trend && <TrendIndicator value={trend.percentageChange} />}
                         </div>
