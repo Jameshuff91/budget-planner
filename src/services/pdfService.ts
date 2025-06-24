@@ -443,9 +443,10 @@ class PDFService {
       'stocks', 'bonds', '401k', 'ira', 'retirement'
     ];
 
-    // Check if this is an investment transaction
+    // Check if this is an investment transaction (using word boundaries to avoid false matches)
     for (const kw of investmentKeywords) {
-      if (lowerDesc.includes(kw)) {
+      const regex = new RegExp(`\\b${kw}\\b`, 'i');
+      if (regex.test(lowerDesc)) {
         return 'income'; // Treat investments as income/savings
       }
     }
@@ -507,7 +508,9 @@ class PDFService {
       // More generic payment descriptions - apply carefully
       /\bOnline payment\b/gi, 
       /\bInternet payment\b/gi,
-      /\bWeb payment\b/gi,
+      /\bWeb payment(?:\s+to)?\b/gi, // Match "Web payment to" or just "Web payment"
+      // Remove "to" after payment descriptions
+      /\b(?:payment|online payment|web payment)\s+to\b/gi,
       // Trailing OCR artifacts
       /\s*\.{2,}$/g, // remove trailing ".." or "..."
       // Amounts - kept from original, applied early
@@ -538,6 +541,7 @@ class PDFService {
       'SVC CHG': 'Service Charge',
       'CHECKCARD': 'Checkcard', // Standardize casing
       'P O S': 'POS', // Point Of Sale
+      'RECD': 'Received',
     };
 
     for (const [abbr, full] of Object.entries(abbreviationMap)) {
@@ -559,8 +563,12 @@ class PDFService {
     cleaned = cleaned.replace(/\s+[-&/.#]\s+/g, ' '); // remove isolated symbols surrounded by space
     cleaned = cleaned.replace(/^[-&/.#]\s+/, ''); // remove leading symbol followed by space
     cleaned = cleaned.replace(/\s+[-&/.#]$/, ''); // remove trailing space followed by symbol
-    cleaned = cleaned.replace(/^[-&/.#]$/, '');   // remove if string is only a single symbol
+    cleaned = cleaned.replace(/^[-&/.#]+$/, '');   // remove if string is only special symbols
 
+    // 6. Final cleanup - if only special characters remain, return empty string
+    if (/^[-&/.#\s]*$/.test(cleaned)) {
+      return '';
+    }
 
     return cleaned.trim(); // Final trim
   }
@@ -576,7 +584,9 @@ class PDFService {
       return null;
     }
     logger.info(`Attempting to parse date string: '${dateStr}'`);
-    const cleanedDateStr = dateStr.trim().replace(/[,.]/g, m => (m === ',' && dateStr.includes('.') ? '' : m)); // Remove commas unless it's the only separator, then keep for EU style dot later
+    // Clean the date string: normalize spaces, handle commas
+    let cleanedDateStr = dateStr.trim().replace(/\s+/g, ' '); // Normalize multiple spaces to single space
+    cleanedDateStr = cleanedDateStr.replace(/[,.]/g, m => (m === ',' && dateStr.includes('.') ? '' : m)); // Remove commas unless it's the only separator, then keep for EU style dot later
 
     const monthMap: { [key: string]: number } = {
       jan: 0, january: 0, feb: 1, february: 1, mar: 2, march: 2, apr: 3, april: 3,
@@ -632,7 +642,7 @@ class PDFService {
       },
       // Month DD, YYYY (e.g., Jan 01, 2023, January 01, 2023, Jan. 01 2023)
       {
-        regex: /^([a-zA-Z]{3,})\.?\s+(\d{1,2}),?\s+(\d{4})$/i,
+        regex: /^([a-zA-Z]{3,})\.?\s+(\d{1,2})\s*,?\s*(\d{4})$/i,
         parser: (match) => {
           const [, monthStr, dayStr, yearStr] = match;
           const month = monthMap[monthStr.toLowerCase()];
@@ -683,7 +693,7 @@ class PDFService {
       }
     }
     
-    logger.error(`Error parsing date string "${dateStr}" - unknown format or invalid date.`);
+    logger.error(`Error parsing date string "${dateStr}"`, 'unknown format or invalid date');
     return null;
   }
 
@@ -832,15 +842,16 @@ class PDFService {
         logger.info(`Statement period derived from fallback logic: Start=${startDate.toISOString()}, End=${endDate.toISOString()} (from ${uniqueDates.length} unique dates)`);
         return { startDate, endDate };
       } else {
-         logger.warn(`Fallback logic resulted in start date not before end date or only one unique date value. Start: ${startDate.toLocaleDateString()}, End: ${endDate.toLocaleDateString()}.`);
-         // Explicitly return null here as per subtask, though the original code would also return null later.
-         // This ensures the final warning is only hit if this path also fails.
-         logger.warn('Could not determine statement period from text after all attempts.');
+         logger.warn('Fallback logic resulted in start date not before end date or only one unique date value.');
          return null;
       }
     }
 
-    logger.warn('Could not determine statement period from text after all attempts.');
+    if (uniqueDates.length === 1) {
+      logger.warn('Fallback logic resulted in start date not before end date or only one unique date value.');
+    } else {
+      logger.warn('Could not determine statement period from text after all attempts.');
+    }
     return null;
   }
 
@@ -881,6 +892,29 @@ class PDFService {
    */
   private determineExpenseCategory(description: string): string {
     const lowerDesc = description.toLowerCase();
+    
+    // Check for credit card payments first (highest priority)
+    const ccPaymentKeywords = ['payment to chase card', 'amex e-payment', 'bill pay to citi card', 'credit card pmt', 'online payment thank you'];
+    for (const kw of ccPaymentKeywords) {
+        const regex = new RegExp(`\\b${kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+        if (regex.test(lowerDesc)) {
+            return 'Credit Card Payment';
+        }
+    }
+    // Special case for Amazon Store Card and similar credit card references
+    if (/\b(?:store card|credit card)\b/i.test(lowerDesc) && /\b(?:ach pmt|payment)\b/i.test(lowerDesc)) {
+        return 'Credit Card Payment';
+    }
+    // Fallback for 'ach pmt' if it's likely a credit card payment and not caught by other categories
+    if (/\bach pmt\b/i.test(lowerDesc) && !lowerDesc.includes('rent') && !lowerDesc.includes('utility')) {
+        return 'Credit Card Payment';
+    }
+
+    // Check for insurance premium (should override health insurance for premium payments)
+    if (/\binsurance premium\b/i.test(lowerDesc)) {
+        return 'Insurance';
+    }
+
     const categoryMappings: { [key: string]: string } = {
       // Rent/Housing
       'rent': 'Rent',
@@ -888,6 +922,10 @@ class PDFService {
       'newrez-shellpoin': 'Rent',
       'housing': 'Rent',
       
+      // Pet Care (place before Groceries to avoid 'food' conflicts)
+      'petco': 'Pet Care', 'petsmart': 'Pet Care', 'vet': 'Pet Care', 'veterinarian': 'Pet Care',
+      'pet food': 'Pet Care', 'dog food': 'Pet Care', 'cat food': 'Pet Care',
+
       // Groceries
       'grocery': 'Groceries', 'trader': 'Groceries', 'whole foods': 'Groceries',
       'safeway': 'Groceries', 'food': 'Groceries', 'supermarket': 'Groceries',
@@ -897,7 +935,7 @@ class PDFService {
       // Utilities
       'utility': 'Utilities', 'comcast': 'Utilities', 'umc inc': 'Utilities',
       'electric': 'Utilities', 'water': 'Utilities', 'gas': 'Utilities',
-      'internet': 'Utilities', 'pge': 'Utilities', 'con edison': 'Utilities',
+      'internet': 'Utilities', 'pge': 'Utilities', 'pg&e': 'Utilities', 'con edison': 'Utilities',
       'spectrum': 'Utilities', 'verizon fios': 'Utilities', 'trash': 'Utilities',
       'recycling': 'Utilities',
 
@@ -918,8 +956,8 @@ class PDFService {
 
       // Healthcare
       'pharmacy': 'Healthcare', 'cvs': 'Healthcare', 'walgreens': 'Healthcare',
-      'doctor': 'Healthcare', 'dentist': 'Healthcare', 'hospital': 'Healthcare',
-      'urgent care': 'Healthcare', 'health insurance': 'Healthcare',
+      'doctor': 'Healthcare', 'dentist': 'Healthcare', 'dental': 'Healthcare', 
+      'hospital': 'Healthcare', 'urgent care': 'Healthcare', 'health insurance': 'Healthcare',
 
       // Shopping
       'amazon': 'Shopping', 'target': 'Shopping', 'walmart': 'Shopping',
@@ -928,25 +966,23 @@ class PDFService {
 
       // Education
       'tuition': 'Education', 'student loan': 'Education', 'coursera': 'Education',
-      'udemy': 'Education', 'books': 'Education',
+      'udemy': 'Education', 'books': 'Education', 'bookstore': 'Education', 'campus': 'Education',
 
       // Home Improvement
-      'home depot': 'Home Improvement', 'lowes': 'Home Improvement', 'ace hardware': 'Home Improvement',
+      'home depot': 'Home Improvement', 'lowes': 'Home Improvement', "lowe's": 'Home Improvement',
+      'ace hardware': 'Home Improvement', 'hardware': 'Home Improvement',
       
       // Personal Care
-      'salon': 'Personal Care', 'barber': 'Personal Care', 'haircut': 'Personal Care', 'spa': 'Personal Care',
+      'salon': 'Personal Care', 'barber': 'Personal Care', 'barbershop': 'Personal Care',
+      'haircut': 'Personal Care', 'spa': 'Personal Care',
 
       // Insurance (General, if not healthcare)
       'state farm': 'Insurance', 'geico': 'Insurance', 'progressive': 'Insurance',
-      'allstate': 'Insurance', 'insurance premium': 'Insurance', 'car insurance': 'Insurance',
+      'allstate': 'Insurance', 'car insurance': 'Insurance',
       'home insurance': 'Insurance', // Note: 'health insurance' is under Healthcare
 
       // Childcare
       'daycare': 'Childcare', 'preschool': 'Childcare', 'babysitter': 'Childcare',
-
-      // Pet Care
-      'petco': 'Pet Care', 'petsmart': 'Pet Care', 'vet': 'Pet Care', 'veterinarian': 'Pet Care',
-      'pet food': 'Pet Care',
 
       // Gifts & Donations
       'gift': 'Gifts & Donations', 'donation': 'Gifts & Donations', 'charity': 'Gifts & Donations',
@@ -959,20 +995,6 @@ class PDFService {
       if (regex.test(lowerDesc)) {
         return category;
       }
-    }
-
-    // Improved Credit Card Payment Logic
-    const ccPaymentKeywords = ['payment to chase card', 'amex e-payment', 'bill pay to citi card', 'credit card pmt', 'online payment thank you'];
-    for (const kw of ccPaymentKeywords) {
-        const regex = new RegExp(`\\b${kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
-        if (regex.test(lowerDesc)) {
-            return 'Credit Card Payment';
-        }
-    }
-    // Fallback for 'ach pmt' if it's likely a credit card payment and not caught by other categories
-    if (/\bach pmt\b/i.test(lowerDesc) && !lowerDesc.includes('rent') && !lowerDesc.includes('utility')) {
-        // Avoid misclassifying ACH payments for rent/utilities as CC payments
-        return 'Credit Card Payment';
     }
     
     return 'Other Expenses';
@@ -1068,14 +1090,14 @@ class PDFService {
     } else { // No statement period, fallback to current date comparison
       if (correctedDate.getFullYear() === currentProcessingYear && correctedDate > currentDate) {
         // If year is current, but date is in future, assume previous year
-        logger.warn(`Transaction date ${originalTransactionDateISO} is in the future. Current date: ${currentDate.toISOString()}. Assuming previous year ${currentProcessingYear - 1}.`);
+        logger.warn(`Transaction date ${originalTransactionDateISO} is in the future. Assuming previous year ${currentProcessingYear - 1}. Current date: ${currentDate.toISOString()}.`);
         correctedDate.setFullYear(currentProcessingYear - 1);
         logger.info(`Date after future date adjustment: ${correctedDate.toISOString()}`);
       }
     }
 
     if (statementPeriod && statementPeriod.startDate && statementPeriod.endDate && (correctedDate < statementPeriod.startDate || correctedDate > statementPeriod.endDate)) {
-      logger.warn(`Final corrected date ${correctedDate.toISOString()} is OUTSIDE the statement period: [${statementPeriod.startDate.toISOString()} - ${statementPeriod.endDate.toISOString()}]`);
+      logger.warn(`Final corrected date ${correctedDate.toISOString()} is outside the statement period: [${statementPeriod.startDate.toISOString()} - ${statementPeriod.endDate.toISOString()}]`);
     }
 
     logger.info(`Returning validated/corrected date: ${correctedDate.toISOString()}`);

@@ -14,3 +14,10 @@ global.IntersectionObserver = vi.fn().mockImplementation(() => ({
   unobserve: vi.fn(),
   disconnect: vi.fn()
 }));
+
+// Mock ImageData for canvas operations
+global.ImageData = vi.fn().mockImplementation((width, height) => ({
+  width,
+  height,
+  data: new Uint8ClampedArray(width * height * 4)
+}));
