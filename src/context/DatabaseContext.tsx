@@ -38,6 +38,7 @@ interface DatabaseContextType {
   loading: boolean;
   error: Error | null;
   addTransaction: (transaction: Omit<Transaction, 'id'>) => Promise<string>;
+  addTransactionsBatch: (transactions: Omit<Transaction, 'id'>[]) => Promise<string[]>;
   updateTransaction: (transaction: Transaction) => Promise<void>;
   deleteTransaction: (id: string) => Promise<void>;
   clearTransactions: () => Promise<void>;
@@ -141,6 +142,24 @@ export function DatabaseProvider({ children }: { children: ReactNode }) {
         return id;
       } catch (err) {
         logger.error('Error adding transaction:', err);
+        throw err;
+      }
+    },
+    [loadData],
+  );
+
+  const addTransactionsBatch = useCallback(
+    async (transactions: Omit<Transaction, 'id'>[]) => {
+      try {
+        const ids: string[] = [];
+        for (const transaction of transactions) {
+          const id = await dbService.addTransaction({ ...transaction, id: generateUUID() });
+          ids.push(id);
+        }
+        await loadData(); // Refresh data only once after all transactions are added
+        return ids;
+      } catch (err) {
+        logger.error('Error adding transactions batch:', err);
         throw err;
       }
     },
@@ -389,6 +408,7 @@ export function DatabaseProvider({ children }: { children: ReactNode }) {
       loading,
       error,
       addTransaction,
+      addTransactionsBatch,
       updateTransaction,
       deleteTransaction,
       clearTransactions,
@@ -414,6 +434,7 @@ export function DatabaseProvider({ children }: { children: ReactNode }) {
       loading,
       error,
       addTransaction,
+      addTransactionsBatch,
       updateTransaction,
       deleteTransaction,
       clearTransactions,

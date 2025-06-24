@@ -33,7 +33,7 @@ export default function PDFUpload() {
   const [isDragging, setIsDragging] = useState(false);
   const [selectedPDFs, setSelectedPDFs] = useState<Set<string>>(new Set());
   const { toast } = useToast();
-  const { addTransaction, refreshData } = useDBContext();
+  const { addTransactionsBatch } = useDBContext();
 
   useEffect(() => {
     loadUploadedFiles();
@@ -95,25 +95,30 @@ export default function PDFUpload() {
           });
 
           // Process extracted transactions
-          let successCount = 0;
+          const transactionsToAdd = [];
+          
+          // Collect all valid transactions first
           for (const transaction of extractedData) {
             if (transaction.date && transaction.amount && transaction.description) {
-              try {
-                await addTransaction({
-                  date: transaction.date,
-                  amount: transaction.amount,
-                  description: transaction.description,
-                  category: transaction.category || 'Uncategorized',
-                  type: transaction.type,
-                  isMonthSummary: transaction.isMonthSummary || false,
-                  accountNumber: transaction.accountNumber,
-                });
-                successCount++;
-              } catch (err) {
-                logger.error('Error adding individual transaction:', err);
-                // Continue processing other transactions even if one fails
-              }
+              transactionsToAdd.push({
+                date: transaction.date,
+                amount: transaction.amount,
+                description: transaction.description,
+                category: transaction.category || 'Uncategorized',
+                type: transaction.type,
+                isMonthSummary: transaction.isMonthSummary || false,
+                accountNumber: transaction.accountNumber,
+              });
             }
+          }
+          
+          // Add all transactions in a single batch to avoid multiple re-renders
+          let successCount = 0;
+          try {
+            await addTransactionsBatch(transactionsToAdd);
+            successCount = transactionsToAdd.length;
+          } catch (err) {
+            logger.error('Error adding transactions batch:', err);
           }
 
           logger.info(
@@ -141,7 +146,7 @@ export default function PDFUpload() {
         await new Promise((resolve, reject) => {
           Papa.parse(file, {
             header: true,
-            complete: (results) => {
+            complete: async (results) => {
               try {
                 const transactions = results.data.map(
                   (row: any): CSVTransaction => ({
@@ -153,11 +158,13 @@ export default function PDFUpload() {
                   })
                 );
 
-                transactions.forEach((transaction: CSVTransaction) => {
-                  if (transaction.date && transaction.amount) {
-                    addTransaction(transaction);
-                  }
-                });
+                const validTransactions = transactions.filter((transaction: CSVTransaction) => 
+                  transaction.date && transaction.amount
+                );
+                
+                if (validTransactions.length > 0) {
+                  await addTransactionsBatch(validTransactions);
+                }
 
                 setProgress((prev) => ({ ...prev, [file.name]: 100 }));
                 resolve(null);
@@ -172,9 +179,6 @@ export default function PDFUpload() {
         });
       }
 
-      // Refresh data to ensure categories and transactions are in sync
-      await refreshData();
-      
       toast({
         title: 'Success',
         description: `Successfully processed ${pdfFiles.length + csvFiles.length} file(s)`,

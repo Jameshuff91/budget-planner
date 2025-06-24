@@ -294,20 +294,23 @@ export const useAnalytics = (timeRange?: { startDate?: Date; endDate?: Date }) =
     }
   }, [transactions]);
 
+  // Memoize filtered transactions to avoid recalculating when same period is requested
+  const filteredTransactions = useMemo(() => {
+    const periodKey = `${startDate.getTime()}-${endDate.getTime()}`;
+    logger.info(`Calculating category spending for period: ${startDate.toISOString()} - ${endDate.toISOString()}`);
+
+    const filtered = transactions.filter(transaction => {
+      const transactionDate = new Date(transaction.date);
+      return transactionDate >= startDate && transactionDate <= endDate;
+    });
+
+    logger.info('Filtered transactions for category spending:', filtered);
+    return filtered;
+  }, [transactions, startDate, endDate]);
+
   const categorySpending = useMemo((): CategoryData[] => {
     try {
       const categoryTotals = new Map<string, number>();
-
-      // Use startDate and endDate from hook parameters (or defaults)
-      logger.info(`Calculating category spending for period: ${startDate.toISOString()} - ${endDate.toISOString()}`);
-
-      const filteredTransactions = transactions.filter(transaction => {
-        const transactionDate = new Date(transaction.date);
-        // Ensure transactionDate is within the provided or defaulted startDate and endDate
-        return transactionDate >= startDate && transactionDate <= endDate;
-      });
-
-      logger.info('Filtered transactions for category spending:', filteredTransactions);
 
       filteredTransactions.forEach((transaction) => {
         if (transaction.type === 'expense') {
@@ -334,27 +337,18 @@ export const useAnalytics = (timeRange?: { startDate?: Date; endDate?: Date }) =
         }));
       }
 
-      logger.info('Category spending result:', result);
       return result;
     } catch (error) {
       logger.error('Error calculating category spending:', error);
       return DEFAULT_VALUES.categoryData;
     }
-  }, [transactions, categories, startDate, endDate]); 
+  }, [filteredTransactions, categories]); 
 
   const detailedCategorySpending = useMemo(() => {
     try {
       const details: Record<string, any[]> = {};
-
-      // Use startDate and endDate from hook parameters (or defaults)
-      logger.info(`Calculating detailed category spending for period: ${startDate.toISOString()} - ${endDate.toISOString()}`);
-
-      const filteredTransactions = transactions.filter(transaction => {
-        const transactionDate = new Date(transaction.date);
-        // Ensure transactionDate is within the provided or defaulted startDate and endDate
-        return transactionDate >= startDate && transactionDate <= endDate;
-      });
       
+      logger.info(`Calculating detailed category spending for period: ${startDate.toISOString()} - ${endDate.toISOString()}`);
       logger.info('Filtered transactions for detailed category spending:', filteredTransactions);
 
       filteredTransactions.forEach((transaction) => {
@@ -374,7 +368,7 @@ export const useAnalytics = (timeRange?: { startDate?: Date; endDate?: Date }) =
       logger.error('Error calculating detailed category spending:', error);
       return {};
     }
-  }, [transactions, startDate, endDate]);
+  }, [filteredTransactions, startDate, endDate]);
 
   const monthlyTrends = useMemo((): MonthlyTrends => {
     try {
@@ -514,15 +508,11 @@ export const useAnalytics = (timeRange?: { startDate?: Date; endDate?: Date }) =
     try {
       const merchantTotals = new Map<string, { value: number; transactionCount: number }>();
 
-      // Use startDate and endDate from hook parameters (or defaults)
       logger.info(`Calculating merchant spending for period: ${startDate.toISOString()} - ${endDate.toISOString()}`);
 
-      const filteredTransactions = transactions.filter(transaction => {
-        const transactionDate = new Date(transaction.date);
-        return transactionDate >= startDate && transactionDate <= endDate && transaction.type === 'expense';
-      });
+      const expenseTransactions = filteredTransactions.filter(transaction => transaction.type === 'expense');
 
-      filteredTransactions.forEach((transaction) => {
+      expenseTransactions.forEach((transaction) => {
         const merchantName = transaction.description;
         const current = merchantTotals.get(merchantName) || { value: 0, transactionCount: 0 };
         current.value += Math.abs(transaction.amount);
@@ -544,7 +534,7 @@ export const useAnalytics = (timeRange?: { startDate?: Date; endDate?: Date }) =
       logger.error('Error calculating merchant spending:', error);
       return DEFAULT_VALUES.merchantSpending;
     }
-  }, [transactions, startDate, endDate]);
+  }, [filteredTransactions, startDate, endDate]);
 
   const potentialRecurringTransactions = useMemo((): RecurringTransactionCandidate[] => {
     logger.info('Calculating potential recurring transactions...');
