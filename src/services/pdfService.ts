@@ -1118,10 +1118,12 @@ class PDFService {
       throw new Error('This function can only be used in browser environment');
     }
 
+    let document: PDFDocument | undefined;
+
     try {
       const arrayBuffer = await file.arrayBuffer();
       const documentDate = this.parseDateFromFilename(file.name);
-      const document: PDFDocument = {
+      document = {
         id: crypto.randomUUID(),
         name: file.name,
         content: arrayBuffer,
@@ -1387,15 +1389,27 @@ class PDFService {
 
       return validatedTransactions;
     } catch (error) {
-      logger.error('Error processing PDF:', error);
+      // Provide more detailed error logging
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorStack = error instanceof Error ? error.stack : 'No stack trace available';
+      
+      logger.error('Error processing PDF:', {
+        message: errorMessage,
+        stack: errorStack,
+        fileName: file?.name || 'Unknown file',
+        error: error
+      });
+      
       // Attempt to update document status if possible
       try {
-        const documentId = crypto.randomUUID(); // Replace with actual document ID if available
-        await this.updateDocumentStatus(
-          documentId,
-          'error',
-          error instanceof Error ? error.message : 'Unknown error'
-        );
+        // Only try to update status if document was created and stored
+        if (document && document.id) {
+          await this.updateDocumentStatus(
+            document.id,
+            'error',
+            errorMessage
+          );
+        }
       } catch (updateError) {
         logger.error('Error updating document status after failure:', updateError);
       }
@@ -1482,6 +1496,19 @@ class PDFService {
 
       for (const doc of documents) {
         try {
+          // Skip documents that are already completed to avoid reprocessing
+          if (doc.status === 'completed' && doc.processed) {
+            logger.info(`Skipping already processed document: ${doc.name}`);
+            continue;
+          }
+
+          // Validate document content exists
+          if (!doc.content || doc.content.byteLength === 0) {
+            logger.error(`Document ${doc.name} has no content or empty content`);
+            await this.updateDocumentStatus(doc.id, 'error', 'Document content is empty');
+            continue;
+          }
+
           // Create a File object from the stored ArrayBuffer
           const file = new File([doc.content], doc.name, { type: 'application/pdf' });
 
@@ -1502,12 +1529,23 @@ class PDFService {
             `Successfully processed PDF: ${doc.name} (${extractedData.length} transactions)`
           );
         } catch (error) {
-          logger.error(`Error processing PDF ${doc.name}:`, error);
-          await this.updateDocumentStatus(
-            doc.id,
-            'error',
-            error instanceof Error ? error.message : 'Unknown error'
-          );
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          logger.error(`Error processing PDF ${doc.name}:`, {
+            message: errorMessage,
+            docId: doc.id,
+            docName: doc.name,
+            error: error
+          });
+          
+          try {
+            await this.updateDocumentStatus(
+              doc.id,
+              'error',
+              errorMessage
+            );
+          } catch (statusUpdateError) {
+            logger.error(`Failed to update status for document ${doc.id}:`, statusUpdateError);
+          }
         }
       }
 
