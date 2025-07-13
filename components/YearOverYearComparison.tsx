@@ -17,6 +17,9 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@components/ui/card';
 import { useAnalytics } from '@hooks/useAnalytics';
 import { formatCurrency } from '@utils/helpers';
+import { useDBContext } from '@context/DatabaseContext';
+import { ChartSkeleton } from './skeletons/ChartSkeleton';
+import { StatCardGridSkeleton } from './skeletons/StatCardSkeleton';
 
 interface YearOverYearComparisonProps {
   selectedYear: number;
@@ -45,14 +48,15 @@ const monthNames = [
 
 export default function YearOverYearComparison({ selectedYear }: YearOverYearComparisonProps) {
   const { spendingOverview } = useAnalytics();
+  const { loading } = useDBContext();
 
   const comparisonData = useMemo(() => {
     const currentYearData = spendingOverview.filter((d) => d.year === selectedYear);
     const previousYearData = spendingOverview.filter((d) => d.year === selectedYear - 1);
 
-    return monthNames.map((month, index) => {
-      const currentMonth = currentYearData.find((d) => d.month === index);
-      const previousMonth = previousYearData.find((d) => d.month === index);
+    return monthNames.map((month) => {
+      const currentMonth = currentYearData.find((d) => d.month === month);
+      const previousMonth = previousYearData.find((d) => d.month === month);
 
       return {
         month,
@@ -118,6 +122,16 @@ export default function YearOverYearComparison({ selectedYear }: YearOverYearCom
     if (value < -5) return <TrendingDown className='h-4 w-4 text-green-500' />;
     return <Minus className='h-4 w-4 text-gray-500' />;
   };
+
+  if (loading) {
+    return (
+      <div className='space-y-4'>
+        <StatCardGridSkeleton count={2} />
+        <ChartSkeleton />
+        <ChartSkeleton />
+      </div>
+    );
+  }
 
   return (
     <div className='space-y-4'>
