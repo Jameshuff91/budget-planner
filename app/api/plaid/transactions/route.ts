@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Configuration, PlaidApi, PlaidEnvironments } from 'plaid';
-import { logger } from '@/src/services/logger';
+
+import { logger } from '@services/logger';
 
 // Initialize Plaid client
 const configuration = new Configuration({

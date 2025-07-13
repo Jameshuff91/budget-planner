@@ -9,15 +9,19 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@components/ui/tabs';
 import { useDatabase } from '../src/hooks/useDatabase';
 
 import BudgetGoal from './BudgetGoal';
+import CategoryRules from './CategoryRules';
+import ChartDiagnostics from './ChartDiagnostics';
+import ChartErrorBoundary from './ChartErrorBoundary';
+import MobileNav from './MobileNav';
+import PlaidConnection from './PlaidConnection';
+import SmartCategorizationSettings from './SmartCategorizationSettings';
+import SpendingAlerts from './SpendingAlerts';
 import SpendingByCategory from './SpendingByCategory';
 import SpendingOverview from './SpendingOverview';
 import SpendingTrend from './SpendingTrend';
-import ChartDiagnostics from './ChartDiagnostics';
 import TransactionList from './TransactionList';
-import SmartCategorizationSettings from './SmartCategorizationSettings';
-import PlaidConnection from './PlaidConnection';
-import SpendingAlerts from './SpendingAlerts';
-import CategoryRules from './CategoryRules';
+import YearOverYearComparison from './YearOverYearComparison';
+import SpendingVelocity from './SpendingVelocity';
 
 // Default values for empty state
 const DEFAULT_INCOME = 0;
@@ -27,15 +31,28 @@ const DEFAULT_SAVINGS = 0;
 export default function Dashboard() {
   const [timeRange, setTimeRange] = useState('month');
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [activeTab, setActiveTab] = useState('overview');
   const { transactions, loading, error } = useDatabase();
-  
+
   // Get current date information
   const currentDate = new Date(); // Use actual current date
   const currentYear = currentDate.getFullYear();
   const currentMonth = currentDate.getMonth();
   const previousMonth = (currentMonth - 1 + 12) % 12;
-  const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
-                     'July', 'August', 'September', 'October', 'November', 'December'];
+  const monthNames = [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
+  ];
 
   const financialSummary = useMemo(() => {
     if (!transactions || transactions.length === 0) {
@@ -45,12 +62,12 @@ export default function Dashboard() {
         savings: DEFAULT_SAVINGS,
         spendingPercentage: '0.00',
         savingsPercentage: '0.00',
-        monthlyData: new Map()
+        monthlyData: new Map(),
       };
     }
 
     // Filter transactions for selected year only
-    const selectedYearTransactions = transactions.filter(transaction => {
+    const selectedYearTransactions = transactions.filter((transaction) => {
       const transactionDate = new Date(transaction.date);
       return transactionDate.getFullYear() === selectedYear;
     });
@@ -59,18 +76,18 @@ export default function Dashboard() {
     const monthlyData = selectedYearTransactions.reduce((acc, transaction) => {
       const date = new Date(transaction.date);
       const monthKey = `${date.getFullYear()}-${date.getMonth() + 1}`;
-      
+
       if (!acc.has(monthKey)) {
         acc.set(monthKey, { income: 0, spending: 0 });
       }
-      
+
       const monthData = acc.get(monthKey)!;
       if (transaction.type === 'income') {
         monthData.income += transaction.amount;
       } else {
         monthData.spending += transaction.amount;
       }
-      
+
       return acc;
     }, new Map<string, { income: number; spending: number }>());
 
@@ -94,20 +111,20 @@ export default function Dashboard() {
       savings: totalSavings,
       spendingPercentage: ((displaySpending / nonZeroIncome) * 100).toFixed(2),
       savingsPercentage: ((totalSavings / nonZeroIncome) * 100).toFixed(2),
-      monthlyData
+      monthlyData,
     };
   }, [transactions, selectedYear]);
 
   // Get available years from transactions
   const availableYears = useMemo(() => {
     if (!transactions || transactions.length === 0) return [new Date().getFullYear()];
-    
+
     const years = new Set<number>();
-    transactions.forEach(transaction => {
+    transactions.forEach((transaction) => {
       const year = new Date(transaction.date).getFullYear();
       years.add(year);
     });
-    
+
     return Array.from(years).sort((a, b) => b - a); // Sort descending (newest first)
   }, [transactions]);
 
@@ -120,19 +137,23 @@ export default function Dashboard() {
   }
 
   return (
-    <div className='space-y-6'>
+    <div className='space-y-6 pb-20 md:pb-0'>
       <div className='flex justify-between items-center'>
         <h2 className='text-3xl font-bold text-gray-800'>Financial Dashboard</h2>
         <div className='flex items-center gap-3'>
-          <label htmlFor="year-select" className='text-sm font-medium text-gray-600'>Year:</label>
+          <label htmlFor='year-select' className='text-sm font-medium text-gray-600'>
+            Year:
+          </label>
           <select
-            id="year-select"
+            id='year-select'
             value={selectedYear}
             onChange={(e) => setSelectedYear(parseInt(e.target.value))}
             className='px-3 py-2 border border-gray-300 rounded-md text-sm font-medium bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent'
           >
-            {availableYears.map(year => (
-              <option key={year} value={year}>{year}</option>
+            {availableYears.map((year) => (
+              <option key={year} value={year}>
+                {year}
+              </option>
             ))}
           </select>
         </div>
@@ -179,15 +200,18 @@ export default function Dashboard() {
           </div>
         </CardHeader>
         <CardContent className='pl-2'>
-          <SpendingOverview selectedYear={selectedYear} />
+          <ChartErrorBoundary chartName='Monthly Overview'>
+            <SpendingOverview selectedYear={selectedYear} />
+          </ChartErrorBoundary>
         </CardContent>
       </Card>
 
-      <Tabs defaultValue='overview' className='space-y-4'>
-        <TabsList>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className='space-y-4'>
+        <TabsList className='hidden md:flex'>
           <TabsTrigger value='overview'>Overview</TabsTrigger>
           <TabsTrigger value='categories'>Categories</TabsTrigger>
           <TabsTrigger value='trends'>Trends</TabsTrigger>
+          <TabsTrigger value='analytics'>Analytics</TabsTrigger>
           <TabsTrigger value='transactions'>Transactions</TabsTrigger>
           <TabsTrigger value='settings'>Settings</TabsTrigger>
           <TabsTrigger value='diagnostics'>Diagnostics</TabsTrigger>
@@ -205,10 +229,18 @@ export default function Dashboard() {
           </div>
         </TabsContent>
         <TabsContent value='categories'>
-          <SpendingByCategory selectedYear={selectedYear} />
+          <ChartErrorBoundary chartName='Spending by Category'>
+            <SpendingByCategory selectedYear={selectedYear} />
+          </ChartErrorBoundary>
         </TabsContent>
         <TabsContent value='trends'>
-          <SpendingTrend selectedYear={selectedYear} />
+          <ChartErrorBoundary chartName='Spending Trends'>
+            <SpendingTrend selectedYear={selectedYear} />
+          </ChartErrorBoundary>
+        </TabsContent>
+        <TabsContent value='analytics' className='space-y-6'>
+          <YearOverYearComparison selectedYear={selectedYear} />
+          <SpendingVelocity selectedYear={selectedYear} />
         </TabsContent>
         <TabsContent value='transactions'>
           <TransactionList />
@@ -223,6 +255,9 @@ export default function Dashboard() {
           <ChartDiagnostics />
         </TabsContent>
       </Tabs>
+
+      {/* Mobile Navigation */}
+      <MobileNav activeTab={activeTab} onTabChange={setActiveTab} />
     </div>
   );
 }

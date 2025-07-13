@@ -1,9 +1,10 @@
 /**
  * @vitest-environment jsdom
  */
+import { renderHook } from '@testing-library/react';
 import React from 'react';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { renderHook } from '@testing-library/react';
+
 import { DatabaseProvider, useDBContext } from '../context/DatabaseContext';
 import { useAnalytics } from '../hooks/useAnalytics';
 import '@testing-library/jest-dom';
@@ -19,9 +20,9 @@ vi.mock('../hooks/useAnalytics', () => ({
   useAnalytics: () => ({
     spendingOverview: [
       { month: 'Jan', year: 2024, totalSpending: 3000, totalIncome: 15000 },
-      { month: 'Feb', year: 2024, totalSpending: 2000, totalIncome: 17000 }
-    ]
-  })
+      { month: 'Feb', year: 2024, totalSpending: 2000, totalIncome: 17000 },
+    ],
+  }),
 }));
 
 vi.mock('../context/DatabaseContext', () => ({
@@ -34,8 +35,8 @@ vi.mock('../context/DatabaseContext', () => ({
     deleteTransaction: vi.fn(),
     getTransactionsByMonth: vi.fn().mockReturnValue([]),
     getCategoryById: vi.fn(),
-    isInitialized: true
-  })
+    isInitialized: true,
+  }),
 }));
 
 describe('Monthly Savings Analysis', () => {
@@ -57,9 +58,11 @@ describe('Monthly Savings Analysis', () => {
       throw new Error('No spending overview data available');
     }
 
-    result.current.spendingOverview.forEach(data => {
+    result.current.spendingOverview.forEach((data) => {
       const savings = data.totalIncome - data.totalSpending;
-      console.log(`${data.month} ${data.year}: Income=${data.totalIncome}, Spending=${data.totalSpending}, Savings=${savings}`);
+      console.log(
+        `${data.month} ${data.year}: Income=${data.totalIncome}, Spending=${data.totalSpending}, Savings=${savings}`
+      );
       expect(savings).toBeGreaterThanOrEqual(MIN_MONTHLY_SAVINGS);
     });
   });

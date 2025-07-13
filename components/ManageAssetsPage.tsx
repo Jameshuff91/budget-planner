@@ -1,11 +1,9 @@
 'use client';
 
+import { Trash2, Edit, PlusCircle } from 'lucide-react';
 import React, { useState, useEffect, useCallback } from 'react';
-import { useDBContext } from '@context/DatabaseContext';
-import { Asset as AssetItem } from '@services/db'; // Import Asset type from db service
-import { useToast } from '@components/ui/use-toast';
+
 import { Button } from '@components/ui/button';
-import { Input } from '@components/ui/input';
 import {
   Card,
   CardContent,
@@ -23,6 +21,9 @@ import {
   DialogTrigger,
   DialogClose, // Added for explicit close
 } from '@components/ui/dialog';
+import { Input } from '@components/ui/input';
+import { Label } from '@components/ui/label';
+import { ScrollArea } from '@components/ui/scroll-area'; // For potentially long tables
 import {
   Table,
   TableHeader,
@@ -31,14 +32,23 @@ import {
   TableHead,
   TableCell,
 } from '@components/ui/table';
-import { Label } from '@components/ui/label';
-import { ScrollArea } from '@components/ui/scroll-area'; // For potentially long tables
+import { useToast } from '@components/ui/use-toast';
+import { useDBContext } from '@context/DatabaseContext';
+import { Asset as AssetItem } from '@services/db'; // Import Asset type from db service
 // Note: Select component not available, using Input for asset type
-import { Trash2, Edit, PlusCircle } from 'lucide-react';
-import { formatCurrency } from '@utils/helpers';
 import { logger } from '@services/logger';
+import { formatCurrency } from '@utils/helpers';
 
-const ASSET_TYPES = ['Cash', 'Savings Account', 'Checking Account', 'Investment (Stocks)', 'Investment (Bonds)', 'Real Estate', 'Vehicle', 'Other'] as const;
+const ASSET_TYPES = [
+  'Cash',
+  'Savings Account',
+  'Checking Account',
+  'Investment (Stocks)',
+  'Investment (Bonds)',
+  'Real Estate',
+  'Vehicle',
+  'Other',
+] as const;
 type AssetTypeTuple = typeof ASSET_TYPES;
 type AssetType = AssetTypeTuple[number];
 
@@ -78,13 +88,13 @@ export default function ManageAssetsPage() {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleTypeChange = (value: AssetType) => {
-    setFormData(prev => ({ ...prev, type: value }));
+    setFormData((prev) => ({ ...prev, type: value }));
   };
-  
+
   const openAddDialog = () => {
     setEditingAsset(null);
     setFormData(DEFAULT_FORM_DATA);
@@ -96,7 +106,7 @@ export default function ManageAssetsPage() {
     // useEffect will populate formData
     setIsDialogOpen(true);
   };
-  
+
   const closeDialog = () => {
     setIsDialogOpen(false);
     setEditingAsset(null); // Important to reset editingAsset
@@ -105,12 +115,20 @@ export default function ManageAssetsPage() {
 
   const handleSaveAsset = async () => {
     if (!formData.name.trim()) {
-      toast({ title: "Validation Error", description: "Asset name cannot be empty.", variant: "destructive" });
+      toast({
+        title: 'Validation Error',
+        description: 'Asset name cannot be empty.',
+        variant: 'destructive',
+      });
       return;
     }
     const currentValueNum = parseFloat(formData.currentValue);
     if (isNaN(currentValueNum) || currentValueNum < 0) {
-      toast({ title: "Validation Error", description: "Current value must be a valid positive number.", variant: "destructive" });
+      toast({
+        title: 'Validation Error',
+        description: 'Current value must be a valid positive number.',
+        variant: 'destructive',
+      });
       return;
     }
 
@@ -124,15 +142,25 @@ export default function ManageAssetsPage() {
     try {
       if (editingAsset) {
         await updateAsset({ ...editingAsset, ...assetPayload });
-        toast({ title: "Asset Updated", description: `${assetPayload.name} has been updated successfully.` });
+        toast({
+          title: 'Asset Updated',
+          description: `${assetPayload.name} has been updated successfully.`,
+        });
       } else {
         await addAsset(assetPayload);
-        toast({ title: "Asset Added", description: `${assetPayload.name} has been added successfully.` });
+        toast({
+          title: 'Asset Added',
+          description: `${assetPayload.name} has been added successfully.`,
+        });
       }
       closeDialog();
     } catch (error) {
-      logger.error("Error saving asset:", error);
-      toast({ title: "Save Error", description: "Failed to save asset. Please try again.", variant: "destructive" });
+      logger.error('Error saving asset:', error);
+      toast({
+        title: 'Save Error',
+        description: 'Failed to save asset. Please try again.',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -141,11 +169,15 @@ export default function ManageAssetsPage() {
 
     try {
       await deleteAsset(assetId);
-      toast({ title: "Asset Deleted", description: `${assetToDelete.name} has been deleted.` });
+      toast({ title: 'Asset Deleted', description: `${assetToDelete.name} has been deleted.` });
       setAssetToDelete(null); // Close confirmation
     } catch (error) {
-      logger.error("Error deleting asset:", error);
-      toast({ title: "Delete Error", description: "Failed to delete asset. Please try again.", variant: "destructive" });
+      logger.error('Error deleting asset:', error);
+      toast({
+        title: 'Delete Error',
+        description: 'Failed to delete asset. Please try again.',
+        variant: 'destructive',
+      });
       setAssetToDelete(null);
     }
   };
@@ -153,51 +185,62 @@ export default function ManageAssetsPage() {
   const formatDate = (isoString: string) => new Date(isoString).toLocaleDateString();
 
   return (
-    <div className="container mx-auto p-4 md:p-6">
+    <div className='container mx-auto p-4 md:p-6'>
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
+        <CardHeader className='flex flex-row items-center justify-between'>
           <div>
             <CardTitle>Manage Assets</CardTitle>
             <CardDescription>Add, edit, or remove your financial assets.</CardDescription>
           </div>
           <Button onClick={openAddDialog}>
-            <PlusCircle className="mr-2 h-4 w-4" /> Add New Asset
+            <PlusCircle className='mr-2 h-4 w-4' /> Add New Asset
           </Button>
         </CardHeader>
         <CardContent>
           {loading && <p>Loading assets...</p>}
           {!loading && assets.length === 0 && (
-            <p className="text-center text-gray-500 py-8">No assets added yet. Click "Add New Asset" to get started.</p>
+            <p className='text-center text-gray-500 py-8'>
+              No assets added yet. Click "Add New Asset" to get started.
+            </p>
           )}
           {!loading && assets.length > 0 && (
-            <ScrollArea className="max-h-[600px]"> {/* Adjust height as needed */}
+            <ScrollArea className='max-h-[600px]'>
+              {' '}
+              {/* Adjust height as needed */}
               <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>Name</TableHead>
                     <TableHead>Type</TableHead>
-                    <TableHead className="text-right">Current Value</TableHead>
+                    <TableHead className='text-right'>Current Value</TableHead>
                     <TableHead>Last Updated</TableHead>
-                    <TableHead className="text-center">Actions</TableHead>
+                    <TableHead className='text-center'>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {assets.map((asset) => (
                     <TableRow key={asset.id}>
-                      <TableCell className="font-medium">{asset.name}</TableCell>
+                      <TableCell className='font-medium'>{asset.name}</TableCell>
                       <TableCell>{asset.type}</TableCell>
-                      <TableCell className="text-right">{formatCurrency(asset.currentValue)}</TableCell>
+                      <TableCell className='text-right'>
+                        {formatCurrency(asset.currentValue)}
+                      </TableCell>
                       <TableCell>{formatDate(asset.lastUpdated)}</TableCell>
-                      <TableCell className="text-center space-x-2">
-                        <Button variant="outline" size="icon" onClick={() => openEditDialog(asset)}>
-                          <Edit className="h-4 w-4" />
-                          <span className="sr-only">Edit Asset</span>
+                      <TableCell className='text-center space-x-2'>
+                        <Button variant='outline' size='icon' onClick={() => openEditDialog(asset)}>
+                          <Edit className='h-4 w-4' />
+                          <span className='sr-only'>Edit Asset</span>
                         </Button>
                         <DialogTrigger asChild>
-                           <Button variant="outline" size="icon" className="text-red-600 hover:text-red-700" onClick={() => setAssetToDelete(asset)}>
-                              <Trash2 className="h-4 w-4" />
-                              <span className="sr-only">Delete Asset</span>
-                           </Button>
+                          <Button
+                            variant='outline'
+                            size='icon'
+                            className='text-red-600 hover:text-red-700'
+                            onClick={() => setAssetToDelete(asset)}
+                          >
+                            <Trash2 className='h-4 w-4' />
+                            <span className='sr-only'>Delete Asset</span>
+                          </Button>
                         </DialogTrigger>
                       </TableCell>
                     </TableRow>
@@ -210,58 +253,104 @@ export default function ManageAssetsPage() {
       </Card>
 
       {/* Add/Edit Dialog */}
-      <Dialog open={isDialogOpen} onOpenChange={(open) => { if (!open) closeDialog(); else setIsDialogOpen(true); }}>
-        <DialogContent className="sm:max-w-[425px]">
+      <Dialog
+        open={isDialogOpen}
+        onOpenChange={(open) => {
+          if (!open) closeDialog();
+          else setIsDialogOpen(true);
+        }}
+      >
+        <DialogContent className='sm:max-w-[425px]'>
           <DialogHeader>
             <DialogTitle>{editingAsset ? 'Edit Asset' : 'Add New Asset'}</DialogTitle>
             <DialogDescription>
-              {editingAsset ? 'Update the details of your asset.' : 'Fill in the details of your new asset.'}
+              {editingAsset
+                ? 'Update the details of your asset.'
+                : 'Fill in the details of your new asset.'}
             </DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="name" className="text-right">Name</Label>
-              <Input id="name" name="name" value={formData.name} onChange={handleInputChange} className="col-span-3" placeholder="e.g., Savings Account" />
+          <div className='grid gap-4 py-4'>
+            <div className='grid grid-cols-4 items-center gap-4'>
+              <Label htmlFor='name' className='text-right'>
+                Name
+              </Label>
+              <Input
+                id='name'
+                name='name'
+                value={formData.name}
+                onChange={handleInputChange}
+                className='col-span-3'
+                placeholder='e.g., Savings Account'
+              />
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="type" className="text-right">Type</Label>
-              <select 
-                id="type" 
-                name="type" 
-                value={formData.type} 
+            <div className='grid grid-cols-4 items-center gap-4'>
+              <Label htmlFor='type' className='text-right'>
+                Type
+              </Label>
+              <select
+                id='type'
+                name='type'
+                value={formData.type}
                 onChange={(e) => handleTypeChange(e.target.value as AssetType)}
-                className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                className='col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50'
               >
-                {ASSET_TYPES.map(type => (
-                  <option key={type} value={type}>{type}</option>
+                {ASSET_TYPES.map((type) => (
+                  <option key={type} value={type}>
+                    {type}
+                  </option>
                 ))}
               </select>
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="currentValue" className="text-right">Current Value</Label>
-              <Input id="currentValue" name="currentValue" type="number" value={formData.currentValue} onChange={handleInputChange} className="col-span-3" placeholder="e.g., 5000" />
+            <div className='grid grid-cols-4 items-center gap-4'>
+              <Label htmlFor='currentValue' className='text-right'>
+                Current Value
+              </Label>
+              <Input
+                id='currentValue'
+                name='currentValue'
+                type='number'
+                value={formData.currentValue}
+                onChange={handleInputChange}
+                className='col-span-3'
+                placeholder='e.g., 5000'
+              />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={closeDialog}>Cancel</Button>
+            <Button variant='outline' onClick={closeDialog}>
+              Cancel
+            </Button>
             <Button onClick={handleSaveAsset}>Save Asset</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      
+
       {/* Delete Confirmation Dialog (Simple version using Dialog for consistency) */}
-      <Dialog open={!!assetToDelete} onOpenChange={(open) => { if (!open) setAssetToDelete(null); }}>
+      <Dialog
+        open={!!assetToDelete}
+        onOpenChange={(open) => {
+          if (!open) setAssetToDelete(null);
+        }}
+      >
         <DialogContent>
-            <DialogHeader>
-                <DialogTitle>Confirm Deletion</DialogTitle>
-                <DialogDescription>
-                    Are you sure you want to delete the asset "{assetToDelete?.name}"? This action cannot be undone.
-                </DialogDescription>
-            </DialogHeader>
-            <DialogFooter>
-                <Button variant="outline" onClick={() => setAssetToDelete(null)}>Cancel</Button>
-                <Button variant="destructive" onClick={() => assetToDelete && handleDeleteAsset(assetToDelete.id)}>Delete</Button>
-            </DialogFooter>
+          <DialogHeader>
+            <DialogTitle>Confirm Deletion</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete the asset "{assetToDelete?.name}"? This action cannot
+              be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant='outline' onClick={() => setAssetToDelete(null)}>
+              Cancel
+            </Button>
+            <Button
+              variant='destructive'
+              onClick={() => assetToDelete && handleDeleteAsset(assetToDelete.id)}
+            >
+              Delete
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

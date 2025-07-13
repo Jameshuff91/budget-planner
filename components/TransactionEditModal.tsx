@@ -1,17 +1,11 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+
+import { useDBContext } from '@context/DatabaseContext';
+
 import { Button } from './ui/button';
-import { Input } from './ui/input';
-import { Label } from './ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from './ui/select';
 import {
   Dialog,
   DialogContent,
@@ -20,9 +14,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from './ui/dialog';
-import { useDBContext } from '@context/DatabaseContext';
-import { Transaction } from '@/src/types';
+import { Input } from './ui/input';
+import { Label } from './ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { toast } from './ui/use-toast';
+
+import { Transaction } from '@/src/types';
 
 interface TransactionEditModalProps {
   transaction: Transaction | null;
@@ -51,7 +48,11 @@ export function TransactionEditModal({
     if (!editedTransaction) return;
 
     // Validate required fields
-    if (!editedTransaction.date || !editedTransaction.description || editedTransaction.amount === undefined) {
+    if (
+      !editedTransaction.date ||
+      !editedTransaction.description ||
+      editedTransaction.amount === undefined
+    ) {
       toast({
         title: 'Validation Error',
         description: 'Please fill in all required fields',
@@ -83,63 +84,60 @@ export function TransactionEditModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[525px]">
+      <DialogContent className='sm:max-w-[525px]'>
         <DialogHeader>
           <DialogTitle>Edit Transaction</DialogTitle>
-          <DialogDescription>
-            Make changes to the transaction details below.
-          </DialogDescription>
+          <DialogDescription>Make changes to the transaction details below.</DialogDescription>
         </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="date" className="text-right">
+        <div className='grid gap-4 py-4'>
+          <div className='grid grid-cols-4 items-center gap-4'>
+            <Label htmlFor='date' className='text-right'>
               Date
             </Label>
             <Input
-              id="date"
-              type="date"
+              id='date'
+              type='date'
               value={editedTransaction.date}
-              onChange={(e) =>
-                setEditedTransaction({ ...editedTransaction, date: e.target.value })
-              }
-              className="col-span-3"
+              onChange={(e) => setEditedTransaction({ ...editedTransaction, date: e.target.value })}
+              className='col-span-3'
             />
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="description" className="text-right">
+          <div className='grid grid-cols-4 items-center gap-4'>
+            <Label htmlFor='description' className='text-right'>
               Description
             </Label>
             <Input
-              id="description"
+              id='description'
               value={editedTransaction.description}
               onChange={(e) =>
                 setEditedTransaction({ ...editedTransaction, description: e.target.value })
               }
-              className="col-span-3"
+              className='col-span-3'
             />
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="amount" className="text-right">
+          <div className='grid grid-cols-4 items-center gap-4'>
+            <Label htmlFor='amount' className='text-right'>
               Amount
             </Label>
             <Input
-              id="amount"
-              type="number"
-              step="0.01"
+              id='amount'
+              type='number'
+              step='0.01'
               value={Math.abs(editedTransaction.amount)}
               onChange={(e) =>
                 setEditedTransaction({
                   ...editedTransaction,
-                  amount: editedTransaction.type === 'expense' 
-                    ? -Math.abs(parseFloat(e.target.value) || 0)
-                    : Math.abs(parseFloat(e.target.value) || 0),
+                  amount:
+                    editedTransaction.type === 'expense'
+                      ? -Math.abs(parseFloat(e.target.value) || 0)
+                      : Math.abs(parseFloat(e.target.value) || 0),
                 })
               }
-              className="col-span-3"
+              className='col-span-3'
             />
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="type" className="text-right">
+          <div className='grid grid-cols-4 items-center gap-4'>
+            <Label htmlFor='type' className='text-right'>
               Type
             </Label>
             <Select
@@ -153,17 +151,17 @@ export function TransactionEditModal({
                 });
               }}
             >
-              <SelectTrigger className="col-span-3">
+              <SelectTrigger className='col-span-3'>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="income">Income</SelectItem>
-                <SelectItem value="expense">Expense</SelectItem>
+                <SelectItem value='income'>Income</SelectItem>
+                <SelectItem value='expense'>Expense</SelectItem>
               </SelectContent>
             </Select>
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="category" className="text-right">
+          <div className='grid grid-cols-4 items-center gap-4'>
+            <Label htmlFor='category' className='text-right'>
               Category
             </Label>
             <Select
@@ -172,15 +170,15 @@ export function TransactionEditModal({
                 setEditedTransaction({
                   ...editedTransaction,
                   categoryId: value === 'uncategorized' ? undefined : value,
-                  category: categories.find(c => c.id === value)?.name || 'Uncategorized',
+                  category: categories.find((c) => c.id === value)?.name || 'Uncategorized',
                 });
               }}
             >
-              <SelectTrigger className="col-span-3">
+              <SelectTrigger className='col-span-3'>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="uncategorized">Uncategorized</SelectItem>
+                <SelectItem value='uncategorized'>Uncategorized</SelectItem>
                 {categories.map((category) => (
                   <SelectItem key={category.id} value={category.id}>
                     {category.name}
@@ -190,16 +188,16 @@ export function TransactionEditModal({
             </Select>
           </div>
           {editedTransaction.accountNumber && (
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label className="text-right">Account</Label>
-              <div className="col-span-3 text-sm text-gray-600">
+            <div className='grid grid-cols-4 items-center gap-4'>
+              <Label className='text-right'>Account</Label>
+              <div className='col-span-3 text-sm text-gray-600'>
                 {editedTransaction.accountNumber}
               </div>
             </div>
           )}
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose} disabled={isLoading}>
+          <Button variant='outline' onClick={onClose} disabled={isLoading}>
             Cancel
           </Button>
           <Button onClick={handleSave} disabled={isLoading}>

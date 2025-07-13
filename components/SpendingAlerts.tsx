@@ -1,16 +1,18 @@
 'use client';
 
+import { Bell, AlertTriangle, Settings, X } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
-import { Bell, AlertTriangle, TrendingUp, DollarSign, X } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
-import { Button } from './ui/button';
-import { Input } from './ui/input';
-import { Label } from './ui/label';
-import { Switch } from './ui/switch';
-import { Alert, AlertDescription } from './ui/alert';
+
 import { useDBContext } from '@context/DatabaseContext';
 import { useAnalytics } from '@hooks/useAnalytics';
 import { formatCurrency } from '@utils/helpers';
+
+import { Alert, AlertDescription } from './ui/alert';
+import { Button } from './ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
+import { Input } from './ui/input';
+import { Label } from './ui/label';
+import { Switch } from './ui/switch';
 import { toast } from './ui/use-toast';
 
 interface AlertRule {
@@ -84,12 +86,12 @@ export default function SpendingAlerts() {
   const checkAlerts = () => {
     const newAlerts: SpendingAlert[] = [];
 
-    alertRules.forEach(rule => {
+    alertRules.forEach((rule) => {
       if (!rule.enabled) return;
 
       switch (rule.type) {
         case 'budget_exceeded':
-          categorySpending.forEach(category => {
+          categorySpending.forEach((category) => {
             if (category.target && category.target > 0) {
               const percentage = (category.value / category.target) * 100;
               if (percentage >= (rule.threshold || 90)) {
@@ -109,18 +111,18 @@ export default function SpendingAlerts() {
 
         case 'unusual_spending':
           const recentTransactions = transactions
-            .filter(t => {
+            .filter((t) => {
               const date = new Date(t.date);
               const daysSince = (Date.now() - date.getTime()) / (1000 * 60 * 60 * 24);
               return daysSince <= 7 && t.type === 'expense';
             })
             .sort((a, b) => b.amount - a.amount);
 
-          const avgTransaction = transactions
-            .filter(t => t.type === 'expense')
-            .reduce((sum, t) => sum + t.amount, 0) / transactions.length;
+          const avgTransaction =
+            transactions.filter((t) => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0) /
+            transactions.length;
 
-          recentTransactions.forEach(tx => {
+          recentTransactions.forEach((tx) => {
             if (tx.amount > avgTransaction * ((rule.threshold || 150) / 100)) {
               newAlerts.push({
                 id: `${rule.id}-${tx.id}`,
@@ -153,15 +155,19 @@ export default function SpendingAlerts() {
     });
 
     // Merge with existing alerts (avoid duplicates)
-    const existingIds = activeAlerts.map(a => a.id);
-    const uniqueNewAlerts = newAlerts.filter(a => !existingIds.includes(a.id));
-    
+    const existingIds = activeAlerts.map((a) => a.id);
+    const uniqueNewAlerts = newAlerts.filter((a) => !existingIds.includes(a.id));
+
     if (uniqueNewAlerts.length > 0) {
       setActiveAlerts([...activeAlerts, ...uniqueNewAlerts]);
-      
+
       // Show notifications if enabled
-      if (notificationsEnabled && 'Notification' in window && Notification.permission === 'granted') {
-        uniqueNewAlerts.forEach(alert => {
+      if (
+        notificationsEnabled &&
+        'Notification' in window &&
+        Notification.permission === 'granted'
+      ) {
+        uniqueNewAlerts.forEach((alert) => {
           new Notification('Budget Alert', {
             body: alert.message,
             icon: '/icon-192x192.png',
@@ -186,7 +192,7 @@ export default function SpendingAlerts() {
   };
 
   const toggleRule = (ruleId: string) => {
-    const updated = alertRules.map(rule =>
+    const updated = alertRules.map((rule) =>
       rule.id === ruleId ? { ...rule, enabled: !rule.enabled } : rule
     );
     setAlertRules(updated);
@@ -194,45 +200,39 @@ export default function SpendingAlerts() {
   };
 
   const updateThreshold = (ruleId: string, threshold: number) => {
-    const updated = alertRules.map(rule =>
-      rule.id === ruleId ? { ...rule, threshold } : rule
-    );
+    const updated = alertRules.map((rule) => (rule.id === ruleId ? { ...rule, threshold } : rule));
     setAlertRules(updated);
     localStorage.setItem('budget.alertRules', JSON.stringify(updated));
   };
 
   const dismissAlert = (alertId: string) => {
-    setActiveAlerts(activeAlerts.filter(a => a.id !== alertId));
+    setActiveAlerts(activeAlerts.filter((a) => a.id !== alertId));
   };
 
-  const undismissedAlerts = activeAlerts.filter(a => !a.dismissed);
+  const undismissedAlerts = activeAlerts.filter((a) => !a.dismissed);
 
   return (
-    <div className="space-y-4">
+    <div className='space-y-4'>
       {/* Active Alerts */}
       {undismissedAlerts.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Bell className="h-5 w-5" />
+            <CardTitle className='flex items-center gap-2'>
+              <Bell className='h-5 w-5' />
               Active Alerts ({undismissedAlerts.length})
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-2">
-            {undismissedAlerts.map(alert => (
+          <CardContent className='space-y-2'>
+            {undismissedAlerts.map((alert) => (
               <Alert
                 key={alert.id}
                 variant={alert.severity === 'critical' ? 'destructive' : 'default'}
               >
-                <AlertTriangle className="h-4 w-4" />
-                <AlertDescription className="flex items-center justify-between">
+                <AlertTriangle className='h-4 w-4' />
+                <AlertDescription className='flex items-center justify-between'>
                   <span>{alert.message}</span>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => dismissAlert(alert.id)}
-                  >
-                    <X className="h-4 w-4" />
+                  <Button variant='ghost' size='sm' onClick={() => dismissAlert(alert.id)}>
+                    <X className='h-4 w-4' />
                   </Button>
                 </AlertDescription>
               </Alert>
@@ -244,26 +244,24 @@ export default function SpendingAlerts() {
       {/* Alert Rules Configuration */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Settings className="h-5 w-5" />
+          <CardTitle className='flex items-center gap-2'>
+            <Settings className='h-5 w-5' />
             Alert Rules
           </CardTitle>
-          <CardDescription>
-            Configure when you want to receive spending alerts
-          </CardDescription>
+          <CardDescription>Configure when you want to receive spending alerts</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className='space-y-4'>
           {/* Push Notifications */}
-          <div className="flex items-center justify-between p-3 border rounded-lg">
+          <div className='flex items-center justify-between p-3 border rounded-lg'>
             <div>
               <Label>Push Notifications</Label>
-              <p className="text-sm text-muted-foreground">
+              <p className='text-sm text-muted-foreground'>
                 Receive alerts as browser notifications
               </p>
             </div>
             <Button
               variant={notificationsEnabled ? 'default' : 'outline'}
-              size="sm"
+              size='sm'
               onClick={requestNotificationPermission}
               disabled={notificationsEnabled}
             >
@@ -272,32 +270,31 @@ export default function SpendingAlerts() {
           </div>
 
           {/* Alert Rules */}
-          {alertRules.map(rule => (
-            <div key={rule.id} className="p-3 border rounded-lg space-y-3">
-              <div className="flex items-center justify-between">
+          {alertRules.map((rule) => (
+            <div key={rule.id} className='p-3 border rounded-lg space-y-3'>
+              <div className='flex items-center justify-between'>
                 <div>
                   <Label>{rule.description}</Label>
                 </div>
-                <Switch
-                  checked={rule.enabled}
-                  onCheckedChange={() => toggleRule(rule.id)}
-                />
+                <Switch checked={rule.enabled} onCheckedChange={() => toggleRule(rule.id)} />
               </div>
-              
+
               {rule.threshold !== undefined && rule.enabled && (
-                <div className="flex items-center gap-2">
-                  <Label htmlFor={`threshold-${rule.id}`} className="text-sm">
+                <div className='flex items-center gap-2'>
+                  <Label htmlFor={`threshold-${rule.id}`} className='text-sm'>
                     Threshold:
                   </Label>
                   <Input
                     id={`threshold-${rule.id}`}
-                    type="number"
+                    type='number'
                     value={rule.threshold}
                     onChange={(e) => updateThreshold(rule.id, Number(e.target.value))}
-                    className="w-24"
+                    className='w-24'
                   />
-                  <span className="text-sm text-muted-foreground">
-                    {rule.type === 'budget_exceeded' || rule.type === 'unusual_spending' ? '%' : '$'}
+                  <span className='text-sm text-muted-foreground'>
+                    {rule.type === 'budget_exceeded' || rule.type === 'unusual_spending'
+                      ? '%'
+                      : '$'}
                   </span>
                 </div>
               )}
@@ -305,7 +302,7 @@ export default function SpendingAlerts() {
           ))}
 
           {/* Add Custom Rule Button */}
-          <Button variant="outline" className="w-full" disabled>
+          <Button variant='outline' className='w-full' disabled>
             Add Custom Rule (Coming Soon)
           </Button>
         </CardContent>

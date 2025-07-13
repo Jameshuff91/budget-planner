@@ -6,6 +6,7 @@ import { useState, useEffect, useMemo } from 'react';
 
 import { Button } from '@components/ui/button';
 import { useDBContext } from '@context/DatabaseContext';
+
 import { formatCurrency } from '../src/utils/helpers';
 
 type SpendingTrendData = {
@@ -15,7 +16,7 @@ type SpendingTrendData = {
 
 export default function MonthSelector() {
   const [selectedMonth, setSelectedMonth] = useState<Date>(new Date());
-  const [expandedSections, setExpandedSections] = useState<{[key: string]: boolean}>({});
+  const [expandedSections, setExpandedSections] = useState<{ [key: string]: boolean }>({});
   const [monthlyData, setMonthlyData] = useState<{
     [key: string]: {
       income: number;
@@ -30,7 +31,7 @@ export default function MonthSelector() {
   // Generate months based on available transaction data
   const months = useMemo(() => {
     // Get all transactions to determine date range
-    
+
     if (!transactions || transactions.length === 0) {
       // Fallback to last 12 months if no transactions
       return Array.from({ length: 12 }, (_, i) => {
@@ -40,23 +41,23 @@ export default function MonthSelector() {
     }
 
     // Find the earliest and latest transaction dates
-    const dates = transactions.map(t => new Date(t.date));
-    const earliestDate = new Date(Math.min(...dates.map(d => d.getTime())));
-    const latestDate = new Date(Math.max(...dates.map(d => d.getTime())));
-    
+    const dates = transactions.map((t) => new Date(t.date));
+    const earliestDate = new Date(Math.min(...dates.map((d) => d.getTime())));
+    const latestDate = new Date(Math.max(...dates.map((d) => d.getTime())));
+
     // Generate months from earliest to latest (plus current month if needed)
     const startMonth = startOfMonth(earliestDate);
     const endMonth = startOfMonth(new Date()); // Include current month
     const finalEndMonth = latestDate > endMonth ? startOfMonth(latestDate) : endMonth;
-    
+
     const monthsArray: Date[] = [];
     let currentMonth = startMonth;
-    
+
     while (currentMonth <= finalEndMonth) {
       monthsArray.push(new Date(currentMonth));
       currentMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1);
     }
-    
+
     return monthsArray.reverse(); // Most recent first
   }, [transactions]);
 
@@ -64,8 +65,18 @@ export default function MonthSelector() {
     try {
       const monthlySpending = new Map<string, number>();
       const months = [
-        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+        'Jan',
+        'Feb',
+        'Mar',
+        'Apr',
+        'May',
+        'Jun',
+        'Jul',
+        'Aug',
+        'Sep',
+        'Oct',
+        'Nov',
+        'Dec',
       ];
 
       // Get current year and month
@@ -90,7 +101,7 @@ export default function MonthSelector() {
       // Convert to array format
       return Array.from(monthlySpending.entries()).map(([name, spending]) => ({
         name,
-        spending
+        spending,
       }));
     } catch (error) {
       console.error('Error calculating spending trend:', error);
@@ -119,7 +130,10 @@ export default function MonthSelector() {
           const individualTransactions = transactions.filter((t) => !t.isMonthSummary);
 
           monthlyStats[monthKey] = {
-            income: transactions.reduce((sum, t) => (t.type === 'income' ? sum + t.amount : sum), 0),
+            income: transactions.reduce(
+              (sum, t) => (t.type === 'income' ? sum + t.amount : sum),
+              0
+            ),
             expenses: transactions.reduce(
               (sum, t) => (t.type === 'expense' ? sum + t.amount : sum),
               0
@@ -134,14 +148,13 @@ export default function MonthSelector() {
         // Emit spending trend data
         const spendingTrendData = Object.entries(monthlyStats).map(([name, data]) => ({
           name,
-          spending: data.expenses
+          spending: data.expenses,
         }));
 
         const spendingTrendEvent = new CustomEvent('spendingTrendUpdated', {
-          detail: spendingTrendData
+          detail: spendingTrendData,
         });
         window.dispatchEvent(spendingTrendEvent);
-
       } catch (error) {
         console.error('Error loading monthly data:', error);
       } finally {
@@ -168,9 +181,9 @@ export default function MonthSelector() {
   };
 
   const toggleSection = (sectionKey: string) => {
-    setExpandedSections(prev => ({
+    setExpandedSections((prev) => ({
       ...prev,
-      [sectionKey]: !prev[sectionKey]
+      [sectionKey]: !prev[sectionKey],
     }));
   };
 
@@ -234,20 +247,21 @@ export default function MonthSelector() {
                 <div className='space-y-3'>
                   {monthlyData[format(selectedMonth, 'MMM yyyy')]?.summaryTransactions.map(
                     (transaction, index) => (
-                      <div
-                        key={index}
-                        className='p-3 rounded-md bg-gray-50'
-                      >
+                      <div key={index} className='p-3 rounded-md bg-gray-50'>
                         <div className='flex justify-between items-start'>
                           <div>
                             <p className='font-medium'>{transaction.description}</p>
                             <p className='text-sm text-gray-500'>
                               {format(new Date(transaction.date), 'MMM d, yyyy')}
-                              {transaction.accountNumber && ` • Account: ${transaction.accountNumber}`}
+                              {transaction.accountNumber &&
+                                ` • Account: ${transaction.accountNumber}`}
                             </p>
                           </div>
-                          <p className={`font-semibold ${transaction.type === 'expense' ? 'text-red-500' : 'text-green-500'}`}>
-                            {transaction.type === 'expense' ? '-' : '+'}{formatCurrency(transaction.amount)}
+                          <p
+                            className={`font-semibold ${transaction.type === 'expense' ? 'text-red-500' : 'text-green-500'}`}
+                          >
+                            {transaction.type === 'expense' ? '-' : '+'}
+                            {formatCurrency(transaction.amount)}
                           </p>
                         </div>
                       </div>
@@ -276,20 +290,21 @@ export default function MonthSelector() {
                 <div className='space-y-3'>
                   {monthlyData[format(selectedMonth, 'MMM yyyy')]?.individualTransactions.map(
                     (transaction, index) => (
-                      <div
-                        key={index}
-                        className='p-3 rounded-md bg-gray-50'
-                      >
+                      <div key={index} className='p-3 rounded-md bg-gray-50'>
                         <div className='flex justify-between items-start'>
                           <div>
                             <p className='font-medium'>{transaction.description}</p>
                             <p className='text-sm text-gray-500'>
                               {format(new Date(transaction.date), 'MMM d, yyyy')}
-                              {transaction.accountNumber && ` • Account: ${transaction.accountNumber}`}
+                              {transaction.accountNumber &&
+                                ` • Account: ${transaction.accountNumber}`}
                             </p>
                           </div>
-                          <p className={`font-semibold ${transaction.type === 'expense' ? 'text-red-500' : 'text-green-500'}`}>
-                            {transaction.type === 'expense' ? '-' : '+'}{formatCurrency(transaction.amount)}
+                          <p
+                            className={`font-semibold ${transaction.type === 'expense' ? 'text-red-500' : 'text-green-500'}`}
+                          >
+                            {transaction.type === 'expense' ? '-' : '+'}
+                            {formatCurrency(transaction.amount)}
                           </p>
                         </div>
                       </div>

@@ -16,11 +16,11 @@ export default function Home() {
       await clearTransactions();
       // Reprocess PDFs and get the extracted transactions
       const extractedTransactions = await pdfService.reprocessStoredPDFs();
-      
+
       // Add each transaction back to the database
       for (const transaction of extractedTransactions) {
         await addTransaction({
-          date: transaction.date,
+          date: transaction.date.toISOString().split('T')[0],
           amount: transaction.amount,
           description: transaction.description,
           category: transaction.category || 'Uncategorized',

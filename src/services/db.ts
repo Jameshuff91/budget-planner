@@ -1,4 +1,5 @@
 import { openDB, DBSchema, IDBPDatabase } from 'idb';
+
 import { generateUUID } from '../utils/helpers'; // Import generateUUID
 
 export interface Asset {
@@ -58,13 +59,14 @@ interface BudgetDB extends DBSchema {
         endDate: Date;
       };
     };
-    indexes: { 
+    indexes: {
       'by-hash': string;
       'by-statement-start': Date;
       'by-statement-end': Date;
     };
   };
-  recurringPreferences: { // Added new store definition
+  recurringPreferences: {
+    // Added new store definition
     key: string;
     value: {
       id: string; // Typically the ID of the RecurringTransactionCandidate
@@ -72,11 +74,13 @@ interface BudgetDB extends DBSchema {
     };
     // No indexes needed for now, can be added later if required
   };
-  assets: { // Added assets store definition
+  assets: {
+    // Added assets store definition
     key: string; // Corresponds to Asset['id']
     value: Asset;
   };
-  liabilities: { // Added liabilities store definition
+  liabilities: {
+    // Added liabilities store definition
     key: string; // Corresponds to Liability['id']
     value: Liability;
   };
@@ -184,12 +188,12 @@ class DatabaseService {
 
   private async upgrade(db: IDBPDatabase<BudgetDB>) {
     console.log('Database upgrade started. Current stores:', Array.from(db.objectStoreNames));
-    
+
     // Create stores if they don't exist
     if (!db.objectStoreNames.contains('transactions')) {
       const transactionStore = db.createObjectStore('transactions', { keyPath: 'id' });
       transactionStore.createIndex('by-date', 'date');
-      
+
       // Add default transactions within the same transaction
       for (const transaction of DEFAULT_TRANSACTIONS) {
         transactionStore.add(transaction);
@@ -199,7 +203,7 @@ class DatabaseService {
 
     if (!db.objectStoreNames.contains('categories')) {
       const categoryStore = db.createObjectStore('categories', { keyPath: 'id' });
-      
+
       // Add default categories within the same transaction
       const defaultCategories = [
         { id: 'salary', name: 'Salary', type: 'income' as const },
@@ -258,7 +262,7 @@ class DatabaseService {
 
   async getTransactionsByDateRange(
     startDate: Date,
-    endDate: Date,
+    endDate: Date
   ): Promise<BudgetDB['transactions']['value'][]> {
     if (!this.db) await this.initialize();
     const index = this.db!.transaction('transactions').store.index('by-date');
@@ -324,7 +328,10 @@ class DatabaseService {
   }
 
   // CRUD methods for recurringPreferences
-  async setRecurringPreference(candidateId: string, status: 'confirmed' | 'dismissed'): Promise<void> {
+  async setRecurringPreference(
+    candidateId: string,
+    status: 'confirmed' | 'dismissed'
+  ): Promise<void> {
     try {
       const db = await this.getDB();
       const tx = db.transaction('recurringPreferences', 'readwrite');

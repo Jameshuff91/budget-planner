@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Configuration, PlaidApi, PlaidEnvironments } from 'plaid';
-import { logger } from '@/src/services/logger';
+
+import { logger } from '@services/logger';
 
 // Initialize Plaid client
 const configuration = new Configuration({
@@ -20,10 +21,7 @@ export async function POST(request: NextRequest) {
     const { public_token } = await request.json();
 
     if (!public_token) {
-      return NextResponse.json(
-        { error: 'Public token is required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Public token is required' }, { status: 400 });
     }
 
     const response = await plaidClient.itemPublicTokenExchange({

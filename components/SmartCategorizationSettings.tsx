@@ -1,14 +1,16 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
 import { Brain, Settings, AlertCircle, Check, X } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
+import React, { useState, useEffect } from 'react';
+
+import { createLLMService } from '@services/llmService';
+
+import { Alert, AlertDescription } from './ui/alert';
 import { Button } from './ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Switch } from './ui/switch';
-import { Alert, AlertDescription } from './ui/alert';
-import { createLLMService } from '@/src/services/llmService';
 import { toast } from './ui/use-toast';
 
 export default function SmartCategorizationSettings() {
@@ -23,7 +25,7 @@ export default function SmartCategorizationSettings() {
     const savedEnabled = localStorage.getItem('smartCategorization.enabled') === 'true';
     const savedApiKey = localStorage.getItem('smartCategorization.apiKey') || '';
     const savedModel = localStorage.getItem('smartCategorization.model') || 'gpt-3.5-turbo';
-    
+
     setIsEnabled(savedEnabled);
     setApiKey(savedApiKey);
     setModel(savedModel);
@@ -33,7 +35,7 @@ export default function SmartCategorizationSettings() {
     localStorage.setItem('smartCategorization.enabled', isEnabled.toString());
     localStorage.setItem('smartCategorization.apiKey', apiKey);
     localStorage.setItem('smartCategorization.model', model);
-    
+
     toast({
       title: 'Settings Saved',
       description: 'Smart categorization settings have been updated.',
@@ -61,7 +63,7 @@ export default function SmartCategorizationSettings() {
       const result = await llmService.categorizeTransaction({
         description: 'Test transaction - Grocery Store',
         amount: -50,
-        date: new Date().toISOString()
+        date: new Date().toISOString(),
       });
 
       if (result.category) {
@@ -84,108 +86,98 @@ export default function SmartCategorizationSettings() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Brain className="h-5 w-5" />
+        <CardTitle className='flex items-center gap-2'>
+          <Brain className='h-5 w-5' />
           Smart Categorization (AI-Powered)
         </CardTitle>
         <CardDescription>
           Use OpenAI to automatically categorize your transactions with high accuracy
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className='space-y-4'>
         <Alert>
-          <AlertCircle className="h-4 w-4" />
+          <AlertCircle className='h-4 w-4' />
           <AlertDescription>
-            Smart categorization uses OpenAI's API to analyze transaction descriptions. 
-            You'll need an OpenAI API key to enable this feature.
+            Smart categorization uses OpenAI's API to analyze transaction descriptions. You'll need
+            an OpenAI API key to enable this feature.
           </AlertDescription>
         </Alert>
 
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label htmlFor="smart-categorization">Enable Smart Categorization</Label>
-              <p className="text-sm text-muted-foreground">
+        <div className='space-y-4'>
+          <div className='flex items-center justify-between'>
+            <div className='space-y-0.5'>
+              <Label htmlFor='smart-categorization'>Enable Smart Categorization</Label>
+              <p className='text-sm text-muted-foreground'>
                 Automatically categorize new transactions using AI
               </p>
             </div>
-            <Switch
-              id="smart-categorization"
-              checked={isEnabled}
-              onCheckedChange={setIsEnabled}
-            />
+            <Switch id='smart-categorization' checked={isEnabled} onCheckedChange={setIsEnabled} />
           </div>
 
           {isEnabled && (
             <>
-              <div className="space-y-2">
-                <Label htmlFor="api-key">OpenAI API Key</Label>
-                <div className="flex gap-2">
+              <div className='space-y-2'>
+                <Label htmlFor='api-key'>OpenAI API Key</Label>
+                <div className='flex gap-2'>
                   <Input
-                    id="api-key"
+                    id='api-key'
                     type={showApiKey ? 'text' : 'password'}
                     value={apiKey}
                     onChange={(e) => setApiKey(e.target.value)}
-                    placeholder="sk-..."
-                    className="font-mono"
+                    placeholder='sk-...'
+                    className='font-mono'
                   />
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowApiKey(!showApiKey)}
-                  >
-                    {showApiKey ? <X className="h-4 w-4" /> : <Check className="h-4 w-4" />}
+                  <Button variant='outline' size='sm' onClick={() => setShowApiKey(!showApiKey)}>
+                    {showApiKey ? <X className='h-4 w-4' /> : <Check className='h-4 w-4' />}
                   </Button>
                 </div>
-                <p className="text-xs text-muted-foreground">
+                <p className='text-xs text-muted-foreground'>
                   Get your API key from{' '}
                   <a
-                    href="https://platform.openai.com/api-keys"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="underline"
+                    href='https://platform.openai.com/api-keys'
+                    target='_blank'
+                    rel='noopener noreferrer'
+                    className='underline'
                   >
                     OpenAI Platform
                   </a>
                 </p>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="model">Model</Label>
+              <div className='space-y-2'>
+                <Label htmlFor='model'>Model</Label>
                 <select
-                  id="model"
+                  id='model'
                   value={model}
                   onChange={(e) => setModel(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                  className='w-full px-3 py-2 border border-gray-300 rounded-md text-sm'
                 >
-                  <option value="gpt-3.5-turbo">GPT-3.5 Turbo (Fast & Affordable)</option>
-                  <option value="gpt-4">GPT-4 (Most Accurate)</option>
-                  <option value="gpt-4-turbo-preview">GPT-4 Turbo (Fast & Accurate)</option>
+                  <option value='gpt-3.5-turbo'>GPT-3.5 Turbo (Fast & Affordable)</option>
+                  <option value='gpt-4'>GPT-4 (Most Accurate)</option>
+                  <option value='gpt-4-turbo-preview'>GPT-4 Turbo (Fast & Accurate)</option>
                 </select>
-                <p className="text-xs text-muted-foreground">
+                <p className='text-xs text-muted-foreground'>
                   GPT-3.5 is recommended for most use cases due to lower cost
                 </p>
               </div>
 
-              <div className="flex gap-2">
+              <div className='flex gap-2'>
                 <Button
-                  variant="outline"
+                  variant='outline'
                   onClick={handleTestConnection}
                   disabled={isTestingConnection || !apiKey}
                 >
                   {isTestingConnection ? 'Testing...' : 'Test Connection'}
                 </Button>
-                <Button onClick={handleSaveSettings}>
-                  Save Settings
-                </Button>
+                <Button onClick={handleSaveSettings}>Save Settings</Button>
               </div>
             </>
           )}
         </div>
 
-        <div className="pt-4 border-t">
-          <h4 className="text-sm font-medium mb-2">How it works:</h4>
-          <ul className="text-sm text-muted-foreground space-y-1">
+        <div className='pt-4 border-t'>
+          <h4 className='text-sm font-medium mb-2'>How it works:</h4>
+          <ul className='text-sm text-muted-foreground space-y-1'>
             <li>• AI analyzes transaction descriptions to determine the best category</li>
             <li>• Works with your existing categories or suggests new ones</li>
             <li>• Learns from patterns in your transaction history</li>

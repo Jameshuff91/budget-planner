@@ -12,15 +12,15 @@ const indexedDBMock = {
           getAll: vi.fn().mockResolvedValue([]),
           get: vi.fn().mockResolvedValue(null),
           delete: vi.fn(),
-          clear: vi.fn()
+          clear: vi.fn(),
         }),
-        oncomplete: null
-      })
+        oncomplete: null,
+      }),
     },
     onupgradeneeded: null,
     onsuccess: null,
-    onerror: null
-  })
+    onerror: null,
+  }),
 };
 
 // Mock browser APIs
@@ -35,14 +35,14 @@ global.URL.revokeObjectURL = vi.fn();
 global.ResizeObserver = vi.fn().mockImplementation(() => ({
   observe: vi.fn(),
   unobserve: vi.fn(),
-  disconnect: vi.fn()
+  disconnect: vi.fn(),
 }));
 
 // Mock IntersectionObserver
 global.IntersectionObserver = vi.fn().mockImplementation(() => ({
   observe: vi.fn(),
   unobserve: vi.fn(),
-  disconnect: vi.fn()
+  disconnect: vi.fn(),
 }));
 
 // Setup global mocks for Jest compatibility with Vitest
@@ -60,12 +60,12 @@ global.jest = {
 */
 global.jest = {
   fn: vi.fn,
-  mock: vi.fn
+  mock: vi.fn,
 } as any;
 
 // Mock ImageData for PDF processing tests - lightweight version
 global.ImageData = vi.fn().mockImplementation((width: number, height: number) => ({
   data: new Uint8ClampedArray(4),
   width: width || 1,
-  height: height || 1
+  height: height || 1,
 })) as any;

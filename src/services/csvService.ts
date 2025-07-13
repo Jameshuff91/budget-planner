@@ -1,6 +1,7 @@
-import { logger } from './logger';
-import { generateUUID } from '../utils/helpers';
 import { Transaction } from '../types';
+import { generateUUID } from '../utils/helpers';
+
+import { logger } from './logger';
 
 export interface CSVTransaction {
   date: string;
@@ -61,9 +62,7 @@ export class CSVService {
 
   private parseAmount(amountStr: string): number {
     // Remove currency symbols and spaces
-    const cleanAmount = amountStr
-      .replace(/[$€£¥₹,\s]/g, '')
-      .trim();
+    const cleanAmount = amountStr.replace(/[$€£¥₹,\s]/g, '').trim();
 
     const amount = parseFloat(cleanAmount);
     if (isNaN(amount)) {
@@ -112,7 +111,7 @@ export class CSVService {
     const opts = { ...defaultOptions, ...options };
     const lines = fileContent.trim().split(/\r?\n/);
     const transactions: CSVTransaction[] = [];
-    
+
     // Skip header if present
     const startIndex = opts.hasHeader ? 1 : 0;
 
@@ -122,7 +121,7 @@ export class CSVService {
 
       try {
         const fields = this.parseLine(line, opts.delimiter!);
-        
+
         // Ensure we have enough columns
         const requiredColumns = Math.max(
           opts.dateColumn! + 1,
@@ -139,7 +138,8 @@ export class CSVService {
         const dateStr = fields[opts.dateColumn!];
         const description = fields[opts.descriptionColumn!];
         const amountStr = fields[opts.amountColumn!];
-        const category = opts.categoryColumn !== undefined ? fields[opts.categoryColumn] : undefined;
+        const category =
+          opts.categoryColumn !== undefined ? fields[opts.categoryColumn] : undefined;
 
         const date = this.parseDate(dateStr, opts.dateFormat!);
         const amount = this.parseAmount(amountStr);
@@ -180,14 +180,14 @@ export class CSVService {
 
     // Check if first line is header
     const firstLine = this.parseLine(lines[0], delimiter);
-    const hasHeader = firstLine.some(field => 
+    const hasHeader = firstLine.some((field) =>
       /^(date|description|amount|category|type)/i.test(field)
     );
 
     // Try to detect date format from second line (or first if no header)
     const dataLine = hasHeader && lines.length > 1 ? lines[1] : lines[0];
     const fields = this.parseLine(dataLine, delimiter);
-    
+
     let dateFormat: 'MM/DD/YYYY' | 'DD/MM/YYYY' | 'YYYY-MM-DD' = 'MM/DD/YYYY';
     for (const field of fields) {
       if (/^\d{4}-\d{2}-\d{2}/.test(field)) {
@@ -208,7 +208,7 @@ export class CSVService {
   }
 
   convertToTransactions(csvTransactions: CSVTransaction[]): Omit<Transaction, 'id'>[] {
-    return csvTransactions.map(csvTx => ({
+    return csvTransactions.map((csvTx) => ({
       date: csvTx.date,
       description: csvTx.description,
       amount: csvTx.type === 'expense' ? -Math.abs(csvTx.amount) : Math.abs(csvTx.amount),

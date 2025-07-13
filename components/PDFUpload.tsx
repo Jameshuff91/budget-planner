@@ -1,23 +1,29 @@
 'use client';
 
-import { Upload, FileType2, Trash2, RefreshCw, CheckCircle, XCircle, ChevronDown } from 'lucide-react';
+import {
+  Upload,
+  FileType2,
+  Trash2,
+  RefreshCw,
+  CheckCircle,
+  XCircle,
+  ChevronDown,
+} from 'lucide-react';
 import Papa from 'papaparse';
 import { useState, useEffect } from 'react';
 
-import { Button } from './ui/button';
-import { Input } from './ui/input';
-import { useToast } from './ui/use-toast';
+import { showUserError } from '@utils/userErrors';
+
 import { useDBContext } from '../src/context/DatabaseContext';
+import { csvService } from '../src/services/csvService';
 import { logger } from '../src/services/logger';
 import { pdfService } from '../src/services/pdfService';
 import type { PDFDocument } from '../src/services/pdfService';
-import { csvService } from '../src/services/csvService';
 
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from './ui/collapsible';
+import { Button } from './ui/button';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible';
+import { Input } from './ui/input';
+import { useToast } from './ui/use-toast';
 
 interface CSVTransaction {
   date: Date;
@@ -97,7 +103,7 @@ export default function PDFUpload() {
 
           // Process extracted transactions
           const transactionsToAdd = [];
-          
+
           // Collect all valid transactions first
           for (const transaction of extractedData) {
             if (transaction.date && transaction.amount && transaction.description) {
@@ -112,7 +118,7 @@ export default function PDFUpload() {
               });
             }
           }
-          
+
           // Add all transactions in a single batch to avoid multiple re-renders
           let successCount = 0;
           try {
@@ -133,11 +139,7 @@ export default function PDFUpload() {
           });
         } catch (error) {
           logger.error(`Error processing PDF ${file.name}:`, error);
-          toast({
-            title: 'Error',
-            description: `Failed to process ${file.name}. Please check the file format.`,
-            variant: 'destructive',
-          });
+          showUserError(error, toast, 'pdf');
         }
       }
 
@@ -146,16 +148,16 @@ export default function PDFUpload() {
         setProgress((prev) => ({ ...prev, [file.name]: 0 }));
         try {
           const fileContent = await file.text();
-          
+
           // Auto-detect CSV format
           const detectedOptions = await csvService.detectCSVFormat(fileContent);
-          
+
           // Parse CSV
           const csvTransactions = await csvService.parseCSV(fileContent, detectedOptions);
-          
+
           // Convert to database format
           const transactionsToAdd = csvService.convertToTransactions(csvTransactions);
-          
+
           if (transactionsToAdd.length > 0) {
             await addTransactionsBatch(transactionsToAdd);
             toast({
@@ -169,15 +171,11 @@ export default function PDFUpload() {
               variant: 'destructive',
             });
           }
-          
+
           setProgress((prev) => ({ ...prev, [file.name]: 100 }));
         } catch (error) {
           logger.error(`Error processing CSV file ${file.name}:`, error);
-          toast({
-            title: 'CSV Import Error',
-            description: `Failed to import ${file.name}. Please check the format.`,
-            variant: 'destructive',
-          });
+          showUserError(error, toast, 'csv');
         }
       }
 
@@ -189,11 +187,7 @@ export default function PDFUpload() {
       await loadUploadedFiles();
     } catch (error) {
       logger.error('Error processing files:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to process files. Please check the file format.',
-        variant: 'destructive',
-      });
+      showUserError(error, toast);
     } finally {
       setIsProcessing(false);
       setProgress({});
@@ -210,7 +204,7 @@ export default function PDFUpload() {
   const handleDelete = async (id: string) => {
     try {
       await pdfService.deletePDFDocument(id);
-      setSelectedPDFs(prev => {
+      setSelectedPDFs((prev) => {
         const newSet = new Set(prev);
         newSet.delete(id);
         return newSet;
@@ -251,7 +245,7 @@ export default function PDFUpload() {
   };
 
   const togglePDFSelection = (id: string) => {
-    setSelectedPDFs(prev => {
+    setSelectedPDFs((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(id)) {
         newSet.delete(id);
@@ -266,7 +260,7 @@ export default function PDFUpload() {
     if (selectedPDFs.size === uploadedFiles.length) {
       setSelectedPDFs(new Set());
     } else {
-      setSelectedPDFs(new Set(uploadedFiles.map(doc => doc.id)));
+      setSelectedPDFs(new Set(uploadedFiles.map((doc) => doc.id)));
     }
   };
 
@@ -339,51 +333,56 @@ export default function PDFUpload() {
       )}
 
       {/* Uploaded Files List */}
-      <Collapsible className="mt-4">
+      <Collapsible className='mt-4'>
         <CollapsibleTrigger asChild>
-          <Button variant="outline" className="w-full flex justify-between items-center">
+          <Button variant='outline' className='w-full flex justify-between items-center'>
             <span>Show Financial Statements ({uploadedFiles.length})</span>
-            <ChevronDown className="h-4 w-4" />
+            <ChevronDown className='h-4 w-4' />
           </Button>
         </CollapsibleTrigger>
-        <CollapsibleContent className="space-y-2 mt-2">
+        <CollapsibleContent className='space-y-2 mt-2'>
           {uploadedFiles.length > 0 && (
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
+            <div className='flex items-center justify-between mb-2'>
+              <div className='flex items-center gap-2'>
                 <input
-                  type="checkbox"
+                  type='checkbox'
                   checked={selectedPDFs.size === uploadedFiles.length}
                   onChange={toggleAllPDFs}
-                  className="w-4 h-4 rounded border-gray-300"
+                  className='w-4 h-4 rounded border-gray-300'
                 />
-                <span className="text-sm text-gray-600">Select All</span>
+                <span className='text-sm text-gray-600'>Select All</span>
               </div>
               {selectedPDFs.size > 0 && (
                 <Button
-                  variant="destructive"
-                  size="sm"
+                  variant='destructive'
+                  size='sm'
                   onClick={handleBulkDelete}
-                  className="flex items-center gap-1"
+                  className='flex items-center gap-1'
                 >
-                  <Trash2 className="h-4 w-4" />
+                  <Trash2 className='h-4 w-4' />
                   Delete Selected ({selectedPDFs.size})
                 </Button>
               )}
             </div>
           )}
           {uploadedFiles.map((doc) => (
-            <div key={doc.id} className='flex items-center justify-between p-3 bg-gray-50 rounded-md'>
+            <div
+              key={doc.id}
+              className='flex items-center justify-between p-3 bg-gray-50 rounded-md'
+            >
               <div className='flex items-center gap-2'>
                 <input
-                  type="checkbox"
+                  type='checkbox'
                   checked={selectedPDFs.has(doc.id)}
                   onChange={() => togglePDFSelection(doc.id)}
-                  className="w-4 h-4 rounded border-gray-300"
+                  className='w-4 h-4 rounded border-gray-300'
                 />
                 {getStatusIcon(doc.status)}
                 <span className='text-sm font-medium'>{doc.name}</span>
                 {doc.transactionCount && (
-                  <span className='text-xs text-gray-500'>({doc.transactionCount} transactions)</span>
+                  <span className='text-xs text-gray-500'>
+                    ({doc.transactionCount} transactions)
+                  </span>
                 )}
               </div>
               <div className='flex items-center gap-2'>

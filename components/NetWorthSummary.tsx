@@ -1,10 +1,11 @@
 'use client';
 
 import React, { useMemo } from 'react';
-import { useDBContext } from '@context/DatabaseContext';
+
 import { Card, CardContent, CardHeader, CardTitle } from '@components/ui/card';
-import { formatCurrency } from '@utils/helpers';
+import { useDBContext } from '@context/DatabaseContext';
 import { logger } from '@services/logger'; // Optional for debugging
+import { formatCurrency } from '@utils/helpers';
 
 export default function NetWorthSummary() {
   const { assets, liabilities, loading } = useDBContext();
@@ -46,18 +47,20 @@ export default function NetWorthSummary() {
         <CardTitle>Net Worth Summary</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="space-y-3"> {/* Increased spacing slightly */}
-          <div className="flex justify-between items-center text-lg">
-            <span className="text-gray-600">Total Assets:</span>
-            <span className="font-medium text-green-600">{formatCurrency(totalAssets)}</span>
+        <div className='space-y-3'>
+          {' '}
+          {/* Increased spacing slightly */}
+          <div className='flex justify-between items-center text-lg'>
+            <span className='text-gray-600'>Total Assets:</span>
+            <span className='font-medium text-green-600'>{formatCurrency(totalAssets)}</span>
           </div>
-          <div className="flex justify-between items-center text-lg">
-            <span className="text-gray-600">Total Liabilities:</span>
-            <span className="font-medium text-red-600">{formatCurrency(totalLiabilities)}</span>
+          <div className='flex justify-between items-center text-lg'>
+            <span className='text-gray-600'>Total Liabilities:</span>
+            <span className='font-medium text-red-600'>{formatCurrency(totalLiabilities)}</span>
           </div>
-          <hr className="my-3" /> {/* Increased margin for separator */}
-          <div className="flex justify-between items-center text-xl">
-            <span className="font-bold">Net Worth:</span>
+          <hr className='my-3' /> {/* Increased margin for separator */}
+          <div className='flex justify-between items-center text-xl'>
+            <span className='font-bold'>Net Worth:</span>
             <span className={`font-bold ${netWorth >= 0 ? 'text-blue-700' : 'text-red-700'}`}>
               {formatCurrency(netWorth)}
             </span>

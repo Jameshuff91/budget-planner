@@ -21,12 +21,7 @@ export interface LLMConfig {
 }
 
 const DEFAULT_CATEGORIES = {
-  income: [
-    'Salary',
-    'Investment Income',
-    'Refunds',
-    'Other Income'
-  ],
+  income: ['Salary', 'Investment Income', 'Refunds', 'Other Income'],
   expense: [
     'Rent',
     'Groceries',
@@ -39,8 +34,8 @@ const DEFAULT_CATEGORIES = {
     'Personal Care',
     'Insurance',
     'Credit Card Payment',
-    'Other Expenses'
-  ]
+    'Other Expenses',
+  ],
 };
 
 export class LLMService {
@@ -63,7 +58,7 @@ export class LLMService {
     try {
       const categories = customCategories || [
         ...DEFAULT_CATEGORIES.income,
-        ...DEFAULT_CATEGORIES.expense
+        ...DEFAULT_CATEGORIES.expense,
       ];
 
       const prompt = this.buildCategorizationPrompt(transaction, categories);
@@ -72,23 +67,24 @@ export class LLMService {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.apiKey}`
+          Authorization: `Bearer ${this.apiKey}`,
         },
         body: JSON.stringify({
           model: this.model,
           messages: [
             {
               role: 'system',
-              content: 'You are a financial transaction categorization assistant. Categorize transactions accurately based on their description and amount.'
+              content:
+                'You are a financial transaction categorization assistant. Categorize transactions accurately based on their description and amount.',
             },
             {
               role: 'user',
-              content: prompt
-            }
+              content: prompt,
+            },
           ],
           temperature: this.temperature,
-          max_tokens: this.maxTokens
-        })
+          max_tokens: this.maxTokens,
+        }),
       });
 
       if (!response.ok) {
@@ -97,11 +93,11 @@ export class LLMService {
 
       const data = await response.json();
       const result = this.parseCategorizationResponse(data.choices[0].message.content);
-      
+
       logger.info('Transaction categorized:', {
         description: transaction.description,
         suggestedCategory: result.category,
-        confidence: result.confidence
+        confidence: result.confidence,
       });
 
       return result;
@@ -118,7 +114,7 @@ export class LLMService {
     try {
       const categories = customCategories || [
         ...DEFAULT_CATEGORIES.income,
-        ...DEFAULT_CATEGORIES.expense
+        ...DEFAULT_CATEGORIES.expense,
       ];
 
       const prompt = this.buildBatchCategorizationPrompt(transactions, categories);
@@ -127,23 +123,24 @@ export class LLMService {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.apiKey}`
+          Authorization: `Bearer ${this.apiKey}`,
         },
         body: JSON.stringify({
           model: this.model,
           messages: [
             {
               role: 'system',
-              content: 'You are a financial transaction categorization assistant. Categorize multiple transactions accurately and efficiently.'
+              content:
+                'You are a financial transaction categorization assistant. Categorize multiple transactions accurately and efficiently.',
             },
             {
               role: 'user',
-              content: prompt
-            }
+              content: prompt,
+            },
           ],
           temperature: this.temperature,
-          max_tokens: this.maxTokens * transactions.length
-        })
+          max_tokens: this.maxTokens * transactions.length,
+        }),
       });
 
       if (!response.ok) {
@@ -152,7 +149,7 @@ export class LLMService {
 
       const data = await response.json();
       const results = this.parseBatchCategorizationResponse(data.choices[0].message.content);
-      
+
       return results;
     } catch (error) {
       logger.error('Error categorizing transactions batch:', error);
@@ -160,14 +157,12 @@ export class LLMService {
     }
   }
 
-  async suggestCustomCategories(
-    transactions: TransactionForCategorization[]
-  ): Promise<string[]> {
+  async suggestCustomCategories(transactions: TransactionForCategorization[]): Promise<string[]> {
     try {
       const prompt = `
 Based on these transactions, suggest additional categories that would be useful:
 
-${transactions.map(t => `- ${t.description} ($${Math.abs(t.amount)})`).join('\n')}
+${transactions.map((t) => `- ${t.description} ($${Math.abs(t.amount)})`).join('\n')}
 
 Current categories: ${[...DEFAULT_CATEGORIES.income, ...DEFAULT_CATEGORIES.expense].join(', ')}
 
@@ -178,23 +173,23 @@ Suggest up to 5 new categories that would better organize these transactions. Re
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.apiKey}`
+          Authorization: `Bearer ${this.apiKey}`,
         },
         body: JSON.stringify({
           model: this.model,
           messages: [
             {
               role: 'system',
-              content: 'You are a financial advisor helping to organize transaction categories.'
+              content: 'You are a financial advisor helping to organize transaction categories.',
             },
             {
               role: 'user',
-              content: prompt
-            }
+              content: prompt,
+            },
           ],
           temperature: 0.5,
-          max_tokens: 100
-        })
+          max_tokens: 100,
+        }),
       });
 
       if (!response.ok) {
@@ -243,11 +238,15 @@ Respond in JSON format:
     return `
 Categorize these financial transactions:
 
-${transactions.map((t, i) => `
+${transactions
+  .map(
+    (t, i) => `
 ${i + 1}. Description: ${t.description}
    Amount: $${Math.abs(t.amount)} (${t.amount >= 0 ? 'income' : 'expense'})
    Date: ${t.date}
-`).join('\n')}
+`
+  )
+  .join('\n')}
 
 Available categories:
 ${categories.join(', ')}
@@ -266,14 +265,14 @@ Respond with a JSON array where each object has:
       return {
         category: parsed.category || 'Other Expenses',
         confidence: parsed.confidence || 0.5,
-        reasoning: parsed.reasoning
+        reasoning: parsed.reasoning,
       };
     } catch {
       // Fallback parsing if JSON fails
       logger.warn('Failed to parse JSON response, using fallback parsing');
       return {
         category: 'Other Expenses',
-        confidence: 0.3
+        confidence: 0.3,
       };
     }
   }
@@ -283,7 +282,7 @@ Respond with a JSON array where each object has:
       const parsed = JSON.parse(response);
       return parsed.map((item: any) => ({
         category: item.category || 'Other Expenses',
-        confidence: item.confidence || 0.5
+        confidence: item.confidence || 0.5,
       }));
     } catch {
       logger.warn('Failed to parse batch JSON response');
@@ -295,7 +294,7 @@ Respond with a JSON array where each object has:
 // Factory function to create LLM service instance
 export function createLLMService(apiKey?: string): LLMService | null {
   const key = apiKey || process.env.NEXT_PUBLIC_OPENAI_API_KEY;
-  
+
   if (!key) {
     logger.warn('OpenAI API key not configured');
     return null;

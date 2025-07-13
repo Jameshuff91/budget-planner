@@ -1,15 +1,16 @@
+import { logger } from '@services/logger';
+
 import { CategoryRule } from '@/components/CategoryRules';
-import { logger } from '@/src/services/logger';
 
 export function applyCategoryRules(description: string, rules: CategoryRule[]): string | null {
   // Sort rules by priority (highest first) and filter enabled ones
-  const activeRules = rules
-    .filter(rule => rule.enabled)
-    .sort((a, b) => b.priority - a.priority);
+  const activeRules = rules.filter((rule) => rule.enabled).sort((a, b) => b.priority - a.priority);
 
   for (const rule of activeRules) {
     if (testRule(rule, description)) {
-      logger.info(`Category rule matched: "${description}" → ${rule.category} (rule: ${rule.pattern})`);
+      logger.info(
+        `Category rule matched: "${description}" → ${rule.category} (rule: ${rule.pattern})`
+      );
       return rule.category;
     }
   }
@@ -43,7 +44,7 @@ function testRule(rule: CategoryRule, testString: string): boolean {
 
 export function loadCategoryRules(): CategoryRule[] {
   if (typeof window === 'undefined') return [];
-  
+
   const saved = localStorage.getItem('budget.categoryRules');
   if (saved) {
     try {
@@ -53,6 +54,6 @@ export function loadCategoryRules(): CategoryRule[] {
       return [];
     }
   }
-  
+
   return [];
 }

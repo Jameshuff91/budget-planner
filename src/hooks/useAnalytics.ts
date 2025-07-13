@@ -1,4 +1,5 @@
 import { useMemo, useState, useEffect } from 'react';
+
 import { useDBContext } from '../context/DatabaseContext';
 import { logger } from '../services/logger';
 
@@ -8,10 +9,10 @@ interface SpendingTrendData {
 }
 
 interface SpendingOverviewData {
-  month: string; 
+  month: string;
   year: number;
-  totalSpending: number; 
-  totalIncome: number; 
+  totalSpending: number;
+  totalIncome: number;
 }
 
 interface CategoryData {
@@ -28,7 +29,7 @@ interface TrendData {
 
 interface MonthlyTrends {
   spending: TrendData;
-  netSavings: TrendData; 
+  netSavings: TrendData;
   income: TrendData;
   categorySpending: Record<string, TrendData>;
 }
@@ -39,7 +40,8 @@ interface MerchantSpendingData {
   transactionCount: number; // Number of transactions for this merchant
 }
 
-interface Transaction { // Ensuring Transaction type is available for RecurringTransactionCandidate
+interface Transaction {
+  // Ensuring Transaction type is available for RecurringTransactionCandidate
   id: string;
   amount: number;
   category: string;
@@ -51,12 +53,12 @@ interface Transaction { // Ensuring Transaction type is available for RecurringT
 }
 
 interface RecurringTransactionCandidate {
-  id: string; 
-  merchantName: string; 
+  id: string;
+  merchantName: string;
   amount: number;
   frequency: 'monthly' | 'weekly' | 'quarterly' | 'annually' | 'other' | 'inconsistent';
-  transactionIds: string[]; 
-  transactions: Transaction[]; 
+  transactionIds: string[];
+  transactions: Transaction[];
   lastDate: Date;
   avgDaysBetween: number | null;
   nextEstimatedDate?: Date;
@@ -78,7 +80,9 @@ export const DEFAULT_VALUES = {
     { name: 'Nov', spending: 0 },
     { name: 'Dec', spending: 0 },
   ],
-  spendingOverview: [{ month: 'Current', year: new Date().getFullYear(), totalSpending: 0, totalIncome: 0 }], // Already matches new structure
+  spendingOverview: [
+    { month: 'Current', year: new Date().getFullYear(), totalSpending: 0, totalIncome: 0 },
+  ], // Already matches new structure
   categoryData: [
     { name: 'Housing', value: 0, target: 2000 },
     { name: 'Transportation', value: 0, target: 500 },
@@ -89,11 +93,11 @@ export const DEFAULT_VALUES = {
   ],
   monthlyTrends: {
     spending: { current: 0, previous: 0, percentageChange: 0 },
-    netSavings: { current: 0, previous: 0, percentageChange: 0 }, 
+    netSavings: { current: 0, previous: 0, percentageChange: 0 },
     income: { current: 0, previous: 0, percentageChange: 0 },
     categorySpending: {},
   },
-  merchantSpending: [], 
+  merchantSpending: [],
   potentialRecurringTransactions: [], // Added
 };
 
@@ -102,27 +106,42 @@ const normalizeMerchantNameForRecurring = (description: string): string => {
   let name = description.toUpperCase();
   // More aggressive prefix removal for recurrence detection
   const prefixes = [
-    /^DEBIT CARD PURCHASE\s*-\s*/i, /^POS DEBIT\s*-\s*/i, /^ACH DEBIT\s*-\s*/i,
-    /^SQ\s*\*?\s*/i, /^PAYPAL\s*\*?\s*/i, /^AMZNMKTPLACE\s*/i, /^AMAZON\.COM\s*\*?\s*/i,
-    /^TST\*\s*/i, /^CHECKCARD\s*\d*\s*/i, /^PURCHASE AUTHORIZED ON\s*\d{2}\/\d{2}\s*/i,
-    /^PENDING\s*-\s*/i, /^BKCD PUR\s*/i, /^ONLINE PAYMENT TO\s*/i,
-    /^RECURRING PAYMENT TO\s*/i, /^BILL PAYMENT TO\s*/i, /^\d{4}X{4}\d{4}\s*/,
+    /^DEBIT CARD PURCHASE\s*-\s*/i,
+    /^POS DEBIT\s*-\s*/i,
+    /^ACH DEBIT\s*-\s*/i,
+    /^SQ\s*\*?\s*/i,
+    /^PAYPAL\s*\*?\s*/i,
+    /^AMZNMKTPLACE\s*/i,
+    /^AMAZON\.COM\s*\*?\s*/i,
+    /^TST\*\s*/i,
+    /^CHECKCARD\s*\d*\s*/i,
+    /^PURCHASE AUTHORIZED ON\s*\d{2}\/\d{2}\s*/i,
+    /^PENDING\s*-\s*/i,
+    /^BKCD PUR\s*/i,
+    /^ONLINE PAYMENT TO\s*/i,
+    /^RECURRING PAYMENT TO\s*/i,
+    /^BILL PAYMENT TO\s*/i,
+    /^\d{4}X{4}\d{4}\s*/,
     // Common services that often have variable parts after the name
-    /^NETFLIX\.COM/i, /^SPOTIFY/i, /^HBO/i, /^HULU/i, /^APPLE\.COM\/BILL/i,
+    /^NETFLIX\.COM/i,
+    /^SPOTIFY/i,
+    /^HBO/i,
+    /^HULU/i,
+    /^APPLE\.COM\/BILL/i,
     /^GOOGLE\s*\*?(?:PLAY|STORAGE|YOUTUBE)/i,
   ];
-  prefixes.forEach(pattern => {
+  prefixes.forEach((pattern) => {
     name = name.replace(pattern, '');
   });
 
   // Remove dates, ref numbers, etc.
-  name = name.replace(/\s*\d{1,2}\/\d{1,2}(\/\d{2,4})?\s*$/, ''); 
+  name = name.replace(/\s*\d{1,2}\/\d{1,2}(\/\d{2,4})?\s*$/, '');
   name = name.replace(/\s*REF#\s*[\w\d-]+/gi, '');
   name = name.replace(/\s*TRACE#\s*[\w\d-]+/gi, '');
   name = name.replace(/\s*CHECK\s*\d+/gi, '');
   name = name.replace(/\s*BILL\s*ID\s*\w+/gi, '');
   name = name.replace(/\s*ACCOUNT\s*\w+/gi, '');
-  
+
   // General cleanup: to lowercase, remove non-alphanumeric (keep spaces), standardize spaces
   name = name.toLowerCase();
   name = name.replace(/[^a-z0-9\s]/g, ''); // Remove non-alphanumeric, non-space
@@ -133,10 +152,9 @@ const normalizeMerchantNameForRecurring = (description: string): string => {
   if (words.length > 3) {
     name = words.slice(0, 3).join(' ');
   }
-  
-  return name || "unknown_merchant"; // Fallback if name becomes empty
-};
 
+  return name || 'unknown_merchant'; // Fallback if name becomes empty
+};
 
 export const useAnalytics = (timeRange?: { startDate?: Date; endDate?: Date }) => {
   const { transactions, categories } = useDBContext();
@@ -154,19 +172,29 @@ export const useAnalytics = (timeRange?: { startDate?: Date; endDate?: Date }) =
     try {
       const monthlySpending = new Map<string, number>();
       const months = [
-        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+        'Jan',
+        'Feb',
+        'Mar',
+        'Apr',
+        'May',
+        'Jun',
+        'Jul',
+        'Aug',
+        'Sep',
+        'Oct',
+        'Nov',
+        'Dec',
       ];
 
       // Get current date and calculate date range based on actual transaction data
       const today = new Date();
       let trendStartDate: Date;
-      let trendEndDate = today;
+      const trendEndDate = today;
 
       if (transactions.length > 0) {
         // Find the earliest transaction date
-        const dates = transactions.map(t => new Date(t.date));
-        const earliestDate = new Date(Math.min(...dates.map(d => d.getTime())));
+        const dates = transactions.map((t) => new Date(t.date));
+        const earliestDate = new Date(Math.min(...dates.map((d) => d.getTime())));
         trendStartDate = new Date(earliestDate.getFullYear(), earliestDate.getMonth(), 1);
       } else {
         // Fallback to last 12 months if no transactions
@@ -204,7 +232,7 @@ export const useAnalytics = (timeRange?: { startDate?: Date; endDate?: Date }) =
       return Array.from(monthlySpending.entries())
         .map(([name, spending]) => ({
           name,
-          spending: Math.abs(spending) // Ensure positive values
+          spending: Math.abs(spending), // Ensure positive values
         }))
         .sort((a, b) => {
           const [monthA, yearA] = a.name.split(' ');
@@ -223,18 +251,28 @@ export const useAnalytics = (timeRange?: { startDate?: Date; endDate?: Date }) =
     try {
       const monthlyData = new Map<string, { totalSpending: number; totalIncome: number }>();
       const months = [
-        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+        'Jan',
+        'Feb',
+        'Mar',
+        'Apr',
+        'May',
+        'Jun',
+        'Jul',
+        'Aug',
+        'Sep',
+        'Oct',
+        'Nov',
+        'Dec',
       ];
 
       // Determine the date range for the overview based on actual transaction data
       let rangeStartDate: Date;
-      let rangeEndDate = new Date(today.getFullYear(), today.getMonth() + 1, 0); // End of current month
+      const rangeEndDate = new Date(today.getFullYear(), today.getMonth() + 1, 0); // End of current month
 
       if (transactions.length > 0) {
         // Find the earliest transaction date
-        const dates = transactions.map(t => new Date(t.date));
-        const firstTxDate = new Date(Math.min(...dates.map(d => d.getTime())));
+        const dates = transactions.map((t) => new Date(t.date));
+        const firstTxDate = new Date(Math.min(...dates.map((d) => d.getTime())));
         rangeStartDate = new Date(firstTxDate.getFullYear(), firstTxDate.getMonth(), 1);
       } else {
         // Fallback to last 12 months if no transactions
@@ -242,21 +280,22 @@ export const useAnalytics = (timeRange?: { startDate?: Date; endDate?: Date }) =
       }
 
       // Initialize all months within the determined range
-      let currentDateIter = new Date(rangeStartDate.getFullYear(), rangeStartDate.getMonth(), 1);
+      const currentDateIter = new Date(rangeStartDate.getFullYear(), rangeStartDate.getMonth(), 1);
       while (currentDateIter <= rangeEndDate) {
         const monthKey = `${currentDateIter.getFullYear()}-${months[currentDateIter.getMonth()]}`;
         monthlyData.set(monthKey, { totalSpending: 0, totalIncome: 0 });
         currentDateIter.setMonth(currentDateIter.getMonth() + 1);
       }
-      
+
       // Process all transactions
       transactions.forEach((transaction) => {
         const date = new Date(transaction.date);
         // Ensure the transaction date is within our considered range before processing
         if (date >= rangeStartDate && date <= rangeEndDate) {
           const monthKey = `${date.getFullYear()}-${months[date.getMonth()]}`;
-          
-          if (monthlyData.has(monthKey)) { // Should always be true due to pre-initialization
+
+          if (monthlyData.has(monthKey)) {
+            // Should always be true due to pre-initialization
             const current = monthlyData.get(monthKey)!;
             if (transaction.type === 'expense') {
               current.totalSpending += Math.abs(transaction.amount);
@@ -297,9 +336,11 @@ export const useAnalytics = (timeRange?: { startDate?: Date; endDate?: Date }) =
   // Memoize filtered transactions to avoid recalculating when same period is requested
   const filteredTransactions = useMemo(() => {
     const periodKey = `${startDate.getTime()}-${endDate.getTime()}`;
-    logger.info(`Calculating category spending for period: ${startDate.toISOString()} - ${endDate.toISOString()}`);
+    logger.info(
+      `Calculating category spending for period: ${startDate.toISOString()} - ${endDate.toISOString()}`
+    );
 
-    const filtered = transactions.filter(transaction => {
+    const filtered = transactions.filter((transaction) => {
       const transactionDate = new Date(transaction.date);
       return transactionDate >= startDate && transactionDate <= endDate;
     });
@@ -330,7 +371,7 @@ export const useAnalytics = (timeRange?: { startDate?: Date; endDate?: Date }) =
 
       // If there are no transactions for the selected month, return empty categories with zero values
       if (result.length === 0) {
-        return categories.map(category => ({
+        return categories.map((category) => ({
           name: category.name,
           value: 0,
           target: category.budget,
@@ -342,13 +383,15 @@ export const useAnalytics = (timeRange?: { startDate?: Date; endDate?: Date }) =
       logger.error('Error calculating category spending:', error);
       return DEFAULT_VALUES.categoryData;
     }
-  }, [filteredTransactions, categories]); 
+  }, [filteredTransactions, categories]);
 
   const detailedCategorySpending = useMemo(() => {
     try {
       const details: Record<string, any[]> = {};
-      
-      logger.info(`Calculating detailed category spending for period: ${startDate.toISOString()} - ${endDate.toISOString()}`);
+
+      logger.info(
+        `Calculating detailed category spending for period: ${startDate.toISOString()} - ${endDate.toISOString()}`
+      );
       logger.info('Filtered transactions for detailed category spending:', filteredTransactions);
 
       filteredTransactions.forEach((transaction) => {
@@ -418,10 +461,11 @@ export const useAnalytics = (timeRange?: { startDate?: Date; endDate?: Date }) =
       const currentIncome = Math.abs(currentData.income);
       // Calculate current month savings including investments
       const currentInvestments = transactions
-        .filter(t =>
-          new Date(t.date).getMonth() === currentMonth &&
-          new Date(t.date).getFullYear() === currentYear &&
-          t.description.toLowerCase().includes('vanguard')
+        .filter(
+          (t) =>
+            new Date(t.date).getMonth() === currentMonth &&
+            new Date(t.date).getFullYear() === currentYear &&
+            t.description.toLowerCase().includes('vanguard')
         )
         .reduce((sum, t) => sum + Math.abs(t.amount), 0);
       const currentSavings = currentIncome - currentSpending + currentInvestments;
@@ -433,10 +477,11 @@ export const useAnalytics = (timeRange?: { startDate?: Date; endDate?: Date }) =
       const previousSpending = Math.abs(previousData.spending);
       const previousIncome = Math.abs(previousData.income);
       const previousInvestments = transactions
-        .filter(t =>
-          new Date(t.date).getMonth() === previousMonth &&
-          new Date(t.date).getFullYear() === previousYear &&
-          t.description.toLowerCase().includes('vanguard')
+        .filter(
+          (t) =>
+            new Date(t.date).getMonth() === previousMonth &&
+            new Date(t.date).getFullYear() === previousYear &&
+            t.description.toLowerCase().includes('vanguard')
         )
         .reduce((sum, t) => sum + Math.abs(t.amount), 0);
       const previousSavings = previousIncome - previousSpending + previousInvestments;
@@ -456,7 +501,7 @@ export const useAnalytics = (timeRange?: { startDate?: Date; endDate?: Date }) =
               t.type === 'expense' &&
               t.category === category.name &&
               new Date(t.date).getMonth() === currentMonth &&
-              new Date(t.date).getFullYear() === currentYear,
+              new Date(t.date).getFullYear() === currentYear
           )
           .reduce((sum, t) => sum + t.amount, 0);
 
@@ -466,7 +511,7 @@ export const useAnalytics = (timeRange?: { startDate?: Date; endDate?: Date }) =
               t.type === 'expense' &&
               t.category === category.name &&
               new Date(t.date).getMonth() === previousMonth &&
-              new Date(t.date).getFullYear() === previousYear,
+              new Date(t.date).getFullYear() === previousYear
           )
           .reduce((sum, t) => sum + t.amount, 0);
 
@@ -475,7 +520,7 @@ export const useAnalytics = (timeRange?: { startDate?: Date; endDate?: Date }) =
           previous: previousCategorySpending,
           percentageChange: calculatePercentageChange(
             currentCategorySpending,
-            previousCategorySpending,
+            previousCategorySpending
           ),
         };
       });
@@ -486,12 +531,14 @@ export const useAnalytics = (timeRange?: { startDate?: Date; endDate?: Date }) =
           previous: previousSpending,
           percentageChange: calculatePercentageChange(currentSpending, previousSpending),
         },
-        netSavings: { // This calculation remains for net savings (income - spending + investments)
-          current: currentSavings, 
-          previous: previousSavings, 
+        netSavings: {
+          // This calculation remains for net savings (income - spending + investments)
+          current: currentSavings,
+          previous: previousSavings,
           percentageChange: calculatePercentageChange(currentSavings, previousSavings),
         },
-        income: { // This represents total raw income from monthlyTotals
+        income: {
+          // This represents total raw income from monthlyTotals
           current: currentIncome,
           previous: previousIncome,
           percentageChange: calculatePercentageChange(currentIncome, previousIncome),
@@ -508,9 +555,13 @@ export const useAnalytics = (timeRange?: { startDate?: Date; endDate?: Date }) =
     try {
       const merchantTotals = new Map<string, { value: number; transactionCount: number }>();
 
-      logger.info(`Calculating merchant spending for period: ${startDate.toISOString()} - ${endDate.toISOString()}`);
+      logger.info(
+        `Calculating merchant spending for period: ${startDate.toISOString()} - ${endDate.toISOString()}`
+      );
 
-      const expenseTransactions = filteredTransactions.filter(transaction => transaction.type === 'expense');
+      const expenseTransactions = filteredTransactions.filter(
+        (transaction) => transaction.type === 'expense'
+      );
 
       expenseTransactions.forEach((transaction) => {
         const merchantName = transaction.description;
@@ -539,16 +590,17 @@ export const useAnalytics = (timeRange?: { startDate?: Date; endDate?: Date }) =
   const potentialRecurringTransactions = useMemo((): RecurringTransactionCandidate[] => {
     logger.info('Calculating potential recurring transactions...');
     const candidates: RecurringTransactionCandidate[] = [];
-    
-    const expenseTransactions = transactions.filter(t => t.type === 'expense');
-    if (expenseTransactions.length < 3) { // Need at least 3 for a pattern
+
+    const expenseTransactions = transactions.filter((t) => t.type === 'expense');
+    if (expenseTransactions.length < 3) {
+      // Need at least 3 for a pattern
       logger.info('Not enough expense transactions to detect recurring patterns.');
       return [];
     }
 
     const groupedByMerchant = new Map<string, Transaction[]>();
 
-    expenseTransactions.forEach(t => {
+    expenseTransactions.forEach((t) => {
       const normalizedName = normalizeMerchantNameForRecurring(t.description);
       // logger.debug(`Original: "${t.description}", Normalized for recurring: "${normalizedName}"`);
       const group = groupedByMerchant.get(normalizedName) || [];
@@ -558,7 +610,7 @@ export const useAnalytics = (timeRange?: { startDate?: Date; endDate?: Date }) =
 
     groupedByMerchant.forEach((merchantTransactions, merchantName) => {
       const groupedByAmount = new Map<number, Transaction[]>();
-      merchantTransactions.forEach(t => {
+      merchantTransactions.forEach((t) => {
         const group = groupedByAmount.get(t.amount) || [];
         group.push(t);
         groupedByAmount.set(t.amount, group);
@@ -566,11 +618,16 @@ export const useAnalytics = (timeRange?: { startDate?: Date; endDate?: Date }) =
 
       groupedByAmount.forEach((transactionsInSeries, amount) => {
         if (transactionsInSeries.length >= 3) {
-          const sortedSeries = [...transactionsInSeries].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-          
+          const sortedSeries = [...transactionsInSeries].sort(
+            (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+          );
+
           const intervals: number[] = [];
           for (let i = 1; i < sortedSeries.length; i++) {
-            const diffTime = Math.abs(new Date(sortedSeries[i].date).getTime() - new Date(sortedSeries[i-1].date).getTime());
+            const diffTime = Math.abs(
+              new Date(sortedSeries[i].date).getTime() -
+                new Date(sortedSeries[i - 1].date).getTime()
+            );
             const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
             intervals.push(diffDays);
           }
@@ -578,50 +635,65 @@ export const useAnalytics = (timeRange?: { startDate?: Date; endDate?: Date }) =
           if (intervals.length < 2) return; // Need at least 2 intervals (3 transactions for a series)
 
           const avgDaysBetween = intervals.reduce((sum, val) => sum + val, 0) / intervals.length;
-          const stdDev = Math.sqrt(intervals.map(x => Math.pow(x - avgDaysBetween, 2)).reduce((a, b) => a + b, 0) / intervals.length);
+          const stdDev = Math.sqrt(
+            intervals.map((x) => Math.pow(x - avgDaysBetween, 2)).reduce((a, b) => a + b, 0) /
+              intervals.length
+          );
 
           let frequency: RecurringTransactionCandidate['frequency'] = 'inconsistent';
           // Heuristic: std dev less than 15% of avg, or less than ~3.5 days for monthly-ish patterns
           // and for very short intervals (weekly), allow slightly larger relative stddev but small absolute.
           let isConsistent = false;
-          if (avgDaysBetween >= 6 && avgDaysBetween <= 9 && stdDev < 2.5) { // weekly-ish
-             isConsistent = true;
+          if (avgDaysBetween >= 6 && avgDaysBetween <= 9 && stdDev < 2.5) {
+            // weekly-ish
+            isConsistent = true;
           } else if (stdDev < Math.max(avgDaysBetween * 0.15, 3.5)) {
-             isConsistent = true;
+            isConsistent = true;
           }
-
 
           if (isConsistent) {
             if (avgDaysBetween >= 27 && avgDaysBetween <= 33) frequency = 'monthly';
-            else if (avgDaysBetween >= 6 && avgDaysBetween <= 9) frequency = 'weekly'; // slightly wider for weekly
+            else if (avgDaysBetween >= 6 && avgDaysBetween <= 9)
+              frequency = 'weekly'; // slightly wider for weekly
             else if (avgDaysBetween >= 85 && avgDaysBetween <= 95) frequency = 'quarterly';
             else if (avgDaysBetween >= 350 && avgDaysBetween <= 380) frequency = 'annually';
-            else if (intervals.length >=2 && stdDev < 2) { // Consistent but not standard, very low stddev
-              frequency = 'other'; 
-              logger.info(`Found 'other' consistent frequency for ${merchantName} - Amount: ${amount}, AvgDays: ${avgDaysBetween}, StdDev: ${stdDev}`);
+            else if (intervals.length >= 2 && stdDev < 2) {
+              // Consistent but not standard, very low stddev
+              frequency = 'other';
+              logger.info(
+                `Found 'other' consistent frequency for ${merchantName} - Amount: ${amount}, AvgDays: ${avgDaysBetween}, StdDev: ${stdDev}`
+              );
             }
           }
-          
+
           // For this first pass, only add candidates with a clearly identified common frequency.
-          if (frequency === 'monthly' || frequency === 'weekly' || frequency === 'quarterly' || frequency === 'annually') { 
+          if (
+            frequency === 'monthly' ||
+            frequency === 'weekly' ||
+            frequency === 'quarterly' ||
+            frequency === 'annually'
+          ) {
             const lastTransaction = sortedSeries[sortedSeries.length - 1];
             const lastDate = new Date(lastTransaction.date);
             let nextEstimatedDate: Date | undefined = undefined;
 
-            if (avgDaysBetween > 0) { // Ensure avgDaysBetween is positive before adding
-                nextEstimatedDate = new Date(lastDate);
-                nextEstimatedDate.setDate(lastDate.getDate() + Math.round(avgDaysBetween));
+            if (avgDaysBetween > 0) {
+              // Ensure avgDaysBetween is positive before adding
+              nextEstimatedDate = new Date(lastDate);
+              nextEstimatedDate.setDate(lastDate.getDate() + Math.round(avgDaysBetween));
             }
-            
+
             // Create a more stable ID based on merchant, amount, and frequency
-            const candidateId = `${merchantName}-${amount}-${frequency}`.replace(/\s+/g, '-').toLowerCase();
+            const candidateId = `${merchantName}-${amount}-${frequency}`
+              .replace(/\s+/g, '-')
+              .toLowerCase();
 
             candidates.push({
-              id: candidateId, 
+              id: candidateId,
               merchantName,
               amount,
               frequency,
-              transactionIds: sortedSeries.map(t => t.id),
+              transactionIds: sortedSeries.map((t) => t.id),
               transactions: sortedSeries, // Store the actual transaction objects
               lastDate,
               avgDaysBetween,
@@ -631,7 +703,7 @@ export const useAnalytics = (timeRange?: { startDate?: Date; endDate?: Date }) =
         }
       });
     });
-    
+
     // Sort candidates by merchant name, then amount
     candidates.sort((a, b) => {
       if (a.merchantName < b.merchantName) return -1;
@@ -650,6 +722,6 @@ export const useAnalytics = (timeRange?: { startDate?: Date; endDate?: Date }) =
     detailedCategorySpending,
     monthlyTrends,
     merchantSpending,
-    potentialRecurringTransactions, 
+    potentialRecurringTransactions,
   };
 };

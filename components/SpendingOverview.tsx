@@ -1,11 +1,20 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
-import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend, CartesianGrid } from 'recharts';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import {
+  Bar,
+  BarChart,
+  ResponsiveContainer,
+  XAxis,
+  YAxis,
+  Tooltip,
+  Legend,
+  CartesianGrid,
+} from 'recharts';
 
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { useAnalytics } from '../src/hooks/useAnalytics';
 import { formatCurrency } from '../src/utils/helpers';
 
@@ -15,11 +24,15 @@ interface SpendingOverviewProps {
   selectedYear?: number;
 }
 
-export default function SpendingOverview({ selectedYear: propSelectedYear }: SpendingOverviewProps) {
+export default function SpendingOverview({
+  selectedYear: propSelectedYear,
+}: SpendingOverviewProps) {
   const { spendingOverview, monthlyTrends } = useAnalytics();
   const [selectedMonth, setSelectedMonth] = useState<(typeof spendingOverview)[0] | null>(null);
-  const [internalSelectedYear, setInternalSelectedYear] = useState<number>(new Date().getFullYear());
-  
+  const [internalSelectedYear, setInternalSelectedYear] = useState<number>(
+    new Date().getFullYear()
+  );
+
   // Use prop if provided, otherwise use internal state
   const selectedYear = propSelectedYear ?? internalSelectedYear;
   const trends = monthlyTrends;
@@ -28,12 +41,24 @@ export default function SpendingOverview({ selectedYear: propSelectedYear }: Spe
   const currentDate = new Date();
   const currentMonth = currentDate.getMonth();
   const previousMonth = (currentMonth - 1 + 12) % 12;
-  const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
-                     'July', 'August', 'September', 'October', 'November', 'December'];
+  const monthNames = [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
+  ];
 
   // Filter data for selected year
   const yearData = useMemo(() => {
-    return spendingOverview.filter(item => item.year === selectedYear);
+    return spendingOverview.filter((item) => item.year === selectedYear);
   }, [spendingOverview, selectedYear]);
 
   const handleBarClick = (data: any) => {
@@ -41,12 +66,12 @@ export default function SpendingOverview({ selectedYear: propSelectedYear }: Spe
   };
 
   const handleYearChange = (direction: 'next' | 'prev') => {
-    setInternalSelectedYear(prev => direction === 'next' ? prev + 1 : prev - 1);
+    setInternalSelectedYear((prev) => (direction === 'next' ? prev + 1 : prev - 1));
   };
 
   // Get available years from the data
   const availableYears = useMemo(() => {
-    const years = new Set(spendingOverview.map(item => item.year));
+    const years = new Set(spendingOverview.map((item) => item.year));
     return Array.from(years).sort();
   }, [spendingOverview]);
 
@@ -106,95 +131,96 @@ export default function SpendingOverview({ selectedYear: propSelectedYear }: Spe
         </div>
         {!propSelectedYear && (
           <div className='flex justify-between items-center mb-4'>
-            <Button 
-              variant="outline" 
-              size="sm" 
+            <Button
+              variant='outline'
+              size='sm'
               onClick={() => handleYearChange('prev')}
               disabled={!canNavigatePrev}
             >
-              <ChevronLeft className="h-4 w-4 mr-1" />
+              <ChevronLeft className='h-4 w-4 mr-1' />
               Previous Year
             </Button>
             <div className='text-lg font-semibold'>{selectedYear}</div>
-            <Button 
-              variant="outline" 
-              size="sm" 
+            <Button
+              variant='outline'
+              size='sm'
               onClick={() => handleYearChange('next')}
               disabled={!canNavigateNext}
             >
               Next Year
-              <ChevronRight className="h-4 w-4 ml-1" />
+              <ChevronRight className='h-4 w-4 ml-1' />
             </Button>
           </div>
         )}
         <div className='h-[300px] w-full'>
           {yearData.length > 0 ? (
-          <ResponsiveContainer width='100%' height='100%'>
-            <BarChart 
-              data={yearData}
-              margin={{ top: 10, right: 10, left: 60, bottom: 30 }}
-            >
-              <XAxis
-                dataKey='name'
-                stroke='#888888'
-                fontSize={12}
-                tickLine={false}
-                axisLine={false}
-                angle={-45}
-                textAnchor="end"
-                height={60}
-              />
-              <YAxis
-                stroke='#888888'
-                fontSize={12}
-                tickLine={false}
-                axisLine={false}
-                tickFormatter={(value) => `${formatCurrency(value)}`}
-                width={60}
-              />
-              <Tooltip
-                content={({ active, payload }) => {
-                  if (active && payload && payload.length) {
-                    return (
-                      <div className='bg-white p-4 rounded-lg shadow-lg border'>
-                        <p className='text-sm text-gray-600'>{payload[0].payload.name} {payload[0].payload.year}</p>
-                        <p className='font-semibold text-red-600'>
-                          Spending: {formatCurrency(payload[0].payload.totalSpending)}
-                        </p>
-                        <p className='font-semibold text-green-600'>
-                          Income: {formatCurrency(payload[0].payload.totalIncome)}
-                        </p>
-                      </div>
-                    );
-                  }
-                  return null;
-                }}
-              />
-              <Legend />
-              <CartesianGrid strokeDasharray="3 3" className="grid grid-gray-100" />
-              <Bar 
-                dataKey='totalSpending' 
-                name='Spending'
-                fill='#ef4444' 
-                radius={[4, 4, 0, 0]} 
-                onClick={handleBarClick}
-                className='cursor-pointer'
-              />
-              <Bar
-                dataKey='totalIncome'
-                name='Income'
-                fill='#16a34a'
-                radius={[4, 4, 0, 0]}
-                onClick={handleBarClick}
-                className='cursor-pointer'
-              />
-            </BarChart>
-          </ResponsiveContainer>
+            <ResponsiveContainer width='100%' height='100%'>
+              <BarChart data={yearData} margin={{ top: 10, right: 10, left: 60, bottom: 30 }}>
+                <XAxis
+                  dataKey='name'
+                  stroke='#888888'
+                  fontSize={12}
+                  tickLine={false}
+                  axisLine={false}
+                  angle={-45}
+                  textAnchor='end'
+                  height={60}
+                />
+                <YAxis
+                  stroke='#888888'
+                  fontSize={12}
+                  tickLine={false}
+                  axisLine={false}
+                  tickFormatter={(value) => `${formatCurrency(value)}`}
+                  width={60}
+                />
+                <Tooltip
+                  content={({ active, payload }) => {
+                    if (active && payload && payload.length) {
+                      return (
+                        <div className='bg-white p-4 rounded-lg shadow-lg border'>
+                          <p className='text-sm text-gray-600'>
+                            {payload[0].payload.name} {payload[0].payload.year}
+                          </p>
+                          <p className='font-semibold text-red-600'>
+                            Spending: {formatCurrency(payload[0].payload.totalSpending)}
+                          </p>
+                          <p className='font-semibold text-green-600'>
+                            Income: {formatCurrency(payload[0].payload.totalIncome)}
+                          </p>
+                        </div>
+                      );
+                    }
+                    return null;
+                  }}
+                />
+                <Legend />
+                <CartesianGrid strokeDasharray='3 3' className='grid grid-gray-100' />
+                <Bar
+                  dataKey='totalSpending'
+                  name='Spending'
+                  fill='#ef4444'
+                  radius={[4, 4, 0, 0]}
+                  onClick={handleBarClick}
+                  className='cursor-pointer'
+                />
+                <Bar
+                  dataKey='totalIncome'
+                  name='Income'
+                  fill='#16a34a'
+                  radius={[4, 4, 0, 0]}
+                  onClick={handleBarClick}
+                  className='cursor-pointer'
+                />
+              </BarChart>
+            </ResponsiveContainer>
           ) : (
             <div className='flex items-center justify-center h-full bg-gray-50 rounded-lg'>
               <div className='text-center p-6'>
                 <p className='text-lg font-medium text-gray-700 mb-2'>No data for {selectedYear}</p>
-                <p className='text-sm text-gray-500 mb-4'>Upload bank statements from {selectedYear} to see monthly overview</p>
+                <p className='text-sm text-gray-500 mb-4'>
+                  Upload bank statements from {selectedYear} to see monthly overview
+                </p>
                 <div className='space-y-2 text-xs text-gray-400'>
                   <p>• Use the year navigation to view other years</p>
                   <p>• Click on bars to see detailed expenses</p>

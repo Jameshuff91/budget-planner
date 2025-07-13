@@ -181,7 +181,10 @@ export class PlaidService {
   /**
    * Sync transactions using the newer transactions/sync endpoint
    */
-  async syncTransactions(accessToken: string, cursor?: string): Promise<{
+  async syncTransactions(
+    accessToken: string,
+    cursor?: string
+  ): Promise<{
     added: PlaidTransaction[];
     modified: PlaidTransaction[];
     removed: string[];
@@ -260,11 +263,12 @@ export class PlaidService {
     // Plaid amounts are positive for debits (expenses) and negative for credits (income)
     const amount = Math.abs(plaidTx.amount);
     const type = plaidTx.amount > 0 ? 'expense' : 'income';
-    
+
     // Use Plaid's category hierarchy
-    const category = plaidTx.category && plaidTx.category.length > 0 
-      ? plaidTx.category[plaidTx.category.length - 1] // Use most specific category
-      : 'Uncategorized';
+    const category =
+      plaidTx.category && plaidTx.category.length > 0
+        ? plaidTx.category[plaidTx.category.length - 1] // Use most specific category
+        : 'Uncategorized';
 
     return {
       date: plaidTx.date,
@@ -306,7 +310,10 @@ export class PlaidService {
 export function createPlaidService(): PlaidService | null {
   const clientId = process.env.NEXT_PUBLIC_PLAID_CLIENT_ID;
   const secret = process.env.PLAID_SECRET;
-  const environment = (process.env.NEXT_PUBLIC_PLAID_ENV || 'sandbox') as 'sandbox' | 'development' | 'production';
+  const environment = (process.env.NEXT_PUBLIC_PLAID_ENV || 'sandbox') as
+    | 'sandbox'
+    | 'development'
+    | 'production';
 
   if (!clientId || !secret) {
     logger.warn('Plaid credentials not configured');

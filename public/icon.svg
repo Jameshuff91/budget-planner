@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3B82F6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1E40AF;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background Circle -->
+  <circle cx="256" cy="256" r="240" fill="url(#bgGradient)" />
+  
+  <!-- Dollar Sign -->
+  <path d="M 256 160 L 256 352" stroke="white" stroke-width="20" stroke-linecap="round" />
+  <path d="M 200 200 Q 200 160 256 160 T 312 200 Q 312 240 256 240 Q 200 240 200 280 Q 200 320 256 320 T 312 280" 
+        fill="none" stroke="white" stroke-width="28" stroke-linecap="round" stroke-linejoin="round" />
+  
+  <!-- Chart Bars -->
+  <rect x="160" y="380" width="40" height="60" fill="white" rx="4" />
+  <rect x="220" y="360" width="40" height="80" fill="white" rx="4" />
+  <rect x="280" y="340" width="40" height="100" fill="white" rx="4" />
+  <rect x="340" y="320" width="40" height="120" fill="white" rx="4" />
+</svg>

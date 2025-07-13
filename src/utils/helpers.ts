@@ -52,7 +52,7 @@ export const calculateTotalsByCategory = (
     amount: number;
     category: string;
     type: 'income' | 'expense';
-  }>,
+  }>
 ): Record<string, { total: number; type: 'income' | 'expense' }> => {
   return transactions.reduce(
     (acc, transaction) => {
@@ -62,7 +62,7 @@ export const calculateTotalsByCategory = (
       acc[transaction.category].total += transaction.amount;
       return acc;
     },
-    {} as Record<string, { total: number; type: 'income' | 'expense' }>,
+    {} as Record<string, { total: number; type: 'income' | 'expense' }>
   );
 };
 
@@ -71,7 +71,7 @@ export const generateMonthlyReport = (
     amount: number;
     date: Date;
     type: 'income' | 'expense';
-  }>,
+  }>
 ) => {
   const report = {
     totalIncome: 0,
@@ -131,7 +131,7 @@ export function generateUUID(): string {
 
 export const debounce = <T extends (...args: any[]) => void>(
   func: T,
-  wait: number,
+  wait: number
 ): ((...args: Parameters<T>) => void) => {
   let timeout: NodeJS.Timeout;
 

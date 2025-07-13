@@ -9,10 +9,11 @@ import {
   useEffect,
   useMemo,
 } from 'react';
+
 import { dbService, Asset, Liability } from '../services/db'; // Import Asset and Liability
 import { logger } from '../services/logger';
-import { generateUUID } from '../utils/helpers';
 import { pdfService } from '../services/pdfService'; // Fix import path
+import { generateUUID } from '../utils/helpers';
 
 interface Transaction {
   id: string;
@@ -65,7 +66,9 @@ const DatabaseContext = createContext<DatabaseContextType | undefined>(undefined
 export function DatabaseProvider({ children }: { children: ReactNode }) {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [recurringPreferences, setRecurringPreferences] = useState<Record<string, 'confirmed' | 'dismissed'>>({});
+  const [recurringPreferences, setRecurringPreferences] = useState<
+    Record<string, 'confirmed' | 'dismissed'>
+  >({});
   const [assets, setAssets] = useState<Asset[]>([]); // Added
   const [liabilities, setLiabilities] = useState<Liability[]>([]); // Added
   const [loading, setLoading] = useState(true);
@@ -75,8 +78,8 @@ export function DatabaseProvider({ children }: { children: ReactNode }) {
     try {
       setLoading(true);
       const [
-        loadedTransactions, 
-        loadedCategories, 
+        loadedTransactions,
+        loadedCategories,
         loadedRecurringPrefs,
         loadedAssets, // New
         loadedLiabilities, // New
@@ -106,7 +109,7 @@ export function DatabaseProvider({ children }: { children: ReactNode }) {
       try {
         // Get existing categories
         const existingCategories = await dbService.getCategories();
-        
+
         // If no categories exist, add default ones
         if (existingCategories.length === 0) {
           const defaultCategories = [
@@ -115,7 +118,7 @@ export function DatabaseProvider({ children }: { children: ReactNode }) {
             { id: 'groceries', name: 'Groceries', type: 'expense' as const },
             { id: 'utilities', name: 'Utilities', type: 'expense' as const },
             { id: 'transport', name: 'Transport', type: 'expense' as const },
-            { id: 'entertainment', name: 'Entertainment', type: 'expense' as const }
+            { id: 'entertainment', name: 'Entertainment', type: 'expense' as const },
           ];
 
           for (const category of defaultCategories) {
@@ -146,7 +149,7 @@ export function DatabaseProvider({ children }: { children: ReactNode }) {
         throw err;
       }
     },
-    [loadData],
+    [loadData]
   );
 
   const addTransactionsBatch = useCallback(
@@ -164,7 +167,7 @@ export function DatabaseProvider({ children }: { children: ReactNode }) {
         throw err;
       }
     },
-    [loadData],
+    [loadData]
   );
 
   // --- Asset Context Functions ---
@@ -180,7 +183,7 @@ export function DatabaseProvider({ children }: { children: ReactNode }) {
         throw err;
       }
     },
-    [loadData],
+    [loadData]
   );
 
   const updateAsset = useCallback(
@@ -194,7 +197,7 @@ export function DatabaseProvider({ children }: { children: ReactNode }) {
         throw err;
       }
     },
-    [loadData],
+    [loadData]
   );
 
   const deleteAsset = useCallback(
@@ -208,7 +211,7 @@ export function DatabaseProvider({ children }: { children: ReactNode }) {
         throw err;
       }
     },
-    [loadData],
+    [loadData]
   );
 
   // --- Liability Context Functions ---
@@ -224,7 +227,7 @@ export function DatabaseProvider({ children }: { children: ReactNode }) {
         throw err;
       }
     },
-    [loadData],
+    [loadData]
   );
 
   const updateLiability = useCallback(
@@ -238,7 +241,7 @@ export function DatabaseProvider({ children }: { children: ReactNode }) {
         throw err;
       }
     },
-    [loadData],
+    [loadData]
   );
 
   const deleteLiability = useCallback(
@@ -252,7 +255,7 @@ export function DatabaseProvider({ children }: { children: ReactNode }) {
         throw err;
       }
     },
-    [loadData],
+    [loadData]
   );
 
   const setRecurringPreference = useCallback(
@@ -265,7 +268,7 @@ export function DatabaseProvider({ children }: { children: ReactNode }) {
         throw err;
       }
     },
-    [loadData],
+    [loadData]
   );
 
   const deleteRecurringPreference = useCallback(
@@ -278,7 +281,7 @@ export function DatabaseProvider({ children }: { children: ReactNode }) {
         throw err;
       }
     },
-    [loadData],
+    [loadData]
   );
 
   const updateCategoryBudget = useCallback(
@@ -291,7 +294,7 @@ export function DatabaseProvider({ children }: { children: ReactNode }) {
         throw err;
       }
     },
-    [loadData],
+    [loadData]
   );
 
   const updateTransaction = useCallback(
@@ -304,7 +307,7 @@ export function DatabaseProvider({ children }: { children: ReactNode }) {
         throw err;
       }
     },
-    [loadData],
+    [loadData]
   );
 
   const deleteTransaction = useCallback(
@@ -317,7 +320,7 @@ export function DatabaseProvider({ children }: { children: ReactNode }) {
         throw err;
       }
     },
-    [loadData],
+    [loadData]
   );
 
   const clearTransactions = useCallback(async () => {
@@ -344,7 +347,7 @@ export function DatabaseProvider({ children }: { children: ReactNode }) {
         throw err;
       }
     },
-    [loadData],
+    [loadData]
   );
 
   const getTransactionsByMonth = useCallback(
@@ -357,7 +360,7 @@ export function DatabaseProvider({ children }: { children: ReactNode }) {
         return transactionDate >= startOfMonth && transactionDate <= endOfMonth;
       });
     },
-    [transactions],
+    [transactions]
   );
 
   const refreshData = useCallback(async () => {
@@ -387,8 +390,8 @@ export function DatabaseProvider({ children }: { children: ReactNode }) {
             (t) =>
               t.date.getTime() === transaction.date.getTime() &&
               t.amount === transaction.amount &&
-              t.description === transaction.description,
-          ),
+              t.description === transaction.description
+          )
       );
 
       setTransactions(uniqueTransactions);
@@ -415,8 +418,8 @@ export function DatabaseProvider({ children }: { children: ReactNode }) {
       clearTransactions,
       addCategory,
       updateCategoryBudget,
-      recurringPreferences, 
-      setRecurringPreference, 
+      recurringPreferences,
+      setRecurringPreference,
       deleteRecurringPreference,
       assets, // Added
       liabilities, // Added
@@ -454,7 +457,7 @@ export function DatabaseProvider({ children }: { children: ReactNode }) {
       deleteLiability, // Added
       refreshData,
       getTransactionsByMonth,
-    ],
+    ]
   );
 
   return <DatabaseContext.Provider value={value}>{children}</DatabaseContext.Provider>;

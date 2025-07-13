@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Configuration, PlaidApi, PlaidEnvironments, Products, CountryCode } from 'plaid';
-import { logger } from '@/src/services/logger';
+
+import { logger } from '@services/logger';
 
 // Initialize Plaid client
 const configuration = new Configuration({
@@ -20,10 +21,7 @@ export async function POST(request: NextRequest) {
     const { user_id, products = ['transactions'] } = await request.json();
 
     if (!user_id) {
-      return NextResponse.json(
-        { error: 'User ID is required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
     }
 
     const productList = products.map((p: string) => p as Products);

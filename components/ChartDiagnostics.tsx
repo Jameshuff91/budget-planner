@@ -1,10 +1,12 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
 import { AlertCircle, CheckCircle, XCircle, Database, FileText, BarChart3 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import React, { useEffect, useState } from 'react';
+
 import { useDBContext } from '@context/DatabaseContext';
 import { useAnalytics } from '@hooks/useAnalytics';
+
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 
 interface DiagnosticItem {
   name: string;
@@ -36,18 +38,19 @@ export default function ChartDiagnostics() {
         name: 'Transaction Data',
         status: 'fail',
         message: 'No transactions found in database',
-        details: 'Charts require transaction data to display. Upload a bank statement PDF to get started.',
+        details:
+          'Charts require transaction data to display. Upload a bank statement PDF to get started.',
       });
     } else {
       results.push({
         name: 'Transaction Data',
         status: 'pass',
         message: `Found ${transactions.length} transactions`,
-        details: `Date range: ${new Date(Math.min(...transactions.map(t => new Date(t.date).getTime()))).toLocaleDateString()} - ${new Date(Math.max(...transactions.map(t => new Date(t.date).getTime()))).toLocaleDateString()}`,
+        details: `Date range: ${new Date(Math.min(...transactions.map((t) => new Date(t.date).getTime()))).toLocaleDateString()} - ${new Date(Math.max(...transactions.map((t) => new Date(t.date).getTime()))).toLocaleDateString()}`,
       });
 
       // Check for valid transaction dates
-      const invalidDates = transactions.filter(t => isNaN(new Date(t.date).getTime()));
+      const invalidDates = transactions.filter((t) => isNaN(new Date(t.date).getTime()));
       if (invalidDates.length > 0) {
         results.push({
           name: 'Transaction Dates',
@@ -64,7 +67,7 @@ export default function ChartDiagnostics() {
       }
 
       // Check for valid amounts
-      const invalidAmounts = transactions.filter(t => isNaN(t.amount) || t.amount === 0);
+      const invalidAmounts = transactions.filter((t) => isNaN(t.amount) || t.amount === 0);
       if (invalidAmounts.length > 0) {
         results.push({
           name: 'Transaction Amounts',
@@ -97,7 +100,7 @@ export default function ChartDiagnostics() {
       });
 
       // Check if transactions have categories
-      const uncategorized = transactions.filter(t => !t.categoryId);
+      const uncategorized = transactions.filter((t) => !t.categoryId);
       if (uncategorized.length > 0) {
         results.push({
           name: 'Transaction Categorization',
@@ -138,7 +141,7 @@ export default function ChartDiagnostics() {
         name: 'Monthly Overview Data',
         status: 'pass',
         message: `Monthly data available for ${spendingOverview.length} months`,
-        details: `Years covered: ${[...new Set(spendingOverview.map(s => s.year))].join(', ')}`,
+        details: `Years covered: ${[...new Set(spendingOverview.map((s) => s.year))].join(', ')}`,
       });
     }
 
@@ -171,15 +174,16 @@ export default function ChartDiagnostics() {
 
     // 6. Check date filtering
     const currentYear = new Date().getFullYear();
-    const currentYearTransactions = transactions.filter(t => 
-      new Date(t.date).getFullYear() === currentYear
+    const currentYearTransactions = transactions.filter(
+      (t) => new Date(t.date).getFullYear() === currentYear
     );
     if (transactions.length > 0 && currentYearTransactions.length === 0) {
       results.push({
         name: 'Current Year Data',
         status: 'warning',
         message: `No transactions found for ${currentYear}`,
-        details: 'Charts default to current year. Try changing the year filter or uploading recent statements.',
+        details:
+          'Charts default to current year. Try changing the year filter or uploading recent statements.',
       });
     }
 
@@ -194,70 +198,69 @@ export default function ChartDiagnostics() {
   const getStatusIcon = (status: DiagnosticItem['status']) => {
     switch (status) {
       case 'pass':
-        return <CheckCircle className="w-5 h-5 text-green-500" />;
+        return <CheckCircle className='w-5 h-5 text-green-500' />;
       case 'fail':
-        return <XCircle className="w-5 h-5 text-red-500" />;
+        return <XCircle className='w-5 h-5 text-red-500' />;
       case 'warning':
-        return <AlertCircle className="w-5 h-5 text-yellow-500" />;
+        return <AlertCircle className='w-5 h-5 text-yellow-500' />;
     }
   };
 
-  const failCount = diagnostics.filter(d => d.status === 'fail').length;
-  const warningCount = diagnostics.filter(d => d.status === 'warning').length;
+  const failCount = diagnostics.filter((d) => d.status === 'fail').length;
+  const warningCount = diagnostics.filter((d) => d.status === 'warning').length;
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <BarChart3 className="w-5 h-5" />
+        <CardTitle className='flex items-center gap-2'>
+          <BarChart3 className='w-5 h-5' />
           Chart Diagnostics
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="space-y-4">
-          <div className="flex gap-4 text-sm">
-            <span className="flex items-center gap-1">
-              <CheckCircle className="w-4 h-4 text-green-500" />
-              {diagnostics.filter(d => d.status === 'pass').length} Passed
+        <div className='space-y-4'>
+          <div className='flex gap-4 text-sm'>
+            <span className='flex items-center gap-1'>
+              <CheckCircle className='w-4 h-4 text-green-500' />
+              {diagnostics.filter((d) => d.status === 'pass').length} Passed
             </span>
-            <span className="flex items-center gap-1">
-              <AlertCircle className="w-4 h-4 text-yellow-500" />
+            <span className='flex items-center gap-1'>
+              <AlertCircle className='w-4 h-4 text-yellow-500' />
               {warningCount} Warnings
             </span>
-            <span className="flex items-center gap-1">
-              <XCircle className="w-4 h-4 text-red-500" />
+            <span className='flex items-center gap-1'>
+              <XCircle className='w-4 h-4 text-red-500' />
               {failCount} Failed
             </span>
           </div>
 
           {failCount > 0 && (
-            <div className="p-3 bg-red-50 border border-red-200 rounded-md">
-              <p className="text-sm text-red-800 font-medium">
-                {failCount} critical issue{failCount > 1 ? 's' : ''} found that may prevent charts from displaying.
+            <div className='p-3 bg-red-50 border border-red-200 rounded-md'>
+              <p className='text-sm text-red-800 font-medium'>
+                {failCount} critical issue{failCount > 1 ? 's' : ''} found that may prevent charts
+                from displaying.
               </p>
             </div>
           )}
 
-          <div className="space-y-2">
+          <div className='space-y-2'>
             {diagnostics.map((item, index) => (
-              <div key={index} className="border rounded-lg p-3">
-                <div className="flex items-start gap-2">
+              <div key={index} className='border rounded-lg p-3'>
+                <div className='flex items-start gap-2'>
                   {getStatusIcon(item.status)}
-                  <div className="flex-1">
-                    <h4 className="font-medium text-sm">{item.name}</h4>
-                    <p className="text-sm text-gray-600">{item.message}</p>
-                    {item.details && (
-                      <p className="text-xs text-gray-500 mt-1">{item.details}</p>
-                    )}
+                  <div className='flex-1'>
+                    <h4 className='font-medium text-sm'>{item.name}</h4>
+                    <p className='text-sm text-gray-600'>{item.message}</p>
+                    {item.details && <p className='text-xs text-gray-500 mt-1'>{item.details}</p>}
                   </div>
                 </div>
               </div>
             ))}
           </div>
 
-          <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
-            <h4 className="text-sm font-medium text-blue-900 mb-2">Troubleshooting Tips:</h4>
-            <ul className="text-xs text-blue-800 space-y-1 list-disc list-inside">
+          <div className='mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md'>
+            <h4 className='text-sm font-medium text-blue-900 mb-2'>Troubleshooting Tips:</h4>
+            <ul className='text-xs text-blue-800 space-y-1 list-disc list-inside'>
               <li>Upload a bank statement PDF to populate transaction data</li>
               <li>Ensure transactions have valid dates in MM/DD/YYYY format</li>
               <li>Check that the selected year filter matches your data</li>
