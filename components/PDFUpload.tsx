@@ -11,6 +11,7 @@ import { useDBContext } from '../src/context/DatabaseContext';
 import { logger } from '../src/services/logger';
 import { pdfService } from '../src/services/pdfService';
 import type { PDFDocument } from '../src/services/pdfService';
+import { csvService } from '../src/services/csvService';
 
 import {
   Collapsible,
@@ -143,40 +144,41 @@ export default function PDFUpload() {
       // Process CSV files
       for (const file of csvFiles) {
         setProgress((prev) => ({ ...prev, [file.name]: 0 }));
-        await new Promise((resolve, reject) => {
-          Papa.parse(file, {
-            header: true,
-            complete: async (results) => {
-              try {
-                const transactions = results.data.map(
-                  (row: any): CSVTransaction => ({
-                    date: new Date(row.date),
-                    description: row.description,
-                    amount: parseFloat(row.amount),
-                    category: row.category || 'Uncategorized',
-                    type: parseFloat(row.amount) >= 0 ? 'income' : 'expense',
-                  })
-                );
-
-                const validTransactions = transactions.filter((transaction: CSVTransaction) => 
-                  transaction.date && transaction.amount
-                );
-                
-                if (validTransactions.length > 0) {
-                  await addTransactionsBatch(validTransactions);
-                }
-
-                setProgress((prev) => ({ ...prev, [file.name]: 100 }));
-                resolve(null);
-              } catch (error) {
-                reject(error);
-              }
-            },
-            error: (error) => {
-              reject(error);
-            },
+        try {
+          const fileContent = await file.text();
+          
+          // Auto-detect CSV format
+          const detectedOptions = await csvService.detectCSVFormat(fileContent);
+          
+          // Parse CSV
+          const csvTransactions = await csvService.parseCSV(fileContent, detectedOptions);
+          
+          // Convert to database format
+          const transactionsToAdd = csvService.convertToTransactions(csvTransactions);
+          
+          if (transactionsToAdd.length > 0) {
+            await addTransactionsBatch(transactionsToAdd);
+            toast({
+              title: 'CSV Imported',
+              description: `Successfully imported ${transactionsToAdd.length} transactions from ${file.name}`,
+            });
+          } else {
+            toast({
+              title: 'No transactions found',
+              description: `No valid transactions found in ${file.name}`,
+              variant: 'destructive',
+            });
+          }
+          
+          setProgress((prev) => ({ ...prev, [file.name]: 100 }));
+        } catch (error) {
+          logger.error(`Error processing CSV file ${file.name}:`, error);
+          toast({
+            title: 'CSV Import Error',
+            description: `Failed to import ${file.name}. Please check the format.`,
+            variant: 'destructive',
           });
-        });
+        }
       }
 
       toast({

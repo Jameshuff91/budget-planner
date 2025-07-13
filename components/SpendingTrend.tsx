@@ -129,6 +129,7 @@ export default function SpendingTrend({ selectedYear }: SpendingTrendProps) {
       </CardHeader>
       <CardContent className='p-6'>
         <div className='h-[400px] mt-4'>
+          {trendData.length > 0 ? (
           <ResponsiveContainer width='100%' height='100%'>
             <LineChart
               data={trendData}
@@ -209,6 +210,19 @@ export default function SpendingTrend({ selectedYear }: SpendingTrendProps) {
               />
             </LineChart>
           </ResponsiveContainer>
+          ) : (
+            <div className='flex items-center justify-center h-full bg-gray-50 rounded-lg'>
+              <div className='text-center p-6'>
+                <p className='text-lg font-medium text-gray-700 mb-2'>No trend data available</p>
+                <p className='text-sm text-gray-500 mb-4'>Upload bank statements to see spending trends and forecasts</p>
+                <div className='space-y-2 text-xs text-gray-400'>
+                  <p>• Trends require at least 2 months of data</p>
+                  <p>• Forecasts are calculated using linear regression</p>
+                  <p>• Check the Diagnostics tab if charts aren't displaying</p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>

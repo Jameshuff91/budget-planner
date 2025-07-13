@@ -4,6 +4,8 @@ import { dbService } from './db';
 import { logger } from './logger';
 import * as pdfjs from 'pdfjs-dist';
 import { createWorker, WorkerOptions } from 'tesseract.js';
+import { createLLMService } from './llmService';
+import { applyCategoryRules, loadCategoryRules } from '../utils/categoryRules';
 
 // Type declaration for OpenCV global variable
 declare global {
@@ -1354,7 +1356,57 @@ class PDFService {
 
             const cleanDesc = this.cleanDescription(rawDesc);
             const type = this.classifyTransaction(cleanDesc, amount);
-            const category = this.categorizeTransaction(cleanDesc, amount);
+            
+            // Try categorization in this order:
+            // 1. Custom user rules
+            // 2. Smart AI categorization (if enabled)
+            // 3. Built-in rule-based categorization
+            
+            let category = 'Uncategorized';
+            
+            // First, try custom category rules
+            const customRules = loadCategoryRules();
+            const customCategory = applyCategoryRules(cleanDesc, customRules);
+            
+            if (customCategory) {
+              category = customCategory;
+              logger.info(`Custom rule categorization: ${cleanDesc} -> ${category}`);
+            } else {
+              // Try smart categorization if enabled
+              const smartCategorizationEnabled = typeof window !== 'undefined' && 
+                localStorage.getItem('smartCategorization.enabled') === 'true';
+              
+              if (smartCategorizationEnabled) {
+                const apiKey = localStorage.getItem('smartCategorization.apiKey');
+                const llmService = createLLMService(apiKey || undefined);
+                
+                if (llmService) {
+                  try {
+                    const suggestion = await llmService.categorizeTransaction({
+                      description: cleanDesc,
+                      amount: amount,
+                      date: transactionDate
+                    });
+                    
+                    if (suggestion.confidence > 0.7) {
+                      category = suggestion.category;
+                      logger.info(`Smart categorization: ${cleanDesc} -> ${category} (${(suggestion.confidence * 100).toFixed(0)}% confidence)`);
+                    } else {
+                      // Fall back to rule-based categorization for low confidence
+                      category = this.categorizeTransaction(cleanDesc, amount);
+                    }
+                  } catch (error) {
+                    logger.error('Smart categorization failed, falling back to rules:', error);
+                    category = this.categorizeTransaction(cleanDesc, amount);
+                  }
+                } else {
+                  category = this.categorizeTransaction(cleanDesc, amount);
+                }
+              } else {
+                // Use built-in rule-based categorization
+                category = this.categorizeTransaction(cleanDesc, amount);
+              }
+            }
 
             if (!isNaN(amount) && cleanDesc) {
               // Validate amount

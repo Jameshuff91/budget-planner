@@ -128,6 +128,7 @@ export default function SpendingOverview({ selectedYear: propSelectedYear }: Spe
           </div>
         )}
         <div className='h-[300px] w-full'>
+          {yearData.length > 0 ? (
           <ResponsiveContainer width='100%' height='100%'>
             <BarChart 
               data={yearData}
@@ -189,6 +190,19 @@ export default function SpendingOverview({ selectedYear: propSelectedYear }: Spe
               />
             </BarChart>
           </ResponsiveContainer>
+          ) : (
+            <div className='flex items-center justify-center h-full bg-gray-50 rounded-lg'>
+              <div className='text-center p-6'>
+                <p className='text-lg font-medium text-gray-700 mb-2'>No data for {selectedYear}</p>
+                <p className='text-sm text-gray-500 mb-4'>Upload bank statements from {selectedYear} to see monthly overview</p>
+                <div className='space-y-2 text-xs text-gray-400'>
+                  <p>• Use the year navigation to view other years</p>
+                  <p>• Click on bars to see detailed expenses</p>
+                  <p>• Check the Diagnostics tab for troubleshooting</p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </CardContent>
       {selectedMonth && (

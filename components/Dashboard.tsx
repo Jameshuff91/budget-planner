@@ -12,6 +12,12 @@ import BudgetGoal from './BudgetGoal';
 import SpendingByCategory from './SpendingByCategory';
 import SpendingOverview from './SpendingOverview';
 import SpendingTrend from './SpendingTrend';
+import ChartDiagnostics from './ChartDiagnostics';
+import TransactionList from './TransactionList';
+import SmartCategorizationSettings from './SmartCategorizationSettings';
+import PlaidConnection from './PlaidConnection';
+import SpendingAlerts from './SpendingAlerts';
+import CategoryRules from './CategoryRules';
 
 // Default values for empty state
 const DEFAULT_INCOME = 0;
@@ -182,6 +188,9 @@ export default function Dashboard() {
           <TabsTrigger value='overview'>Overview</TabsTrigger>
           <TabsTrigger value='categories'>Categories</TabsTrigger>
           <TabsTrigger value='trends'>Trends</TabsTrigger>
+          <TabsTrigger value='transactions'>Transactions</TabsTrigger>
+          <TabsTrigger value='settings'>Settings</TabsTrigger>
+          <TabsTrigger value='diagnostics'>Diagnostics</TabsTrigger>
         </TabsList>
         <TabsContent value='overview' className='space-y-4'>
           <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-7'>
@@ -200,6 +209,18 @@ export default function Dashboard() {
         </TabsContent>
         <TabsContent value='trends'>
           <SpendingTrend selectedYear={selectedYear} />
+        </TabsContent>
+        <TabsContent value='transactions'>
+          <TransactionList />
+        </TabsContent>
+        <TabsContent value='settings' className='space-y-4'>
+          <SpendingAlerts />
+          <CategoryRules />
+          <PlaidConnection />
+          <SmartCategorizationSettings />
+        </TabsContent>
+        <TabsContent value='diagnostics'>
+          <ChartDiagnostics />
         </TabsContent>
       </Tabs>
     </div>

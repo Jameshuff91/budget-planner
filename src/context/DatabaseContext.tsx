@@ -18,8 +18,9 @@ interface Transaction {
   id: string;
   amount: number;
   category: string;
+  categoryId?: string;
   description: string;
-  date: Date;
+  date: string;
   type: 'income' | 'expense';
   isMonthSummary?: boolean;
   accountNumber?: string;
