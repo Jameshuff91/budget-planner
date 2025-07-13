@@ -43,10 +43,11 @@ export async function POST(request: NextRequest) {
       transactions: response.data.transactions,
       total_transactions: response.data.total_transactions,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error('Error getting transactions:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Failed to get transactions';
     return NextResponse.json(
-      { error: error.message || 'Failed to get transactions' },
+      { error: errorMessage },
       { status: 500 }
     );
   }

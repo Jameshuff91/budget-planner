@@ -42,10 +42,11 @@ export async function POST(request: NextRequest) {
       link_token: response.data.link_token,
       expiration: response.data.expiration,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error('Error creating Plaid link token:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Failed to create link token';
     return NextResponse.json(
-      { error: error.message || 'Failed to create link token' },
+      { error: errorMessage },
       { status: 500 }
     );
   }

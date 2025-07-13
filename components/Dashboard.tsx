@@ -1,10 +1,11 @@
 'use client';
 
-import { DollarSign, TrendingUp, PiggyBank } from 'lucide-react';
+import { DollarSign, TrendingUp, PiggyBank, Download } from 'lucide-react';
 import { useState, useMemo } from 'react';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@components/ui/tabs';
+import { Button } from '@components/ui/button';
 
 import { useDatabase } from '../src/hooks/useDatabase';
 
@@ -22,6 +23,7 @@ import SpendingTrend from './SpendingTrend';
 import TransactionList from './TransactionList';
 import YearOverYearComparison from './YearOverYearComparison';
 import SpendingVelocity from './SpendingVelocity';
+import { ExportDialog } from './ExportDialog';
 
 // Default values for empty state
 const DEFAULT_INCOME = 0;
@@ -32,6 +34,7 @@ export default function Dashboard() {
   const [timeRange, setTimeRange] = useState('month');
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [activeTab, setActiveTab] = useState('overview');
+  const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
   const { transactions, loading, error } = useDatabase();
 
   // Get current date information
@@ -141,6 +144,14 @@ export default function Dashboard() {
       <div className='flex justify-between items-center'>
         <h2 className='text-3xl font-bold text-gray-800'>Financial Dashboard</h2>
         <div className='flex items-center gap-3'>
+          <Button
+            variant='outline'
+            size='sm'
+            onClick={() => setIsExportDialogOpen(true)}
+          >
+            <Download className='h-4 w-4 mr-2' />
+            Export Data
+          </Button>
           <label htmlFor='year-select' className='text-sm font-medium text-gray-600'>
             Year:
           </label>
@@ -258,6 +269,12 @@ export default function Dashboard() {
 
       {/* Mobile Navigation */}
       <MobileNav activeTab={activeTab} onTabChange={setActiveTab} />
+
+      {/* Export Dialog */}
+      <ExportDialog 
+        isOpen={isExportDialogOpen} 
+        onClose={() => setIsExportDialogOpen(false)} 
+      />
     </div>
   );
 }

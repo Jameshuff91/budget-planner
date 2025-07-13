@@ -1,10 +1,11 @@
 'use client';
 
-import { Edit2, Trash2, Search } from 'lucide-react';
+import { Edit2, Trash2, Search, Download, FileText } from 'lucide-react';
 import React, { useState, useMemo } from 'react';
 
 import { useDBContext } from '@context/DatabaseContext';
 import { formatCurrency } from '@utils/helpers';
+import { exportTransactionsToCSV, exportCategorySummaryToCSV } from '@utils/csvExport';
 
 import { TransactionEditModal } from './TransactionEditModal';
 import { Button } from './ui/button';
@@ -82,10 +83,64 @@ export default function TransactionList() {
     });
   };
 
+  const handleExportTransactions = () => {
+    try {
+      exportTransactionsToCSV(filteredTransactions);
+      toast({
+        title: 'Success',
+        description: `Exported ${filteredTransactions.length} transactions to CSV`,
+      });
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to export transactions',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleExportSummary = () => {
+    try {
+      exportCategorySummaryToCSV(filteredTransactions);
+      toast({
+        title: 'Success',
+        description: 'Exported category summary to CSV',
+      });
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to export summary',
+        variant: 'destructive',
+      });
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Transaction History</CardTitle>
+        <div className='flex items-center justify-between'>
+          <CardTitle>Transaction History</CardTitle>
+          <div className='flex gap-2'>
+            <Button
+              variant='outline'
+              size='sm'
+              onClick={handleExportTransactions}
+              disabled={filteredTransactions.length === 0}
+            >
+              <Download className='h-4 w-4 mr-2' />
+              Export Transactions
+            </Button>
+            <Button
+              variant='outline'
+              size='sm'
+              onClick={handleExportSummary}
+              disabled={filteredTransactions.length === 0}
+            >
+              <FileText className='h-4 w-4 mr-2' />
+              Export Summary
+            </Button>
+          </div>
+        </div>
       </CardHeader>
       <CardContent>
         <div className='space-y-4'>

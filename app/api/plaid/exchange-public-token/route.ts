@@ -34,10 +34,11 @@ export async function POST(request: NextRequest) {
       access_token: response.data.access_token,
       item_id: response.data.item_id,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error('Error exchanging public token:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Failed to exchange public token';
     return NextResponse.json(
-      { error: error.message || 'Failed to exchange public token' },
+      { error: errorMessage },
       { status: 500 }
     );
   }

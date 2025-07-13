@@ -151,12 +151,12 @@ export default function BudgetGoal() {
             {understandMetric.toFixed(2)}% of your goal saved each month
           </p>
           <p className='text-xs text-blue-600 mt-1'>
-            This percentage represents how much of your goal you're saving each month. A higher
-            percentage means you're saving more relative to your goal.
+            This percentage represents how much of your goal you&apos;re saving each month. A higher
+            percentage means you&apos;re saving more relative to your goal.
           </p>
           <p className='text-sm text-blue-700'>
             At {formatCurrency(monthlySavings)} monthly savings with 8% annual compound growth,
-            you'll reach your goal of {formatCurrency(goalAmount)} in{' '}
+            you&apos;ll reach your goal of {formatCurrency(goalAmount)} in{' '}
             {(timeToReach / 12).toFixed(1)} years
           </p>
         </div>

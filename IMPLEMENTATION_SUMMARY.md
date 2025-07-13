@@ -317,9 +317,50 @@ PLAID_REDIRECT_URI=optional_redirect_uri
 - Real-time velocity tracking
 - Visual trend indicators
 
+### 5. E2E Testing Framework
+**Purpose**: Automated end-to-end testing for critical user flows.
+
+**Implementation**:
+- Created `e2e/budget-planner.spec.ts` - Playwright test suite
+- Test coverage includes:
+  - Application loading and title verification
+  - File upload functionality (CSV and PDF)
+  - Dashboard visibility
+  - Mobile responsiveness
+  - Error handling for invalid files
+
+**Benefits**:
+- Automated regression testing
+- Cross-browser compatibility testing
+- Mobile device testing
+- User flow validation
+
+## Future Implementations in Progress
+
+### 1. Enhanced Test Coverage
+- Additional E2E tests for:
+  - Transaction editing flows
+  - Category rule management
+  - Alert configuration
+  - Bank connection flows
+  - Analytics features
+
+### 2. Performance Optimizations
+- Code splitting for faster initial load
+- Lazy loading for heavy components
+- Image optimization
+- Bundle size reduction
+
+### 3. Accessibility Improvements
+- ARIA labels for all interactive elements
+- Keyboard navigation support
+- Screen reader optimization
+- High contrast mode support
+
 ## Known Limitations
 1. Plaid integration requires API credentials
 2. OpenAI integration requires API key
 3. Some features require HTTPS in production
 4. Push notifications require user permission
 5. ESLint warnings remain (code style, not functionality)
+6. Some E2E tests are currently skipped pending dashboard structure updates
