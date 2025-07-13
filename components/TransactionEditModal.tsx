@@ -19,7 +19,7 @@ import { Label } from './ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { toast } from './ui/use-toast';
 
-import { Transaction } from '@/src/types';
+import { Transaction } from '../src/types';
 
 interface TransactionEditModalProps {
   transaction: Transaction | null;

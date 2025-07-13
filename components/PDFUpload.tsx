@@ -108,7 +108,7 @@ export default function PDFUpload() {
           for (const transaction of extractedData) {
             if (transaction.date && transaction.amount && transaction.description) {
               transactionsToAdd.push({
-                date: transaction.date,
+                date: transaction.date.toISOString(),
                 amount: transaction.amount,
                 description: transaction.description,
                 category: transaction.category || 'Uncategorized',

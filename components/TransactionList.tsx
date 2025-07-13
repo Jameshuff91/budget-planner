@@ -14,7 +14,7 @@ import { Input } from './ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
 import { toast } from './ui/use-toast';
 
-import { Transaction } from '@/src/types';
+import { Transaction } from '../src/types';
 
 export default function TransactionList() {
   const { transactions, updateTransaction, deleteTransaction } = useDBContext();

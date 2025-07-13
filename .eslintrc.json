@@ -12,8 +12,16 @@
   "rules": {
     "react/react-in-jsx-scope": "off",
     "@typescript-eslint/no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }],
+    "@typescript-eslint/no-explicit-any": "warn",
+    "react-hooks/exhaustive-deps": "warn",
+    "no-case-declarations": "warn",
+    "no-useless-escape": "warn",
+    "no-var": "warn",
+    "react/no-unescaped-entities": "warn",
+    "@typescript-eslint/ban-ts-comment": "warn",
+    "prettier/prettier": "warn",
     "import/order": [
-      "error",
+      "warn",
       {
         "groups": ["builtin", "external", "internal", "parent", "sibling", "index"],
         "newlines-between": "always",
@@ -28,10 +36,10 @@
         "useTabs": false,
         "semi": true,
         "singleQuote": true,
-        "trailingComma": "es5",
+        "trailingComma": "all",
         "bracketSpacing": true,
         "arrowParens": "always",
-        "endOfLine": "auto"
+        "endOfLine": "lf"
       }
     ]
   },

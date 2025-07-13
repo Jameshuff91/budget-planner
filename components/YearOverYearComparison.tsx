@@ -38,15 +38,15 @@ const monthNames = [
 ];
 
 export default function YearOverYearComparison({ selectedYear }: YearOverYearComparisonProps) {
-  const { monthlySpendingData } = useAnalytics();
+  const { spendingOverview } = useAnalytics();
 
   const comparisonData = useMemo(() => {
-    const currentYearData = monthlySpendingData.filter((d) => d.year === selectedYear);
-    const previousYearData = monthlySpendingData.filter((d) => d.year === selectedYear - 1);
+    const currentYearData = spendingOverview.filter((d: any) => d.year === selectedYear);
+    const previousYearData = spendingOverview.filter((d: any) => d.year === selectedYear - 1);
 
     return monthNames.map((month, index) => {
-      const currentMonth = currentYearData.find((d) => d.month === index);
-      const previousMonth = previousYearData.find((d) => d.month === index);
+      const currentMonth = currentYearData.find((d: any) => d.month === month);
+      const previousMonth = previousYearData.find((d: any) => d.month === month);
 
       return {
         month,
@@ -56,7 +56,7 @@ export default function YearOverYearComparison({ selectedYear }: YearOverYearCom
         previousIncome: previousMonth?.totalIncome || 0,
       };
     });
-  }, [monthlySpendingData, selectedYear]);
+  }, [spendingOverview, selectedYear]);
 
   const yearOverYearStats = useMemo(() => {
     const currentYearTotal = comparisonData.reduce((sum, d) => sum + d[selectedYear], 0);

@@ -90,7 +90,12 @@ export function DatabaseProvider({ children }: { children: ReactNode }) {
         dbService.getAllAssets(), // New call
         dbService.getAllLiabilities(), // New call
       ]);
-      setTransactions(loadedTransactions);
+      setTransactions(
+        loadedTransactions.map((t) => ({
+          ...t,
+          date: t.date instanceof Date ? t.date.toISOString() : t.date,
+        })),
+      );
       setCategories(loadedCategories);
       setRecurringPreferences(loadedRecurringPrefs);
       setAssets(loadedAssets); // New
