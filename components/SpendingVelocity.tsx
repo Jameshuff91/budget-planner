@@ -122,7 +122,15 @@ export default function SpendingVelocity({ selectedYear }: SpendingVelocityProps
     }));
   }, [currentMonthData]);
 
-  const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?: any; label?: any }) => {
+  const CustomTooltip = ({
+    active,
+    payload,
+    label,
+  }: {
+    active?: boolean;
+    payload?: any;
+    label?: any;
+  }) => {
     if (!active || !payload) return null;
 
     return (

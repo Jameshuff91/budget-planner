@@ -132,11 +132,11 @@ export default function MonthSelector() {
           monthlyStats[monthKey] = {
             income: transactions.reduce(
               (sum, t) => (t.type === 'income' ? sum + t.amount : sum),
-              0
+              0,
             ),
             expenses: transactions.reduce(
               (sum, t) => (t.type === 'expense' ? sum + t.amount : sum),
-              0
+              0,
             ),
             summaryTransactions,
             individualTransactions,
@@ -265,7 +265,7 @@ export default function MonthSelector() {
                           </p>
                         </div>
                       </div>
-                    )
+                    ),
                   )}
                 </div>
               )}
@@ -308,7 +308,7 @@ export default function MonthSelector() {
                           </p>
                         </div>
                       </div>
-                    )
+                    ),
                   )}
                 </div>
               )}

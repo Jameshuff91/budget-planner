@@ -99,7 +99,7 @@ export default function BudgetManagementPage() {
         }));
       }
     },
-    [budgetInputs, categories, updateCategoryBudget, toast]
+    [budgetInputs, categories, updateCategoryBudget, toast],
   );
 
   if (categoriesLoading) {
@@ -118,7 +118,7 @@ export default function BudgetManagementPage() {
               .filter((cat) => cat.type === 'expense')
               .map(
                 (
-                  category // Filter for expense categories
+                  category, // Filter for expense categories
                 ) => (
                   <div
                     key={category.id}
@@ -142,7 +142,7 @@ export default function BudgetManagementPage() {
                       placeholder='Enter budget (e.g., 500)'
                     />
                   </div>
-                )
+                ),
               )}
             {categories.filter((cat) => cat.type === 'expense').length === 0 && (
               <p>No expense categories found. Add some categories to manage budgets.</p>

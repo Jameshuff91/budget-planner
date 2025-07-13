@@ -29,7 +29,7 @@ type SpendingTrendData = {
 
 // Helper function to calculate linear regression
 const calculateTrendLine = (
-  data: { x: number; y: number }[]
+  data: { x: number; y: number }[],
 ): { slope: number; intercept: number } => {
   const n = data.length;
   if (n < 2) return { slope: 0, intercept: 0 };
@@ -91,7 +91,7 @@ export default function SpendingTrend({ selectedYear }: SpendingTrendProps) {
           const lastItem = chartData[chartData.length - 1];
           const lastMonthIndex = new Date(
             lastItem.year,
-            monthsAbbrev.indexOf(lastItem.name)
+            monthsAbbrev.indexOf(lastItem.name),
           ).getMonth();
 
           const nextForecastMonthDate = new Date(lastItem.year, lastMonthIndex + i + 1, 1);
@@ -235,7 +235,7 @@ export default function SpendingTrend({ selectedYear }: SpendingTrendProps) {
                 <div className='space-y-2 text-xs text-gray-400'>
                   <p>• Trends require at least 2 months of data</p>
                   <p>• Forecasts are calculated using linear regression</p>
-                  <p>• Check the Diagnostics tab if charts aren't displaying</p>
+                  <p>• Check the Diagnostics tab if charts aren&apos;t displaying</p>
                 </div>
               </div>
             </div>

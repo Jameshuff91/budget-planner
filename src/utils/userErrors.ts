@@ -6,7 +6,7 @@ export class UserError extends Error {
   constructor(
     public userMessage: string,
     public technicalMessage?: string,
-    public action?: string
+    public action?: string,
   ) {
     super(userMessage);
     this.name = 'UserError';
@@ -112,7 +112,7 @@ export function toUserError(error: unknown, context?: string): UserError {
     return new UserError(
       ErrorMessages.DB_OPERATION_FAILED.message,
       errorMessage,
-      ErrorMessages.DB_OPERATION_FAILED.action
+      ErrorMessages.DB_OPERATION_FAILED.action,
     );
   }
 
@@ -121,7 +121,7 @@ export function toUserError(error: unknown, context?: string): UserError {
     return new UserError(
       ErrorMessages.NETWORK_ERROR.message,
       errorMessage,
-      ErrorMessages.NETWORK_ERROR.action
+      ErrorMessages.NETWORK_ERROR.action,
     );
   }
 
@@ -131,13 +131,13 @@ export function toUserError(error: unknown, context?: string): UserError {
       return new UserError(
         ErrorMessages.PDF_NOT_FOUND.message,
         errorMessage,
-        ErrorMessages.PDF_NOT_FOUND.action
+        ErrorMessages.PDF_NOT_FOUND.action,
       );
     }
     return new UserError(
       ErrorMessages.PDF_PARSE_FAILED.message,
       errorMessage,
-      ErrorMessages.PDF_PARSE_FAILED.action
+      ErrorMessages.PDF_PARSE_FAILED.action,
     );
   }
 
@@ -147,20 +147,20 @@ export function toUserError(error: unknown, context?: string): UserError {
       return new UserError(
         ErrorMessages.CSV_DATE_FORMAT.message,
         errorMessage,
-        ErrorMessages.CSV_DATE_FORMAT.action
+        ErrorMessages.CSV_DATE_FORMAT.action,
       );
     }
     if (lowerMessage.includes('amount')) {
       return new UserError(
         ErrorMessages.CSV_INVALID_AMOUNT.message,
         errorMessage,
-        ErrorMessages.CSV_INVALID_AMOUNT.action
+        ErrorMessages.CSV_INVALID_AMOUNT.action,
       );
     }
     return new UserError(
       ErrorMessages.CSV_PARSE_FAILED.message,
       errorMessage,
-      ErrorMessages.CSV_PARSE_FAILED.action
+      ErrorMessages.CSV_PARSE_FAILED.action,
     );
   }
 
@@ -168,7 +168,7 @@ export function toUserError(error: unknown, context?: string): UserError {
   return new UserError(
     ErrorMessages.UNKNOWN_ERROR.message,
     errorMessage,
-    ErrorMessages.UNKNOWN_ERROR.action
+    ErrorMessages.UNKNOWN_ERROR.action,
   );
 }
 

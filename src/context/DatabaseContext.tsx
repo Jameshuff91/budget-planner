@@ -149,7 +149,7 @@ export function DatabaseProvider({ children }: { children: ReactNode }) {
         throw err;
       }
     },
-    [loadData]
+    [loadData],
   );
 
   const addTransactionsBatch = useCallback(
@@ -167,7 +167,7 @@ export function DatabaseProvider({ children }: { children: ReactNode }) {
         throw err;
       }
     },
-    [loadData]
+    [loadData],
   );
 
   // --- Asset Context Functions ---
@@ -183,7 +183,7 @@ export function DatabaseProvider({ children }: { children: ReactNode }) {
         throw err;
       }
     },
-    [loadData]
+    [loadData],
   );
 
   const updateAsset = useCallback(
@@ -197,7 +197,7 @@ export function DatabaseProvider({ children }: { children: ReactNode }) {
         throw err;
       }
     },
-    [loadData]
+    [loadData],
   );
 
   const deleteAsset = useCallback(
@@ -211,7 +211,7 @@ export function DatabaseProvider({ children }: { children: ReactNode }) {
         throw err;
       }
     },
-    [loadData]
+    [loadData],
   );
 
   // --- Liability Context Functions ---
@@ -227,7 +227,7 @@ export function DatabaseProvider({ children }: { children: ReactNode }) {
         throw err;
       }
     },
-    [loadData]
+    [loadData],
   );
 
   const updateLiability = useCallback(
@@ -241,7 +241,7 @@ export function DatabaseProvider({ children }: { children: ReactNode }) {
         throw err;
       }
     },
-    [loadData]
+    [loadData],
   );
 
   const deleteLiability = useCallback(
@@ -255,7 +255,7 @@ export function DatabaseProvider({ children }: { children: ReactNode }) {
         throw err;
       }
     },
-    [loadData]
+    [loadData],
   );
 
   const setRecurringPreference = useCallback(
@@ -268,7 +268,7 @@ export function DatabaseProvider({ children }: { children: ReactNode }) {
         throw err;
       }
     },
-    [loadData]
+    [loadData],
   );
 
   const deleteRecurringPreference = useCallback(
@@ -281,7 +281,7 @@ export function DatabaseProvider({ children }: { children: ReactNode }) {
         throw err;
       }
     },
-    [loadData]
+    [loadData],
   );
 
   const updateCategoryBudget = useCallback(
@@ -294,7 +294,7 @@ export function DatabaseProvider({ children }: { children: ReactNode }) {
         throw err;
       }
     },
-    [loadData]
+    [loadData],
   );
 
   const updateTransaction = useCallback(
@@ -307,7 +307,7 @@ export function DatabaseProvider({ children }: { children: ReactNode }) {
         throw err;
       }
     },
-    [loadData]
+    [loadData],
   );
 
   const deleteTransaction = useCallback(
@@ -320,7 +320,7 @@ export function DatabaseProvider({ children }: { children: ReactNode }) {
         throw err;
       }
     },
-    [loadData]
+    [loadData],
   );
 
   const clearTransactions = useCallback(async () => {
@@ -347,7 +347,7 @@ export function DatabaseProvider({ children }: { children: ReactNode }) {
         throw err;
       }
     },
-    [loadData]
+    [loadData],
   );
 
   const getTransactionsByMonth = useCallback(
@@ -360,7 +360,7 @@ export function DatabaseProvider({ children }: { children: ReactNode }) {
         return transactionDate >= startOfMonth && transactionDate <= endOfMonth;
       });
     },
-    [transactions]
+    [transactions],
   );
 
   const refreshData = useCallback(async () => {
@@ -390,8 +390,8 @@ export function DatabaseProvider({ children }: { children: ReactNode }) {
             (t) =>
               t.date.getTime() === transaction.date.getTime() &&
               t.amount === transaction.amount &&
-              t.description === transaction.description
-          )
+              t.description === transaction.description,
+          ),
       );
 
       setTransactions(uniqueTransactions);
@@ -457,7 +457,7 @@ export function DatabaseProvider({ children }: { children: ReactNode }) {
       deleteLiability, // Added
       refreshData,
       getTransactionsByMonth,
-    ]
+    ],
   );
 
   return <DatabaseContext.Provider value={value}>{children}</DatabaseContext.Provider>;

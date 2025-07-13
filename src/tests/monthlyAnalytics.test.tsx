@@ -61,7 +61,7 @@ describe('Monthly Savings Analysis', () => {
     result.current.spendingOverview.forEach((data) => {
       const savings = data.totalIncome - data.totalSpending;
       console.log(
-        `${data.month} ${data.year}: Income=${data.totalIncome}, Spending=${data.totalSpending}, Savings=${savings}`
+        `${data.month} ${data.year}: Income=${data.totalIncome}, Spending=${data.totalSpending}, Savings=${savings}`,
       );
       expect(savings).toBeGreaterThanOrEqual(MIN_MONTHLY_SAVINGS);
     });

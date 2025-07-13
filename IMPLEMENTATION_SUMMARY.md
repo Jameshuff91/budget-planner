@@ -211,14 +211,25 @@ This document provides a comprehensive summary of all features implemented in th
 - `/components/SpendingAlerts.tsx`
 - `/components/CategoryRules.tsx`
 - `/components/MobileNav.tsx`
+- `/components/ExportDialog.tsx`
+- `/components/YearOverYearComparison.tsx`
+- `/components/SpendingVelocity.tsx`
+- `/components/ErrorBoundary.tsx`
+- `/components/ChartErrorBoundary.tsx`
 
 ### New UI Components
 - `/components/ui/select.tsx`
 - `/components/ui/switch.tsx`
 - `/components/ui/alert.tsx`
+- `/components/ui/dialog.tsx`
+- `/components/ui/table.tsx`
+- `/components/ui/radio-group.tsx`
+- `/components/ui/label.tsx`
 
 ### New Utilities
 - `/src/utils/categoryRules.ts`
+- `/src/utils/csvExport.ts`
+- `/src/utils/userErrors.ts`
 - `/src/types/index.ts`
 
 ### API Routes
@@ -231,6 +242,7 @@ This document provides a comprehensive summary of all features implemented in th
 - `react-plaid-link` - Plaid Link React component
 - `@radix-ui/react-select` - Select component
 - `@radix-ui/react-switch` - Switch component
+- `@radix-ui/react-radio-group` - Radio group component
 - `@ducanh2912/next-pwa` - PWA support
 
 ## Configuration Required
@@ -334,6 +346,38 @@ PLAID_REDIRECT_URI=optional_redirect_uri
 - Cross-browser compatibility testing
 - Mobile device testing
 - User flow validation
+
+### 6. CSV Export Functionality
+**Purpose**: Enable users to export their financial data for external analysis and record keeping.
+
+**Implementation**:
+- Created `src/utils/csvExport.ts` - comprehensive CSV export utilities
+  - Transaction to CSV conversion
+  - Category summary generation
+  - File download handling
+- Enhanced `components/TransactionList.tsx` with export buttons
+  - Export filtered transactions
+  - Export category summaries
+  - Respects current search/filter state
+- Created `components/ExportDialog.tsx` - advanced export interface
+  - Multiple date range options (all, custom range, month, year)
+  - Category filtering (multi-select)
+  - Export format selection (detailed vs summary)
+- Added global export button to Dashboard header
+
+**Features**:
+- Export all or filtered transactions
+- Custom date range selection
+- Category-based filtering
+- Summary reports by category
+- Standard CSV format (Excel/Google Sheets compatible)
+- Real-time export based on current filters
+
+**Benefits**:
+- Data portability for tax preparation
+- External analysis capabilities
+- Backup and archival options
+- Integration with accounting software
 
 ## Future Implementations in Progress
 

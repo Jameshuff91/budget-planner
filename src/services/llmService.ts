@@ -53,7 +53,7 @@ export class LLMService {
 
   async categorizeTransaction(
     transaction: TransactionForCategorization,
-    customCategories?: string[]
+    customCategories?: string[],
   ): Promise<CategorySuggestion> {
     try {
       const categories = customCategories || [
@@ -109,7 +109,7 @@ export class LLMService {
 
   async categorizeTransactionsBatch(
     transactions: TransactionForCategorization[],
-    customCategories?: string[]
+    customCategories?: string[],
   ): Promise<CategorySuggestion[]> {
     try {
       const categories = customCategories || [
@@ -211,7 +211,7 @@ Suggest up to 5 new categories that would better organize these transactions. Re
 
   private buildCategorizationPrompt(
     transaction: TransactionForCategorization,
-    categories: string[]
+    categories: string[],
   ): string {
     return `
 Categorize this financial transaction:
@@ -233,7 +233,7 @@ Respond in JSON format:
 
   private buildBatchCategorizationPrompt(
     transactions: TransactionForCategorization[],
-    categories: string[]
+    categories: string[],
   ): string {
     return `
 Categorize these financial transactions:
@@ -244,7 +244,7 @@ ${transactions
 ${i + 1}. Description: ${t.description}
    Amount: $${Math.abs(t.amount)} (${t.amount >= 0 ? 'income' : 'expense'})
    Date: ${t.date}
-`
+`,
   )
   .join('\n')}
 

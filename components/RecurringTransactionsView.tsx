@@ -62,7 +62,7 @@ export default function RecurringTransactionsView() {
 
   const handleSetPreference = async (
     candidateId: string,
-    status: 'confirmed' | 'dismissed' | null
+    status: 'confirmed' | 'dismissed' | null,
   ) => {
     try {
       if (status === null) {
@@ -123,7 +123,7 @@ export default function RecurringTransactionsView() {
           >
             Confirmed (
             {potentialRecurringTransactions?.filter(
-              (c) => recurringPreferences[c.id] === 'confirmed'
+              (c) => recurringPreferences[c.id] === 'confirmed',
             ).length || 0}
             )
           </Button>
@@ -133,7 +133,7 @@ export default function RecurringTransactionsView() {
           >
             Dismissed (
             {potentialRecurringTransactions?.filter(
-              (c) => recurringPreferences[c.id] === 'dismissed'
+              (c) => recurringPreferences[c.id] === 'dismissed',
             ).length || 0}
             )
           </Button>

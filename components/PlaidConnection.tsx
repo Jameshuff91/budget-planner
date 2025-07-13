@@ -109,7 +109,7 @@ export default function PlaidConnection() {
         showUserError(error, toast, 'plaid');
       }
     },
-    [linkedAccounts]
+    [linkedAccounts],
   );
 
   const config = {
@@ -144,7 +144,7 @@ export default function PlaidConnection() {
 
         // Update last sync time
         const updated = linkedAccounts.map((acc) =>
-          acc.accessToken === accessToken ? { ...acc, lastSync: new Date().toISOString() } : acc
+          acc.accessToken === accessToken ? { ...acc, lastSync: new Date().toISOString() } : acc,
         );
         setLinkedAccounts(updated);
         localStorage.setItem('plaid.linkedAccounts', JSON.stringify(updated));

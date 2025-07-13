@@ -76,7 +76,7 @@ describe('PDFService', () => {
       expect(pdfService['parseCurrencyAmount']('Amount is $ 123.45')).toBe(5123.45); // Fails as "Amount is " is not handled
       expect(logger.error).not.toHaveBeenCalledWith(
         expect.stringContaining('Parsed amount is NaN'),
-        expect.anything()
+        expect.anything(),
       );
     });
 
@@ -86,21 +86,21 @@ describe('PDFService', () => {
       expect(pdfService['parseCurrencyAmount']('USD123.45')).toBe(5123.45); // Fails as "USD" is not handled
       expect(logger.error).not.toHaveBeenCalledWith(
         expect.stringContaining('Parsed amount is NaN'),
-        expect.anything()
+        expect.anything(),
       );
     });
 
     it('should return 0 for invalid input: "abc"', () => {
       expect(pdfService['parseCurrencyAmount']('abc')).toBe(0);
       expect(logger.error).toHaveBeenCalledWith(
-        expect.stringContaining('Parsed amount is NaN for amount string: "abc" (cleaned: "")')
+        expect.stringContaining('Parsed amount is NaN for amount string: "abc" (cleaned: "")'),
       );
     });
 
     it('should return 0 for empty input: ""', () => {
       expect(pdfService['parseCurrencyAmount']('')).toBe(0);
       expect(logger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('Input amount string is empty or invalid')
+        expect.stringContaining('Input amount string is empty or invalid'),
       );
     });
 
@@ -143,27 +143,27 @@ describe('PDFService', () => {
     it('should return 0 for amounts exceeding MAX_AMOUNT: "200000.00"', () => {
       expect(pdfService['parseCurrencyAmount']('200000.00')).toBe(0);
       expect(logger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('is outside the reasonable range')
+        expect.stringContaining('is outside the reasonable range'),
       );
       expect(logger.error).toHaveBeenCalledWith(
-        expect.stringContaining('remains outside reasonable limits')
+        expect.stringContaining('remains outside reasonable limits'),
       );
     });
 
     it('should return 0 for amounts below MIN_AMOUNT: "-200000.00"', () => {
       expect(pdfService['parseCurrencyAmount']('-200000.00')).toBe(0);
       expect(logger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('is outside the reasonable range')
+        expect.stringContaining('is outside the reasonable range'),
       );
       expect(logger.error).toHaveBeenCalledWith(
-        expect.stringContaining('remains outside reasonable limits')
+        expect.stringContaining('remains outside reasonable limits'),
       );
     });
 
     it('should handle string with only currency symbol: "$"', () => {
       expect(pdfService['parseCurrencyAmount']('$')).toBe(0);
       expect(logger.error).toHaveBeenCalledWith(
-        expect.stringContaining('Parsed amount is NaN for amount string: "$" (cleaned: "")')
+        expect.stringContaining('Parsed amount is NaN for amount string: "$" (cleaned: "")'),
       );
     });
 
@@ -214,7 +214,7 @@ describe('PDFService', () => {
     // Expense tests
     it('should classify "Subscription Fee for Netflux" as expense', () => {
       expect(pdfService['classifyTransaction']('Subscription Fee for Netflux', -15)).toBe(
-        'expense'
+        'expense',
       );
     });
     it('should classify "POS Debit STARBUCKS" as expense', () => {
@@ -243,7 +243,7 @@ describe('PDFService', () => {
     });
     it('should classify "Venmo to Jane Smith for dinner" as expense', () => {
       expect(pdfService['classifyTransaction']('Venmo to Jane Smith for dinner', -20)).toBe(
-        'expense'
+        'expense',
       );
     });
     it('should classify "Venmo payment to Joe" as expense', () => {
@@ -447,7 +447,7 @@ describe('PDFService', () => {
       date: Date | null,
       year: number | null,
       month: number | null,
-      day: number | null
+      day: number | null,
     ) => {
       if (year === null || month === null || day === null) {
         expect(date).toBeNull();
@@ -524,41 +524,41 @@ describe('PDFService', () => {
       expect(pdfService['parseDate']('99/99/9999')).toBeNull();
       expect(logger.error).toHaveBeenCalledWith(
         expect.stringContaining('Error parsing date string "99/99/9999"'),
-        expect.anything()
+        expect.anything(),
       );
     });
     it('should return null for "Not a date"', () => {
       expect(pdfService['parseDate']('Not a date')).toBeNull();
       expect(logger.error).toHaveBeenCalledWith(
         expect.stringContaining('Error parsing date string "Not a date"'),
-        expect.anything()
+        expect.anything(),
       );
     });
     it('should return null for invalid day "02/30/2023"', () => {
       expect(pdfService['parseDate']('02/30/2023')).toBeNull();
       expect(logger.error).toHaveBeenCalledWith(
         expect.stringContaining('Error parsing date string "02/30/2023"'),
-        expect.anything()
+        expect.anything(),
       );
     });
     it('should return null for empty string ""', () => {
       expect(pdfService['parseDate']('')).toBeNull();
       expect(logger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('Invalid date string provided: ')
+        expect.stringContaining('Invalid date string provided: '),
       );
     });
     it('should return null for invalid month name "NonExistentMonth 10, 2023"', () => {
       expect(pdfService['parseDate']('NonExistentMonth 10, 2023')).toBeNull();
       expect(logger.error).toHaveBeenCalledWith(
         expect.stringContaining('Error parsing date string "NonExistentMonth 10, 2023"'),
-        expect.anything()
+        expect.anything(),
       );
     });
     it('should return null for "13/01/2023" (invalid month)', () => {
       expect(pdfService['parseDate']('13/01/2023')).toBeNull();
       expect(logger.error).toHaveBeenCalledWith(
         expect.stringContaining('Error parsing date string "13/01/2023"'),
-        expect.anything()
+        expect.anything(),
       );
     });
   });
@@ -580,7 +580,7 @@ describe('PDFService', () => {
       if (currentYear !== 2023) {
         // Log only if year was actually changed
         expect(logger.warn).toHaveBeenCalledWith(
-          expect.stringContaining('Adjusting transaction year')
+          expect.stringContaining('Adjusting transaction year'),
         );
       }
     });
@@ -594,7 +594,7 @@ describe('PDFService', () => {
       expect(corrected.getDate()).toBe(5);
       if (currentYear !== 2023) {
         expect(logger.warn).toHaveBeenCalledWith(
-          expect.stringContaining('Adjusting transaction year')
+          expect.stringContaining('Adjusting transaction year'),
         );
       }
     });
@@ -608,7 +608,7 @@ describe('PDFService', () => {
       expect(corrected.getDate()).toBe(20);
       if (currentYear !== 2022) {
         expect(logger.warn).toHaveBeenCalledWith(
-          expect.stringContaining('Adjusting transaction year')
+          expect.stringContaining('Adjusting transaction year'),
         );
       }
     });
@@ -633,7 +633,7 @@ describe('PDFService', () => {
       expect(corrected.getDate()).toBe(tomorrow.getDate());
       expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('Transaction date'));
       expect(logger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('is in the future. Assuming previous year')
+        expect.stringContaining('is in the future. Assuming previous year'),
       );
     });
 
@@ -644,7 +644,7 @@ describe('PDFService', () => {
       expect(corrected.getMonth()).toBe(4);
       expect(corrected.getDate()).toBe(15);
       expect(logger.warn).not.toHaveBeenCalledWith(
-        expect.stringContaining('Adjusting transaction year')
+        expect.stringContaining('Adjusting transaction year'),
       );
     });
 
@@ -656,7 +656,7 @@ describe('PDFService', () => {
       expect(corrected.getMonth()).toBe(5);
       expect(corrected.getDate()).toBe(15);
       expect(logger.warn).not.toHaveBeenCalledWith(
-        expect.stringContaining('Adjusting transaction year')
+        expect.stringContaining('Adjusting transaction year'),
       );
     });
 
@@ -675,7 +675,7 @@ describe('PDFService', () => {
       // The current implementation might log "Adjusting transaction year" and then
       // "Transaction date ... is outside the statement period ... after year correction."
       expect(logger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('is outside the statement period')
+        expect.stringContaining('is outside the statement period'),
       );
     });
 
@@ -709,7 +709,7 @@ describe('PDFService', () => {
       expect(corrected.getDate()).toBe(15);
       // It should log that the date is outside the statement period.
       expect(logger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('is outside the statement period')
+        expect.stringContaining('is outside the statement period'),
       );
     });
   });
@@ -879,7 +879,7 @@ describe('PDFService', () => {
       const period = await pdfService['detectStatementPeriod'](text);
       expect(period).toBeNull();
       expect(logger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('Could not determine statement period')
+        expect.stringContaining('Could not determine statement period'),
       );
     });
 
@@ -890,7 +890,7 @@ describe('PDFService', () => {
       // If fallback finds 01/31 and 01/01, it will sort them correctly.
       // So, the test should check the logger warning for the primary pattern failing.
       expect(logger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('Parsed dates from primary pattern are in wrong order')
+        expect.stringContaining('Parsed dates from primary pattern are in wrong order'),
       );
       // Depending on whether fallback then succeeds, period might not be null.
       // For this specific text, fallback will find 01/31 and 01/01 and sort them.
@@ -904,8 +904,8 @@ describe('PDFService', () => {
       expect(period).toBeNull();
       expect(logger.warn).toHaveBeenCalledWith(
         expect.stringContaining(
-          'Fallback logic resulted in start date not before end date or only one unique date value.'
-        )
+          'Fallback logic resulted in start date not before end date or only one unique date value.',
+        ),
       );
     });
 
@@ -1017,7 +1017,7 @@ describe('PDFService', () => {
       expect(processedData.data[1]).toBe(threshold);
       expect(processedData.data[2]).toBe(threshold);
       expect(logger.error).toHaveBeenCalledWith(
-        'OpenCV (cv) is not loaded. Skipping advanced preprocessing.'
+        'OpenCV (cv) is not loaded. Skipping advanced preprocessing.',
       );
     });
 

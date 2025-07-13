@@ -337,7 +337,7 @@ export const useAnalytics = (timeRange?: { startDate?: Date; endDate?: Date }) =
   const filteredTransactions = useMemo(() => {
     const periodKey = `${startDate.getTime()}-${endDate.getTime()}`;
     logger.info(
-      `Calculating category spending for period: ${startDate.toISOString()} - ${endDate.toISOString()}`
+      `Calculating category spending for period: ${startDate.toISOString()} - ${endDate.toISOString()}`,
     );
 
     const filtered = transactions.filter((transaction) => {
@@ -390,7 +390,7 @@ export const useAnalytics = (timeRange?: { startDate?: Date; endDate?: Date }) =
       const details: Record<string, any[]> = {};
 
       logger.info(
-        `Calculating detailed category spending for period: ${startDate.toISOString()} - ${endDate.toISOString()}`
+        `Calculating detailed category spending for period: ${startDate.toISOString()} - ${endDate.toISOString()}`,
       );
       logger.info('Filtered transactions for detailed category spending:', filteredTransactions);
 
@@ -465,7 +465,7 @@ export const useAnalytics = (timeRange?: { startDate?: Date; endDate?: Date }) =
           (t) =>
             new Date(t.date).getMonth() === currentMonth &&
             new Date(t.date).getFullYear() === currentYear &&
-            t.description.toLowerCase().includes('vanguard')
+            t.description.toLowerCase().includes('vanguard'),
         )
         .reduce((sum, t) => sum + Math.abs(t.amount), 0);
       const currentSavings = currentIncome - currentSpending + currentInvestments;
@@ -481,7 +481,7 @@ export const useAnalytics = (timeRange?: { startDate?: Date; endDate?: Date }) =
           (t) =>
             new Date(t.date).getMonth() === previousMonth &&
             new Date(t.date).getFullYear() === previousYear &&
-            t.description.toLowerCase().includes('vanguard')
+            t.description.toLowerCase().includes('vanguard'),
         )
         .reduce((sum, t) => sum + Math.abs(t.amount), 0);
       const previousSavings = previousIncome - previousSpending + previousInvestments;
@@ -501,7 +501,7 @@ export const useAnalytics = (timeRange?: { startDate?: Date; endDate?: Date }) =
               t.type === 'expense' &&
               t.category === category.name &&
               new Date(t.date).getMonth() === currentMonth &&
-              new Date(t.date).getFullYear() === currentYear
+              new Date(t.date).getFullYear() === currentYear,
           )
           .reduce((sum, t) => sum + t.amount, 0);
 
@@ -511,7 +511,7 @@ export const useAnalytics = (timeRange?: { startDate?: Date; endDate?: Date }) =
               t.type === 'expense' &&
               t.category === category.name &&
               new Date(t.date).getMonth() === previousMonth &&
-              new Date(t.date).getFullYear() === previousYear
+              new Date(t.date).getFullYear() === previousYear,
           )
           .reduce((sum, t) => sum + t.amount, 0);
 
@@ -520,7 +520,7 @@ export const useAnalytics = (timeRange?: { startDate?: Date; endDate?: Date }) =
           previous: previousCategorySpending,
           percentageChange: calculatePercentageChange(
             currentCategorySpending,
-            previousCategorySpending
+            previousCategorySpending,
           ),
         };
       });
@@ -556,11 +556,11 @@ export const useAnalytics = (timeRange?: { startDate?: Date; endDate?: Date }) =
       const merchantTotals = new Map<string, { value: number; transactionCount: number }>();
 
       logger.info(
-        `Calculating merchant spending for period: ${startDate.toISOString()} - ${endDate.toISOString()}`
+        `Calculating merchant spending for period: ${startDate.toISOString()} - ${endDate.toISOString()}`,
       );
 
       const expenseTransactions = filteredTransactions.filter(
-        (transaction) => transaction.type === 'expense'
+        (transaction) => transaction.type === 'expense',
       );
 
       expenseTransactions.forEach((transaction) => {
@@ -619,14 +619,14 @@ export const useAnalytics = (timeRange?: { startDate?: Date; endDate?: Date }) =
       groupedByAmount.forEach((transactionsInSeries, amount) => {
         if (transactionsInSeries.length >= 3) {
           const sortedSeries = [...transactionsInSeries].sort(
-            (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+            (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
           );
 
           const intervals: number[] = [];
           for (let i = 1; i < sortedSeries.length; i++) {
             const diffTime = Math.abs(
               new Date(sortedSeries[i].date).getTime() -
-                new Date(sortedSeries[i - 1].date).getTime()
+                new Date(sortedSeries[i - 1].date).getTime(),
             );
             const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
             intervals.push(diffDays);
@@ -637,7 +637,7 @@ export const useAnalytics = (timeRange?: { startDate?: Date; endDate?: Date }) =
           const avgDaysBetween = intervals.reduce((sum, val) => sum + val, 0) / intervals.length;
           const stdDev = Math.sqrt(
             intervals.map((x) => Math.pow(x - avgDaysBetween, 2)).reduce((a, b) => a + b, 0) /
-              intervals.length
+              intervals.length,
           );
 
           let frequency: RecurringTransactionCandidate['frequency'] = 'inconsistent';
@@ -661,7 +661,7 @@ export const useAnalytics = (timeRange?: { startDate?: Date; endDate?: Date }) =
               // Consistent but not standard, very low stddev
               frequency = 'other';
               logger.info(
-                `Found 'other' consistent frequency for ${merchantName} - Amount: ${amount}, AvgDays: ${avgDaysBetween}, StdDev: ${stdDev}`
+                `Found 'other' consistent frequency for ${merchantName} - Amount: ${amount}, AvgDays: ${avgDaysBetween}, StdDev: ${stdDev}`,
               );
             }
           }

@@ -32,7 +32,7 @@ export default function MobileNav({ activeTab, onTabChange }: MobileNavProps) {
                 'flex flex-col items-center justify-center gap-1 text-xs transition-colors',
                 activeTab === tab.id
                   ? 'text-primary'
-                  : 'text-muted-foreground hover:text-foreground'
+                  : 'text-muted-foreground hover:text-foreground',
               )}
             >
               <Icon className='h-5 w-5' />

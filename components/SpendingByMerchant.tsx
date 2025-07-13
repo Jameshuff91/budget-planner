@@ -33,7 +33,7 @@ export default function SpendingByMerchant() {
               {merchantSpending.map(
                 (
                   merchant: { name: string; value: number; transactionCount: number },
-                  index: number
+                  index: number,
                 ) => (
                   <div
                     key={index}
@@ -56,7 +56,7 @@ export default function SpendingByMerchant() {
                     </p>{' '}
                     {/* Added whitespace-nowrap */}
                   </div>
-                )
+                ),
               )}
             </div>
           </ScrollArea>

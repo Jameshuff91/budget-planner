@@ -38,12 +38,12 @@ export function ExportDialog({ isOpen, onClose }: ExportDialogProps) {
   const [exportFormat, setExportFormat] = useState<'detailed' | 'summary'>('detailed');
 
   // Get unique categories
-  const categories = Array.from(new Set(transactions.map(t => t.category))).sort();
+  const categories = Array.from(new Set(transactions.map((t) => t.category))).sort();
 
   // Get available years
-  const years = Array.from(
-    new Set(transactions.map(t => new Date(t.date).getFullYear()))
-  ).sort((a, b) => b - a);
+  const years = Array.from(new Set(transactions.map((t) => new Date(t.date).getFullYear()))).sort(
+    (a, b) => b - a,
+  );
 
   const filterTransactions = (): Transaction[] => {
     let filtered = [...transactions];
@@ -52,23 +52,25 @@ export function ExportDialog({ isOpen, onClose }: ExportDialogProps) {
     switch (exportType) {
       case 'range':
         if (startDate && endDate) {
-          filtered = filtered.filter(t => {
+          filtered = filtered.filter((t) => {
             const date = new Date(t.date);
             return date >= new Date(startDate) && date <= new Date(endDate);
           });
         }
         break;
       case 'month':
-        filtered = filtered.filter(t => t.date.startsWith(selectedMonth));
+        filtered = filtered.filter((t) => t.date.startsWith(selectedMonth));
         break;
       case 'year':
-        filtered = filtered.filter(t => new Date(t.date).getFullYear() === parseInt(selectedYear));
+        filtered = filtered.filter(
+          (t) => new Date(t.date).getFullYear() === parseInt(selectedYear),
+        );
         break;
     }
 
     // Apply category filter if any categories are selected
     if (includeCategories.length > 0) {
-      filtered = filtered.filter(t => includeCategories.includes(t.category));
+      filtered = filtered.filter((t) => includeCategories.includes(t.category));
     }
 
     return filtered;
@@ -77,7 +79,7 @@ export function ExportDialog({ isOpen, onClose }: ExportDialogProps) {
   const handleExport = () => {
     try {
       const filteredTransactions = filterTransactions();
-      
+
       if (filteredTransactions.length === 0) {
         toast({
           title: 'No data to export',
@@ -100,7 +102,7 @@ export function ExportDialog({ isOpen, onClose }: ExportDialogProps) {
           description: 'Exported category summary to CSV',
         });
       }
-      
+
       onClose();
     } catch (error) {
       toast({
@@ -112,10 +114,8 @@ export function ExportDialog({ isOpen, onClose }: ExportDialogProps) {
   };
 
   const handleCategoryToggle = (category: string) => {
-    setIncludeCategories(prev =>
-      prev.includes(category)
-        ? prev.filter(c => c !== category)
-        : [...prev, category]
+    setIncludeCategories((prev) =>
+      prev.includes(category) ? prev.filter((c) => c !== category) : [...prev, category],
     );
   };
 
@@ -136,19 +136,27 @@ export function ExportDialog({ isOpen, onClose }: ExportDialogProps) {
             <RadioGroup value={exportType} onValueChange={(value: any) => setExportType(value)}>
               <div className='flex items-center space-x-2'>
                 <RadioGroupItem value='all' id='all' />
-                <Label htmlFor='all' className='font-normal'>All transactions</Label>
+                <Label htmlFor='all' className='font-normal'>
+                  All transactions
+                </Label>
               </div>
               <div className='flex items-center space-x-2'>
                 <RadioGroupItem value='range' id='range' />
-                <Label htmlFor='range' className='font-normal'>Custom date range</Label>
+                <Label htmlFor='range' className='font-normal'>
+                  Custom date range
+                </Label>
               </div>
               <div className='flex items-center space-x-2'>
                 <RadioGroupItem value='month' id='month' />
-                <Label htmlFor='month' className='font-normal'>Specific month</Label>
+                <Label htmlFor='month' className='font-normal'>
+                  Specific month
+                </Label>
               </div>
               <div className='flex items-center space-x-2'>
                 <RadioGroupItem value='year' id='year' />
-                <Label htmlFor='year' className='font-normal'>Specific year</Label>
+                <Label htmlFor='year' className='font-normal'>
+                  Specific year
+                </Label>
               </div>
             </RadioGroup>
           </div>
@@ -199,8 +207,10 @@ export function ExportDialog({ isOpen, onClose }: ExportDialogProps) {
                 onChange={(e) => setSelectedYear(e.target.value)}
                 className='w-full px-3 py-2 border border-gray-300 rounded-md'
               >
-                {years.map(year => (
-                  <option key={year} value={year}>{year}</option>
+                {years.map((year) => (
+                  <option key={year} value={year}>
+                    {year}
+                  </option>
                 ))}
               </select>
             </div>
@@ -210,7 +220,7 @@ export function ExportDialog({ isOpen, onClose }: ExportDialogProps) {
           <div className='space-y-3'>
             <Label>Categories (select all that apply)</Label>
             <div className='grid grid-cols-3 gap-2 max-h-32 overflow-y-auto'>
-              {categories.map(category => (
+              {categories.map((category) => (
                 <label key={category} className='flex items-center space-x-2'>
                   <input
                     type='checkbox'

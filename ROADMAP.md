@@ -11,6 +11,9 @@ The Budget Planner has evolved from a basic PDF parsing tool to a comprehensive 
 - ✅ Basic E2E testing framework with Playwright
 - ✅ Analytics tab with advanced financial insights
 - ✅ Development environment fixes and stability improvements
+- ✅ CSV export for all transactions with advanced filtering
+- ✅ Category summary export functionality
+- ✅ Date range and category-based export filtering
 
 ## Immediate Priorities (Next 2 Weeks)
 
@@ -29,11 +32,11 @@ The Budget Planner has evolved from a basic PDF parsing tool to a comprehensive 
 - [ ] Add performance monitoring (Web Vitals)
 
 ### 3. Data Export & Backup 💾
-- [ ] CSV export for all transactions
+- [x] CSV export for all transactions ✅
 - [ ] PDF report generation with charts
 - [ ] Backup/restore functionality
 - [ ] Data migration tools
-- [ ] Export templates for tax preparation
+- [x] Export templates for tax preparation ✅
 
 ## Short Term Goals (1 Month)
 

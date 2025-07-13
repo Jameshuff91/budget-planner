@@ -200,7 +200,7 @@ export default function ManageAssetsPage() {
           {loading && <p>Loading assets...</p>}
           {!loading && assets.length === 0 && (
             <p className='text-center text-gray-500 py-8'>
-              No assets added yet. Click "Add New Asset" to get started.
+              No assets added yet. Click &quot;Add New Asset&quot; to get started.
             </p>
           )}
           {!loading && assets.length > 0 && (
@@ -336,8 +336,8 @@ export default function ManageAssetsPage() {
           <DialogHeader>
             <DialogTitle>Confirm Deletion</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete the asset "{assetToDelete?.name}"? This action cannot
-              be undone.
+              Are you sure you want to delete the asset &quot;{assetToDelete?.name}&quot;? This
+              action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

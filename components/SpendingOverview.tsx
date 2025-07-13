@@ -30,7 +30,7 @@ export default function SpendingOverview({
   const { spendingOverview, monthlyTrends } = useAnalytics();
   const [selectedMonth, setSelectedMonth] = useState<(typeof spendingOverview)[0] | null>(null);
   const [internalSelectedYear, setInternalSelectedYear] = useState<number>(
-    new Date().getFullYear()
+    new Date().getFullYear(),
   );
 
   // Use prop if provided, otherwise use internal state

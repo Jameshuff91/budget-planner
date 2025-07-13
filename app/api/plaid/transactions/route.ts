@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
     if (!access_token || !start_date || !end_date) {
       return NextResponse.json(
         { error: 'Access token, start date, and end date are required' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -46,9 +46,6 @@ export async function POST(request: NextRequest) {
   } catch (error: unknown) {
     logger.error('Error getting transactions:', error);
     const errorMessage = error instanceof Error ? error.message : 'Failed to get transactions';
-    return NextResponse.json(
-      { error: errorMessage },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }

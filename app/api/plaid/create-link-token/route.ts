@@ -45,9 +45,6 @@ export async function POST(request: NextRequest) {
   } catch (error: unknown) {
     logger.error('Error creating Plaid link token:', error);
     const errorMessage = error instanceof Error ? error.message : 'Failed to create link token';
-    return NextResponse.json(
-      { error: errorMessage },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }

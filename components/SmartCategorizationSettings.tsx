@@ -98,8 +98,8 @@ export default function SmartCategorizationSettings() {
         <Alert>
           <AlertCircle className='h-4 w-4' />
           <AlertDescription>
-            Smart categorization uses OpenAI's API to analyze transaction descriptions. You'll need
-            an OpenAI API key to enable this feature.
+            Smart categorization uses OpenAI&apos;s API to analyze transaction descriptions.
+            You&apos;ll need an OpenAI API key to enable this feature.
           </AlertDescription>
         </Alert>
 

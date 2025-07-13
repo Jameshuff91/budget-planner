@@ -9,7 +9,7 @@ export function applyCategoryRules(description: string, rules: CategoryRule[]): 
   for (const rule of activeRules) {
     if (testRule(rule, description)) {
       logger.info(
-        `Category rule matched: "${description}" → ${rule.category} (rule: ${rule.pattern})`
+        `Category rule matched: "${description}" → ${rule.category} (rule: ${rule.pattern})`,
       );
       return rule.category;
     }

@@ -194,7 +194,7 @@ export default function ManageLiabilitiesPage() {
           {loading && <p>Loading liabilities...</p>}
           {!loading && liabilities.length === 0 && (
             <p className='text-center text-gray-500 py-8'>
-              No liabilities added yet. Click "Add New Liability" to get started.
+              No liabilities added yet. Click &quot;Add New Liability&quot; to get started.
             </p>
           )}
           {!loading && liabilities.length > 0 && (
@@ -332,8 +332,8 @@ export default function ManageLiabilitiesPage() {
           <DialogHeader>
             <DialogTitle>Confirm Deletion</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete the liability "{liabilityToDelete?.name}"? This action
-              cannot be undone.
+              Are you sure you want to delete the liability &quot;{liabilityToDelete?.name}&quot;?
+              This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

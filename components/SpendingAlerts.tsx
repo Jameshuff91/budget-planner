@@ -193,7 +193,7 @@ export default function SpendingAlerts() {
 
   const toggleRule = (ruleId: string) => {
     const updated = alertRules.map((rule) =>
-      rule.id === ruleId ? { ...rule, enabled: !rule.enabled } : rule
+      rule.id === ruleId ? { ...rule, enabled: !rule.enabled } : rule,
     );
     setAlertRules(updated);
     localStorage.setItem('budget.alertRules', JSON.stringify(updated));

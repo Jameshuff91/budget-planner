@@ -37,9 +37,6 @@ export async function POST(request: NextRequest) {
   } catch (error: unknown) {
     logger.error('Error exchanging public token:', error);
     const errorMessage = error instanceof Error ? error.message : 'Failed to exchange public token';
-    return NextResponse.json(
-      { error: errorMessage },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }

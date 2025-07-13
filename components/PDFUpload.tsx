@@ -77,7 +77,7 @@ export default function PDFUpload() {
     const csvFiles = files.filter((file) => file.type === 'text/csv' || file.name.endsWith('.csv'));
     const invalidFiles = files.filter(
       (file) =>
-        file.type !== 'application/pdf' && file.type !== 'text/csv' && !file.name.endsWith('.csv')
+        file.type !== 'application/pdf' && file.type !== 'text/csv' && !file.name.endsWith('.csv'),
     );
 
     if (invalidFiles.length > 0) {
@@ -129,7 +129,7 @@ export default function PDFUpload() {
           }
 
           logger.info(
-            `Successfully processed ${successCount} of ${extractedData.length} transactions from ${file.name}`
+            `Successfully processed ${successCount} of ${extractedData.length} transactions from ${file.name}`,
           );
 
           // Update UI with success message

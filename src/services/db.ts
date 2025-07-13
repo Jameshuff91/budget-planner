@@ -262,7 +262,7 @@ class DatabaseService {
 
   async getTransactionsByDateRange(
     startDate: Date,
-    endDate: Date
+    endDate: Date,
   ): Promise<BudgetDB['transactions']['value'][]> {
     if (!this.db) await this.initialize();
     const index = this.db!.transaction('transactions').store.index('by-date');
@@ -330,7 +330,7 @@ class DatabaseService {
   // CRUD methods for recurringPreferences
   async setRecurringPreference(
     candidateId: string,
-    status: 'confirmed' | 'dismissed'
+    status: 'confirmed' | 'dismissed',
   ): Promise<void> {
     try {
       const db = await this.getDB();

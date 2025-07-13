@@ -41,7 +41,7 @@ export default function SpendingByCategory({ selectedYear }: SpendingByCategoryP
         endDate.setHours(23, 59, 59, 999);
         return { startDate, endDate };
       }
-    }
+    },
   );
 
   const { categorySpending, detailedCategorySpending, monthlyTrends } =

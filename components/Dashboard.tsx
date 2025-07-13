@@ -144,11 +144,7 @@ export default function Dashboard() {
       <div className='flex justify-between items-center'>
         <h2 className='text-3xl font-bold text-gray-800'>Financial Dashboard</h2>
         <div className='flex items-center gap-3'>
-          <Button
-            variant='outline'
-            size='sm'
-            onClick={() => setIsExportDialogOpen(true)}
-          >
+          <Button variant='outline' size='sm' onClick={() => setIsExportDialogOpen(true)}>
             <Download className='h-4 w-4 mr-2' />
             Export Data
           </Button>
@@ -271,10 +267,7 @@ export default function Dashboard() {
       <MobileNav activeTab={activeTab} onTabChange={setActiveTab} />
 
       {/* Export Dialog */}
-      <ExportDialog 
-        isOpen={isExportDialogOpen} 
-        onClose={() => setIsExportDialogOpen(false)} 
-      />
+      <ExportDialog isOpen={isExportDialogOpen} onClose={() => setIsExportDialogOpen(false)} />
     </div>
   );
 }

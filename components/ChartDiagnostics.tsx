@@ -175,7 +175,7 @@ export default function ChartDiagnostics() {
     // 6. Check date filtering
     const currentYear = new Date().getFullYear();
     const currentYearTransactions = transactions.filter(
-      (t) => new Date(t.date).getFullYear() === currentYear
+      (t) => new Date(t.date).getFullYear() === currentYear,
     );
     if (transactions.length > 0 && currentYearTransactions.length === 0) {
       results.push({
@@ -264,7 +264,7 @@ export default function ChartDiagnostics() {
               <li>Upload a bank statement PDF to populate transaction data</li>
               <li>Ensure transactions have valid dates in MM/DD/YYYY format</li>
               <li>Check that the selected year filter matches your data</li>
-              <li>Try refreshing the page if charts don't appear immediately</li>
+              <li>Try refreshing the page if charts don&apos;t appear immediately</li>
               <li>Clear browser cache if experiencing persistent issues</li>
             </ul>
           </div>

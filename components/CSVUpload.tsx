@@ -38,7 +38,7 @@ const CSVUpload: React.FC = () => {
         logger.error('Error processing CSV file:', error);
       }
     },
-    [addTransaction]
+    [addTransaction],
   );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({

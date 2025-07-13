@@ -150,7 +150,7 @@ export class PlaidService {
     accessToken: string,
     startDate: string,
     endDate: string,
-    accountIds?: string[]
+    accountIds?: string[],
   ): Promise<PlaidTransaction[]> {
     try {
       const response = await fetch('/api/plaid/transactions', {
@@ -183,7 +183,7 @@ export class PlaidService {
    */
   async syncTransactions(
     accessToken: string,
-    cursor?: string
+    cursor?: string,
   ): Promise<{
     added: PlaidTransaction[];
     modified: PlaidTransaction[];

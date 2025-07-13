@@ -106,7 +106,7 @@ export class CSVService {
 
   async parseCSV(
     fileContent: string,
-    options: Partial<CSVParseOptions> = {}
+    options: Partial<CSVParseOptions> = {},
   ): Promise<CSVTransaction[]> {
     const opts = { ...defaultOptions, ...options };
     const lines = fileContent.trim().split(/\r?\n/);
@@ -127,7 +127,7 @@ export class CSVService {
           opts.dateColumn! + 1,
           opts.descriptionColumn! + 1,
           opts.amountColumn! + 1,
-          opts.categoryColumn !== undefined ? opts.categoryColumn + 1 : 0
+          opts.categoryColumn !== undefined ? opts.categoryColumn + 1 : 0,
         );
 
         if (fields.length < requiredColumns) {
@@ -181,7 +181,7 @@ export class CSVService {
     // Check if first line is header
     const firstLine = this.parseLine(lines[0], delimiter);
     const hasHeader = firstLine.some((field) =>
-      /^(date|description|amount|category|type)/i.test(field)
+      /^(date|description|amount|category|type)/i.test(field),
     );
 
     // Try to detect date format from second line (or first if no header)
