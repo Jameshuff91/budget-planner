@@ -1,6 +1,5 @@
 'use client';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@components/ui/card';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import React, { useMemo } from 'react';
 import {
@@ -15,11 +14,18 @@ import {
   ReferenceLine,
 } from 'recharts';
 
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@components/ui/card';
 import { useAnalytics } from '@hooks/useAnalytics';
 import { formatCurrency } from '@utils/helpers';
 
 interface YearOverYearComparisonProps {
   selectedYear: number;
+}
+
+interface TooltipPayload {
+  name: string;
+  value: number;
+  color: string;
 }
 
 const monthNames = [
@@ -41,12 +47,12 @@ export default function YearOverYearComparison({ selectedYear }: YearOverYearCom
   const { spendingOverview } = useAnalytics();
 
   const comparisonData = useMemo(() => {
-    const currentYearData = spendingOverview.filter((d: any) => d.year === selectedYear);
-    const previousYearData = spendingOverview.filter((d: any) => d.year === selectedYear - 1);
+    const currentYearData = spendingOverview.filter((d) => d.year === selectedYear);
+    const previousYearData = spendingOverview.filter((d) => d.year === selectedYear - 1);
 
     return monthNames.map((month, index) => {
-      const currentMonth = currentYearData.find((d: any) => d.month === month);
-      const previousMonth = previousYearData.find((d: any) => d.month === month);
+      const currentMonth = currentYearData.find((d) => d.month === index);
+      const previousMonth = previousYearData.find((d) => d.month === index);
 
       return {
         month,
@@ -84,13 +90,21 @@ export default function YearOverYearComparison({ selectedYear }: YearOverYearCom
     };
   }, [comparisonData, selectedYear]);
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const CustomTooltip = ({
+    active,
+    payload,
+    label,
+  }: {
+    active?: boolean;
+    payload?: TooltipPayload[];
+    label?: string;
+  }) => {
     if (!active || !payload) return null;
 
     return (
       <div className='bg-white p-3 border rounded-lg shadow-lg'>
         <p className='font-semibold'>{label}</p>
-        {payload.map((entry: any, index: number) => (
+        {payload.map((entry, index) => (
           <p key={index} style={{ color: entry.color }}>
             {entry.name}: {formatCurrency(entry.value)}
           </p>
