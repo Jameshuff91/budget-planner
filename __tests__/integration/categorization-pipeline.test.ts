@@ -190,7 +190,7 @@ describe('Categorization Pipeline Integration Tests', () => {
 
       const transaction: TransactionForCategorization = {
         description: 'Whole Foods Market',
-        amount: -125.50,
+        amount: -125.5,
         date: '2024-01-15',
         existingCategory: 'Uncategorized',
       };
@@ -204,7 +204,7 @@ describe('Categorization Pipeline Integration Tests', () => {
           headers: expect.objectContaining({
             Authorization: 'Bearer test-api-key',
           }),
-        })
+        }),
       );
     });
 
@@ -216,7 +216,7 @@ describe('Categorization Pipeline Integration Tests', () => {
 
       const transaction: TransactionForCategorization = {
         description: 'Ambiguous Store',
-        amount: -50.00,
+        amount: -50.0,
         date: '2024-01-15',
         existingCategory: 'Shopping',
       };
@@ -233,7 +233,7 @@ describe('Categorization Pipeline Integration Tests', () => {
 
       const transaction: TransactionForCategorization = {
         description: 'Test Transaction',
-        amount: -25.00,
+        amount: -25.0,
         date: '2024-01-15',
         existingCategory: 'Other Expenses',
       };
@@ -248,7 +248,7 @@ describe('Categorization Pipeline Integration Tests', () => {
 
       const transaction: TransactionForCategorization = {
         description: 'Test Transaction',
-        amount: -25.00,
+        amount: -25.0,
         date: '2024-01-15',
         existingCategory: 'Manual Category',
       };
@@ -264,7 +264,7 @@ describe('Categorization Pipeline Integration Tests', () => {
 
       const transaction: TransactionForCategorization = {
         description: 'Test Transaction',
-        amount: -25.00,
+        amount: -25.0,
         date: '2024-01-15',
       };
 
@@ -286,7 +286,7 @@ describe('Categorization Pipeline Integration Tests', () => {
                   index: i + 1,
                   category: r.category,
                   confidence: r.confidence,
-                }))
+                })),
               ),
             },
           },
@@ -309,18 +309,18 @@ describe('Categorization Pipeline Integration Tests', () => {
       mockFetch
         .mockResolvedValueOnce(
           mockBatchOpenAIResponse(
-            Array.from({ length: 10 }, () => ({ category: 'Shopping', confidence: 0.8 }))
-          )
+            Array.from({ length: 10 }, () => ({ category: 'Shopping', confidence: 0.8 })),
+          ),
         )
         .mockResolvedValueOnce(
           mockBatchOpenAIResponse(
-            Array.from({ length: 10 }, () => ({ category: 'Entertainment', confidence: 0.75 }))
-          )
+            Array.from({ length: 10 }, () => ({ category: 'Entertainment', confidence: 0.75 })),
+          ),
         )
         .mockResolvedValueOnce(
           mockBatchOpenAIResponse(
-            Array.from({ length: 5 }, () => ({ category: 'Dining Out', confidence: 0.9 }))
-          )
+            Array.from({ length: 5 }, () => ({ category: 'Dining Out', confidence: 0.9 })),
+          ),
         );
 
       const results = await categorizeTransactionsBatchWithAI(transactions);
@@ -381,7 +381,7 @@ describe('Categorization Pipeline Integration Tests', () => {
         mockBatchOpenAIResponse([
           { category: 'Groceries', confidence: 0.9 }, // High confidence
           { category: 'Unknown', confidence: 0.3 }, // Low confidence
-        ])
+        ]),
       );
 
       const results = await categorizeTransactionsBatchWithAI(transactions);
@@ -415,7 +415,7 @@ describe('Categorization Pipeline Integration Tests', () => {
 
       // Test 2: AI categorization when no custom rule matches
       mockFetch.mockResolvedValueOnce(mockOpenAIResponse('Electronics', 0.85));
-      
+
       const electronicsTransaction: TransactionForCategorization = {
         description: 'Best Buy Electronics Store',
         amount: -299.99,
@@ -427,7 +427,7 @@ describe('Categorization Pipeline Integration Tests', () => {
 
       // Test 3: Fallback to built-in when AI confidence is low
       mockFetch.mockResolvedValueOnce(mockOpenAIResponse('Unclear', 0.4));
-      
+
       const unclearTransaction: TransactionForCategorization = {
         description: 'Random Store 12345',
         amount: -50,
@@ -441,7 +441,7 @@ describe('Categorization Pipeline Integration Tests', () => {
 
     test('should handle the complete categorization flow with custom categories', async () => {
       const customCategories = ['Subscriptions', 'Pet Supplies', 'Home Improvement'];
-      
+
       localStorageMock.setItem('smartCategorization.enabled', 'true');
       localStorageMock.setItem('smartCategorization.apiKey', 'test-api-key');
 
@@ -509,10 +509,10 @@ describe('Categorization Pipeline Integration Tests', () => {
 
     test('should handle empty or null values gracefully', async () => {
       const rules: CategoryRule[] = [];
-      
+
       // Empty description
       expect(applyCategoryRules('', rules)).toBeNull();
-      
+
       // Empty rules
       expect(applyCategoryRules('Test transaction', [])).toBeNull();
 
@@ -567,15 +567,15 @@ describe('Categorization Pipeline Integration Tests', () => {
       }));
 
       const startTime = performance.now();
-      
+
       // Test 1000 transactions
       for (let i = 0; i < 1000; i++) {
         applyCategoryRules(`Transaction with pattern50 in it`, largeRuleSet);
       }
-      
+
       const endTime = performance.now();
       const totalTime = endTime - startTime;
-      
+
       // Should complete 1000 categorizations in under 100ms
       expect(totalTime).toBeLessThan(100);
     });
@@ -608,10 +608,9 @@ describe('Categorization Pipeline Integration Tests', () => {
       localStorageMock.setItem('smartCategorization.apiKey', 'test-api-key');
 
       // Mock a timeout
-      mockFetch.mockImplementationOnce(() => 
-        new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Network timeout')), 100)
-        )
+      mockFetch.mockImplementationOnce(
+        () =>
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Network timeout')), 100)),
       );
 
       const transaction: TransactionForCategorization = {
@@ -670,7 +669,7 @@ describe('Categorization Pipeline Integration Tests', () => {
         };
 
         const result = await categorizeTransactionWithAI(transaction);
-        
+
         if (testCase.shouldUseAI) {
           expect(result).toBe('AI Category');
         } else {
@@ -709,7 +708,10 @@ describe('Categorization Pipeline Integration Tests', () => {
         id: `${i}`,
         pattern: test.expectedPattern,
         category: test.expectedCategory,
-        matchType: test.expectedPattern.includes('.*') || test.expectedPattern.startsWith('^') ? 'regex' : 'contains',
+        matchType:
+          test.expectedPattern.includes('.*') || test.expectedPattern.startsWith('^')
+            ? 'regex'
+            : 'contains',
         priority: 1,
         enabled: true,
       }));

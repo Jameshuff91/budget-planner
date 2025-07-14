@@ -10,7 +10,7 @@ jobs:
   lighthouse:
     name: Lighthouse CI
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -47,7 +47,7 @@ jobs:
   bundle-analysis:
     name: Bundle Size Analysis
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -64,7 +64,7 @@ jobs:
       - name: Build and analyze bundle
         run: |
           npm run build
-          
+
           # Create bundle report
           echo "## Bundle Size Report" >> bundle-report.md
           echo "" >> bundle-report.md
@@ -77,7 +77,7 @@ jobs:
           echo '```' >> bundle-report.md
           find .next/static/css -name "*.css" -exec du -h {} + 2>/dev/null | sort -h >> bundle-report.md || echo "No CSS files found" >> bundle-report.md
           echo '```' >> bundle-report.md
-          
+
           # Calculate total sizes
           echo "" >> bundle-report.md
           echo "### Total Sizes" >> bundle-report.md
@@ -101,20 +101,20 @@ jobs:
           script: |
             const fs = require('fs');
             const report = fs.readFileSync('bundle-report.md', 'utf8');
-            
+
             // Find existing comment
             const { data: comments } = await github.rest.issues.listComments({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.issue.number,
             });
-            
+
             const botComment = comments.find(comment => 
               comment.user.type === 'Bot' && comment.body.includes('Bundle Size Report')
             );
-            
+
             const body = `## 📊 Bundle Size Report\n\n${report}`;
-            
+
             if (botComment) {
               await github.rest.issues.updateComment({
                 owner: context.repo.owner,
@@ -134,7 +134,7 @@ jobs:
   memory-profiling:
     name: Memory Usage Analysis
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -162,7 +162,7 @@ jobs:
         run: |
           cat > memory-test.js << 'EOF'
           const { chromium } = require('playwright');
-          
+
           (async () => {
             const browser = await chromium.launch();
             const context = await browser.newContext();
@@ -204,7 +204,7 @@ jobs:
             await browser.close();
           })();
           EOF
-          
+
           node memory-test.js > memory-report.txt
 
       - name: Save memory report

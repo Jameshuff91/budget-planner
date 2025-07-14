@@ -9,7 +9,7 @@ jobs:
   visual-tests:
     name: Visual Regression Tests
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -41,18 +41,18 @@ jobs:
           # Create visual test script
           cat > visual-tests.spec.ts << 'EOF'
           import { test, expect } from '@playwright/test';
-          
+
           const pages = [
             { name: 'home', path: '/' },
             { name: 'dashboard', path: '/' }, // After data load
           ];
-          
+
           const viewports = [
             { name: 'desktop', width: 1920, height: 1080 },
             { name: 'tablet', width: 768, height: 1024 },
             { name: 'mobile', width: 375, height: 667 },
           ];
-          
+
           for (const pageInfo of pages) {
             for (const viewport of viewports) {
               test(`${pageInfo.name} - ${viewport.name}`, async ({ page }) => {
@@ -81,7 +81,7 @@ jobs:
               });
             }
           }
-          
+
           // Component-specific visual tests
           test('spending chart', async ({ page }) => {
             await page.goto('http://localhost:3000');
@@ -125,15 +125,15 @@ jobs:
         with:
           script: |
             const comment = `## ❌ Visual Regression Tests Failed
-            
+
             Visual differences were detected. Please review the screenshots in the artifacts.
-            
+
             To update the baseline images, run:
             \`\`\`bash
             npx playwright test --update-snapshots
             \`\`\`
             `;
-            
+
             github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,

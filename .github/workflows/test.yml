@@ -18,7 +18,7 @@ jobs:
       fail-fast: false
       matrix:
         node-version: [18, 20]
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -68,7 +68,7 @@ jobs:
       fail-fast: false
       matrix:
         browser: [chromium, firefox, webkit]
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -123,7 +123,7 @@ jobs:
   code-quality:
     name: Code Quality
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -169,7 +169,7 @@ jobs:
   performance-budget:
     name: Performance Budget
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -191,26 +191,26 @@ jobs:
           # Define performance budgets (in KB)
           MAX_JS_SIZE=500
           MAX_CSS_SIZE=100
-          
+
           # Check JavaScript bundle size
           JS_SIZE=$(find .next/static/chunks -name "*.js" -exec du -k {} + | awk '{sum+=$1} END {print sum}')
           echo "JavaScript bundle size: ${JS_SIZE}KB (budget: ${MAX_JS_SIZE}KB)"
-          
+
           # Check CSS bundle size  
           CSS_SIZE=$(find .next/static/css -name "*.css" -exec du -k {} + 2>/dev/null | awk '{sum+=$1} END {print sum}' || echo 0)
           echo "CSS bundle size: ${CSS_SIZE}KB (budget: ${MAX_CSS_SIZE}KB)"
-          
+
           # Fail if over budget
           if [ "$JS_SIZE" -gt "$MAX_JS_SIZE" ]; then
             echo "❌ JavaScript bundle exceeds budget!"
             exit 1
           fi
-          
+
           if [ "$CSS_SIZE" -gt "$MAX_CSS_SIZE" ]; then
             echo "❌ CSS bundle exceeds budget!"
             exit 1
           fi
-          
+
           echo "✅ All bundles within budget!"
 
   # Test Result Summary
@@ -219,38 +219,38 @@ jobs:
     runs-on: ubuntu-latest
     needs: [unit-tests, e2e-tests, code-quality, performance-budget]
     if: always()
-    
+
     steps:
       - name: Check test results
         run: |
           echo "### Test Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          
+
           # Check each job status
           if [ "${{ needs.unit-tests.result }}" == "success" ]; then
             echo "✅ Unit Tests: Passed" >> $GITHUB_STEP_SUMMARY
           else
             echo "❌ Unit Tests: Failed" >> $GITHUB_STEP_SUMMARY
           fi
-          
+
           if [ "${{ needs.e2e-tests.result }}" == "success" ]; then
             echo "✅ E2E Tests: Passed" >> $GITHUB_STEP_SUMMARY
           else
             echo "❌ E2E Tests: Failed" >> $GITHUB_STEP_SUMMARY
           fi
-          
+
           if [ "${{ needs.code-quality.result }}" == "success" ]; then
             echo "✅ Code Quality: Passed" >> $GITHUB_STEP_SUMMARY
           else
             echo "❌ Code Quality: Failed" >> $GITHUB_STEP_SUMMARY
           fi
-          
+
           if [ "${{ needs.performance-budget.result }}" == "success" ]; then
             echo "✅ Performance Budget: Passed" >> $GITHUB_STEP_SUMMARY
           else
             echo "❌ Performance Budget: Failed" >> $GITHUB_STEP_SUMMARY
           fi
-          
+
           # Overall status
           if [ "${{ needs.unit-tests.result }}" == "success" ] && \
              [ "${{ needs.e2e-tests.result }}" == "success" ] && \

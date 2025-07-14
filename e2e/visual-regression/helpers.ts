@@ -5,17 +5,17 @@ import { Page } from '@playwright/test';
  */
 export async function waitForChartsToRender(page: Page) {
   // Wait for Recharts containers
-  await page.waitForSelector('.recharts-responsive-container', { 
+  await page.waitForSelector('.recharts-responsive-container', {
     timeout: 10000,
-    state: 'visible' 
+    state: 'visible',
   });
-  
+
   // Wait for animations to complete
   await page.waitForTimeout(1500);
-  
+
   // Ensure fonts are loaded
   await page.evaluate(() => document.fonts.ready);
-  
+
   // Wait for any chart animations
   await page.waitForFunction(() => {
     const animations = document.getAnimations();
@@ -28,19 +28,19 @@ export async function waitForChartsToRender(page: Page) {
  */
 export async function uploadSampleTransactions(page: Page) {
   await page.goto('/');
-  
+
   // Wait for the upload area to be visible
   await page.waitForSelector('input[type="file"]', { timeout: 10000 });
-  
+
   // Upload the sample CSV file
   const fileInput = await page.locator('input[type="file"]').first();
   await fileInput.setInputFiles('./sample-transactions.csv');
-  
+
   // Wait for upload to complete
-  await page.waitForSelector('text=/transactions imported successfully/i', { 
-    timeout: 15000 
+  await page.waitForSelector('text=/transactions imported successfully/i', {
+    timeout: 15000,
   });
-  
+
   // Additional wait for data processing
   await page.waitForTimeout(2000);
 }
@@ -54,7 +54,7 @@ export async function clearDatabase(page: Page) {
       return indexedDB.deleteDatabase('BudgetPlannerDB');
     }
   });
-  
+
   // Reload to ensure clean state
   await page.reload({ waitUntil: 'networkidle' });
 }
@@ -64,13 +64,16 @@ export async function clearDatabase(page: Page) {
  */
 export async function waitForSkeletonsToDisappear(page: Page) {
   // Wait for any skeleton elements to be hidden
-  await page.waitForFunction(() => {
-    const skeletons = document.querySelectorAll('.skeleton, [data-testid*="skeleton"]');
-    return skeletons.length === 0 || 
-           Array.from(skeletons).every(el => 
-             window.getComputedStyle(el).display === 'none'
-           );
-  }, { timeout: 10000 });
+  await page.waitForFunction(
+    () => {
+      const skeletons = document.querySelectorAll('.skeleton, [data-testid*="skeleton"]');
+      return (
+        skeletons.length === 0 ||
+        Array.from(skeletons).every((el) => window.getComputedStyle(el).display === 'none')
+      );
+    },
+    { timeout: 10000 },
+  );
 }
 
 /**
@@ -79,7 +82,7 @@ export async function waitForSkeletonsToDisappear(page: Page) {
 export async function setConsistentDate(page: Page, date: Date = new Date('2024-01-15')) {
   await page.addInitScript((dateStr) => {
     const constantDate = new Date(dateStr);
-    
+
     // Override Date constructor
     const OriginalDate = Date;
     // @ts-ignore
@@ -91,12 +94,12 @@ export async function setConsistentDate(page: Page, date: Date = new Date('2024-
           super(...args);
         }
       }
-      
+
       static now() {
         return constantDate.getTime();
       }
     };
-    
+
     // Override Date prototype methods
     window.Date.prototype = OriginalDate.prototype;
     window.Date.UTC = OriginalDate.UTC;
@@ -130,7 +133,7 @@ export async function hideDynamicElements(page: Page) {
       *:focus {
         outline: none !important;
       }
-    `
+    `,
   });
 }
 
@@ -140,10 +143,10 @@ export async function hideDynamicElements(page: Page) {
 export async function scrollToElement(page: Page, selector: string) {
   const element = await page.locator(selector);
   await element.scrollIntoViewIfNeeded();
-  
+
   // Wait for scroll to complete
   await page.waitForTimeout(500);
-  
+
   // Wait for any triggered animations
   await page.waitForFunction(() => {
     const animations = document.getAnimations();
@@ -154,11 +157,7 @@ export async function scrollToElement(page: Page, selector: string) {
 /**
  * Take a screenshot with retry logic for stability
  */
-export async function takeStableScreenshot(
-  element: any, 
-  name: string, 
-  options?: any
-) {
+export async function takeStableScreenshot(element: any, name: string, options?: any) {
   // Take multiple screenshots and use the last one
   // This helps ensure animations have fully completed
   for (let i = 0; i < 3; i++) {
@@ -182,25 +181,25 @@ export async function waitForNetworkIdle(page: Page) {
  */
 export async function mockApiResponses(page: Page) {
   // Mock any external API calls that might affect visual consistency
-  await page.route('**/api/plaid/**', route => {
+  await page.route('**/api/plaid/**', (route) => {
     route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ 
+      body: JSON.stringify({
         transactions: [],
-        accounts: []
-      })
+        accounts: [],
+      }),
     });
   });
-  
-  await page.route('**/api/openai/**', route => {
+
+  await page.route('**/api/openai/**', (route) => {
     route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ 
+      body: JSON.stringify({
         category: 'Groceries',
-        confidence: 0.95
-      })
+        confidence: 0.95,
+      }),
     });
   });
 }

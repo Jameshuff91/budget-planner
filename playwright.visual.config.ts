@@ -45,46 +45,46 @@ export default defineConfig({
     // Desktop viewports
     {
       name: 'chromium-desktop',
-      use: { 
+      use: {
         ...devices['Desktop Chrome'],
         viewport: { width: 1920, height: 1080 },
       },
     },
     {
       name: 'firefox-desktop',
-      use: { 
+      use: {
         ...devices['Desktop Firefox'],
         viewport: { width: 1920, height: 1080 },
       },
     },
     {
       name: 'webkit-desktop',
-      use: { 
+      use: {
         ...devices['Desktop Safari'],
         viewport: { width: 1920, height: 1080 },
       },
     },
-    
+
     // Tablet viewports
     {
       name: 'chromium-tablet',
-      use: { 
+      use: {
         ...devices['iPad Pro'],
         viewport: { width: 768, height: 1024 },
       },
     },
-    
+
     // Mobile viewports
     {
       name: 'chromium-mobile',
-      use: { 
+      use: {
         ...devices['iPhone 12'],
         viewport: { width: 375, height: 812 },
       },
     },
     {
       name: 'webkit-mobile',
-      use: { 
+      use: {
         ...devices['iPhone 12'],
         viewport: { width: 375, height: 812 },
       },

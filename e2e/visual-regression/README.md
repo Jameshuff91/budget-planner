@@ -56,6 +56,7 @@ npm run test:visual:report
 ### Helper Functions
 
 The `helpers.ts` file provides utilities for:
+
 - Waiting for charts to render
 - Uploading sample data
 - Clearing database
@@ -65,6 +66,7 @@ The `helpers.ts` file provides utilities for:
 ## Configuration
 
 Visual tests use `playwright.visual.config.ts` with:
+
 - Separate test results directory
 - Visual comparison thresholds
 - Multiple viewport configurations
@@ -87,6 +89,7 @@ npx playwright test charts.spec.ts --config=playwright.visual.config.ts --update
 ### Baseline Storage
 
 Baselines are stored in `__screenshots__/` organized by:
+
 - Browser (chromium, firefox, webkit)
 - Viewport (desktop, tablet, mobile)
 - Test name
@@ -94,6 +97,7 @@ Baselines are stored in `__screenshots__/` organized by:
 ## CI/CD Integration
 
 The `.github/workflows/visual-tests.yml` workflow:
+
 - Runs tests on pull requests
 - Generates diff reports on failures
 - Allows manual baseline updates
@@ -143,7 +147,7 @@ Example:
 test('New component visual test', async ({ page }) => {
   await uploadSampleTransactions(page);
   await waitForChartsToRender(page);
-  
+
   const component = await page.locator('[data-testid="new-component"]');
   await expect(component).toHaveScreenshot('new-component-default.png');
 });

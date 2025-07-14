@@ -79,6 +79,7 @@ This document outlines the recommended branch protection rules for the Budget Pl
 ## Feature Branch Naming Convention
 
 Enforce branch naming patterns:
+
 - `feature/*` - New features
 - `fix/*` - Bug fixes
 - `hotfix/*` - Urgent production fixes
@@ -90,13 +91,16 @@ Enforce branch naming patterns:
 ## Pull Request Rules
 
 ### PR Template
+
 Create `.github/pull_request_template.md`:
 
 ```markdown
 ## Description
+
 Brief description of changes
 
 ## Type of Change
+
 - [ ] Bug fix (non-breaking change which fixes an issue)
 - [ ] New feature (non-breaking change which adds functionality)
 - [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)
@@ -105,12 +109,14 @@ Brief description of changes
 - [ ] Code refactoring
 
 ## Testing
+
 - [ ] Unit tests pass locally
 - [ ] E2E tests pass locally
 - [ ] Added new tests for new functionality
 - [ ] Manually tested the changes
 
 ## Checklist
+
 - [ ] My code follows the style guidelines of this project
 - [ ] I have performed a self-review of my own code
 - [ ] I have commented my code, particularly in hard-to-understand areas
@@ -131,6 +137,7 @@ Brief description of changes
 ### Required Webhooks
 
 Configure webhooks for:
+
 - Deployment services (Vercel, Netlify)
 - Code quality tools (SonarCloud, CodeClimate)
 - Project management tools (Jira, Linear)
@@ -138,25 +145,30 @@ Configure webhooks for:
 ## Security Policies
 
 ### Secret Scanning
+
 - ✅ Enable secret scanning
 - ✅ Push protection for secrets
 
 ### Dependabot Security Updates
+
 - ✅ Enable Dependabot security updates
 - ✅ Automatically open PRs for vulnerabilities
 
 ### Code Scanning
+
 - ✅ Enable CodeQL analysis
 - ✅ Schedule: Weekly
 
 ## Merge Strategies
 
 ### Allowed Merge Methods
+
 - ✅ Squash and merge (recommended for feature branches)
 - ✅ Rebase and merge (for clean history)
 - ❌ Create a merge commit (disabled to maintain linear history)
 
 ### Automatic Deletion
+
 - ✅ Automatically delete head branches after merge
 
 ## Implementation Checklist

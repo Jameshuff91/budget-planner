@@ -1,8 +1,11 @@
 ## Description
+
 <!-- Provide a brief description of the changes in this PR -->
 
 ## Type of Change
+
 <!-- Mark the relevant option with an "x" -->
+
 - [ ] 🐛 Bug fix (non-breaking change which fixes an issue)
 - [ ] ✨ New feature (non-breaking change which adds functionality)
 - [ ] 💥 Breaking change (fix or feature that would cause existing functionality to not work as expected)
@@ -15,17 +18,23 @@
 - [ ] 🔐 Security fix
 
 ## Related Issues
+
 <!-- Link to related issues -->
+
 Closes #
 
 ## Changes Made
+
 <!-- List the specific changes made in this PR -->
-- 
-- 
-- 
+
+-
+-
+-
 
 ## Testing
+
 <!-- Describe the tests you ran to verify your changes -->
+
 - [ ] Unit tests pass locally (`npm test`)
 - [ ] E2E tests pass locally (`npm run test:e2e`)
 - [ ] Added new tests for new functionality
@@ -34,22 +43,29 @@ Closes #
 - [ ] Tested on mobile devices/responsive design
 
 ### Test Evidence
+
 <!-- Add screenshots or recordings if applicable -->
 
 ## Performance Impact
+
 <!-- Describe any performance implications -->
+
 - [ ] No performance impact
 - [ ] Improved performance
 - [ ] Potential performance impact (explain below)
 
 ## Bundle Size Impact
+
 <!-- Run `npm run build` and check bundle sizes -->
+
 - [ ] No significant change in bundle size
 - [ ] Bundle size increased (justify below)
 - [ ] Bundle size decreased
 
 ## Checklist
+
 <!-- Mark completed items with an "x" -->
+
 - [ ] My code follows the style guidelines of this project
 - [ ] I have performed a self-review of my own code
 - [ ] I have commented my code, particularly in hard-to-understand areas
@@ -61,7 +77,9 @@ Closes #
 - [ ] Any dependent changes have been merged and published
 
 ## Security Considerations
+
 <!-- Check all that apply -->
+
 - [ ] This change doesn't affect security
 - [ ] I've reviewed for potential security vulnerabilities
 - [ ] No sensitive data is exposed
@@ -69,20 +87,26 @@ Closes #
 - [ ] No new external dependencies with known vulnerabilities
 
 ## Deployment Notes
+
 <!-- Add any special instructions for deployment -->
+
 - [ ] No special deployment steps required
 - [ ] Database migration required
 - [ ] Environment variables need to be updated
 - [ ] Cache needs to be cleared
 
 ## Screenshots/Recordings
+
 <!-- If applicable, add screenshots or recordings to help explain your changes -->
 
 ### Before
+
 <!-- Add before screenshots -->
 
 ### After
+
 <!-- Add after screenshots -->
 
 ## Additional Notes
+
 <!-- Add any additional context or notes for reviewers -->

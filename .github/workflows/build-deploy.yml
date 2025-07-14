@@ -13,7 +13,7 @@ jobs:
   build:
     name: Build Application
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -64,7 +64,7 @@ jobs:
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
           find .next/static -name "*.js" -o -name "*.css" | xargs du -h | sort -h | tail -20 >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-          
+
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "#### Build Info" >> $GITHUB_STEP_SUMMARY
           echo "- Node Version: $(node --version)" >> $GITHUB_STEP_SUMMARY
@@ -96,7 +96,7 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    
+
     steps:
       - name: Download build artifacts
         uses: actions/download-artifact@v4
@@ -124,7 +124,7 @@ jobs:
     environment:
       name: production
       url: ${{ steps.vercel-deploy.outputs.preview-url }}
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -148,7 +148,7 @@ jobs:
     environment:
       name: production-netlify
       url: ${{ steps.netlify-deploy.outputs.deploy-url }}
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -165,7 +165,7 @@ jobs:
           publish-dir: './out'
           production-deploy: true
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          deploy-message: "Deploy from GitHub Actions"
+          deploy-message: 'Deploy from GitHub Actions'
           enable-pull-request-comment: true
           enable-commit-comment: true
           enable-commit-status: true
@@ -179,7 +179,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [build, deploy-github-pages]
     if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -214,13 +214,13 @@ jobs:
           release_name: Release v${{ steps.package-version.outputs.version }}
           body: |
             ## Changes in this release
-            
+
             - Automated release from GitHub Actions
             - View commits: https://github.com/${{ github.repository }}/commits/v${{ steps.package-version.outputs.version }}
-            
+
             ## Deployment URLs
             - GitHub Pages: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/
-            
+
             ## Build Information
             - Commit: ${{ github.sha }}
             - Build Date: ${{ github.event.head_commit.timestamp }}

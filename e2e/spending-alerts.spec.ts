@@ -48,7 +48,9 @@ test.describe('Spending Alerts Configuration', () => {
 
     // Check that Spending Alerts section is visible
     await expect(page.locator('h3:has-text("Alert Rules")')).toBeVisible();
-    await expect(page.locator('text=Configure when you want to receive spending alerts')).toBeVisible();
+    await expect(
+      page.locator('text=Configure when you want to receive spending alerts'),
+    ).toBeVisible();
   });
 
   test('should display default alert rules', async ({ page }) => {
@@ -72,7 +74,9 @@ test.describe('Spending Alerts Configuration', () => {
     await page.waitForTimeout(1000);
 
     // Find the first alert rule switch
-    const firstRuleContainer = page.locator('text=Alert when spending exceeds 90% of budget').locator('..');
+    const firstRuleContainer = page
+      .locator('text=Alert when spending exceeds 90% of budget')
+      .locator('..');
     const firstSwitch = firstRuleContainer.locator('button[role="switch"]');
 
     // Get initial state
@@ -97,8 +101,10 @@ test.describe('Spending Alerts Configuration', () => {
     await page.waitForTimeout(1000);
 
     // Find threshold input for budget exceeded rule
-    const budgetRuleContainer = page.locator('text=Alert when spending exceeds 90% of budget').locator('..');
-    
+    const budgetRuleContainer = page
+      .locator('text=Alert when spending exceeds 90% of budget')
+      .locator('..');
+
     // Ensure the rule is enabled first
     const budgetSwitch = budgetRuleContainer.locator('button[role="switch"]');
     const switchState = await budgetSwitch.getAttribute('data-state');
@@ -109,11 +115,11 @@ test.describe('Spending Alerts Configuration', () => {
     // Find and update threshold input
     const thresholdInput = budgetRuleContainer.locator('input[type="number"]');
     await expect(thresholdInput).toBeVisible();
-    
+
     // Clear and set new value
     await thresholdInput.clear();
     await thresholdInput.fill('80');
-    
+
     // Verify value was updated
     await expect(thresholdInput).toHaveValue('80');
   });
@@ -136,7 +142,7 @@ test.describe('Spending Alerts Configuration', () => {
 
     // Verify success toast appears
     await expect(page.locator('text=Notifications Enabled')).toBeVisible();
-    
+
     // Button should now show as Enabled and be disabled
     await expect(page.locator('button:has-text("Enabled")').nth(0)).toBeVisible();
     await expect(page.locator('button:has-text("Enabled")').nth(0)).toBeDisabled();
@@ -148,7 +154,9 @@ test.describe('Spending Alerts Configuration', () => {
     await page.waitForTimeout(1000);
 
     // Enable unusual spending alert
-    const unusualSpendingContainer = page.locator('text=Alert on transactions 150% above average').locator('..');
+    const unusualSpendingContainer = page
+      .locator('text=Alert on transactions 150% above average')
+      .locator('..');
     const unusualSwitch = unusualSpendingContainer.locator('button[role="switch"]');
     const switchState = await unusualSwitch.getAttribute('data-state');
     if (switchState !== 'checked') {
@@ -161,15 +169,15 @@ test.describe('Spending Alerts Configuration', () => {
 
     // Check for active alerts section
     const activeAlertsSection = page.locator('h3:has-text("Active Alerts")');
-    
+
     // If alerts are generated, they should be visible
     const alerts = page.locator('[role="alert"]');
     const alertCount = await alerts.count();
-    
+
     if (alertCount > 0) {
       // Verify alert structure
       await expect(alerts.first()).toBeVisible();
-      
+
       // Check for dismiss button
       const dismissButton = alerts.first().locator('button').last();
       await expect(dismissButton).toBeVisible();
@@ -182,7 +190,9 @@ test.describe('Spending Alerts Configuration', () => {
     await page.waitForTimeout(1000);
 
     // Enable unusual spending alert
-    const unusualSpendingContainer = page.locator('text=Alert on transactions 150% above average').locator('..');
+    const unusualSpendingContainer = page
+      .locator('text=Alert on transactions 150% above average')
+      .locator('..');
     const unusualSwitch = unusualSpendingContainer.locator('button[role="switch"]');
     const switchState = await unusualSwitch.getAttribute('data-state');
     if (switchState !== 'checked') {
@@ -218,12 +228,14 @@ test.describe('Spending Alerts Configuration', () => {
     await page.waitForTimeout(1000);
 
     // Change threshold for budget exceeded rule
-    const budgetRuleContainer = page.locator('text=Alert when spending exceeds 90% of budget').locator('..');
-    
+    const budgetRuleContainer = page
+      .locator('text=Alert when spending exceeds 90% of budget')
+      .locator('..');
+
     // Enable the rule
     const budgetSwitch = budgetRuleContainer.locator('button[role="switch"]');
     await budgetSwitch.click();
-    
+
     // Update threshold
     const thresholdInput = budgetRuleContainer.locator('input[type="number"]');
     await thresholdInput.clear();
@@ -238,7 +250,10 @@ test.describe('Spending Alerts Configuration', () => {
     await page.waitForTimeout(1000);
 
     // Verify settings persisted
-    const reloadedInput = page.locator('text=Alert when spending exceeds 90% of budget').locator('..').locator('input[type="number"]');
+    const reloadedInput = page
+      .locator('text=Alert when spending exceeds 90% of budget')
+      .locator('..')
+      .locator('input[type="number"]');
     await expect(reloadedInput).toHaveValue('75');
   });
 
@@ -248,19 +263,25 @@ test.describe('Spending Alerts Configuration', () => {
     await page.waitForTimeout(1000);
 
     // Test Budget Exceeded Alert
-    const budgetAlert = page.locator('text=Alert when spending exceeds 90% of budget').locator('..');
+    const budgetAlert = page
+      .locator('text=Alert when spending exceeds 90% of budget')
+      .locator('..');
     await expect(budgetAlert).toBeVisible();
     const budgetThreshold = budgetAlert.locator('input[type="number"]');
     await expect(budgetAlert.locator('text=%')).toBeVisible(); // Should show percentage
 
     // Test Unusual Spending Alert
-    const unusualAlert = page.locator('text=Alert on transactions 150% above average').locator('..');
+    const unusualAlert = page
+      .locator('text=Alert on transactions 150% above average')
+      .locator('..');
     await expect(unusualAlert).toBeVisible();
     const unusualThreshold = unusualAlert.locator('input[type="number"]');
     await expect(unusualAlert.locator('text=%')).toBeVisible(); // Should show percentage
 
     // Test Savings Goal Alert
-    const savingsAlert = page.locator('text=Alert when monthly savings fall below $500').locator('..');
+    const savingsAlert = page
+      .locator('text=Alert when monthly savings fall below $500')
+      .locator('..');
     await expect(savingsAlert).toBeVisible();
     const savingsThreshold = savingsAlert.locator('input[type="number"]');
     await expect(savingsAlert.locator('text=$')).toBeVisible(); // Should show dollar sign
@@ -286,7 +307,7 @@ test.describe('Spending Alerts Configuration', () => {
     // Enable all three default rules
     const switches = page.locator('button[role="switch"]');
     const switchCount = await switches.count();
-    
+
     for (let i = 0; i < switchCount; i++) {
       const switchElement = switches.nth(i);
       const state = await switchElement.getAttribute('data-state');
@@ -298,12 +319,18 @@ test.describe('Spending Alerts Configuration', () => {
 
     // Set lower thresholds to trigger alerts
     // Budget exceeded threshold to 50%
-    const budgetInput = page.locator('text=Alert when spending exceeds 90% of budget').locator('..').locator('input[type="number"]');
+    const budgetInput = page
+      .locator('text=Alert when spending exceeds 90% of budget')
+      .locator('..')
+      .locator('input[type="number"]');
     await budgetInput.clear();
     await budgetInput.fill('50');
 
     // Unusual spending threshold to 120%
-    const unusualInput = page.locator('text=Alert on transactions 150% above average').locator('..').locator('input[type="number"]');
+    const unusualInput = page
+      .locator('text=Alert on transactions 150% above average')
+      .locator('..')
+      .locator('input[type="number"]');
     await unusualInput.clear();
     await unusualInput.fill('120');
 
@@ -315,9 +342,10 @@ test.describe('Spending Alerts Configuration', () => {
     await page.waitForTimeout(1000);
 
     // Look for any generated alerts
-    const alertsExist = await page.locator('[role="alert"]').count() > 0 ||
-                        await page.locator('text=Active Alerts').isVisible();
-    
+    const alertsExist =
+      (await page.locator('[role="alert"]').count()) > 0 ||
+      (await page.locator('text=Active Alerts').isVisible());
+
     // We expect some alerts to be generated based on our test data
     if (alertsExist) {
       // Verify we can see alert messages

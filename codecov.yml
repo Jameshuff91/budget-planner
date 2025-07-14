@@ -6,8 +6,8 @@ codecov:
 coverage:
   precision: 2
   round: down
-  range: "70...100"
-  
+  range: '70...100'
+
   status:
     project:
       default:
@@ -21,7 +21,7 @@ coverage:
         if_not_found: success
         if_ci_failed: error
         only_pulls: false
-        
+
     patch:
       default:
         # Require at least 70% coverage on new code
@@ -32,12 +32,12 @@ coverage:
         if_ci_failed: error
 
 comment:
-  layout: "reach,diff,flags,files,footer"
+  layout: 'reach,diff,flags,files,footer'
   behavior: default
   require_changes: false
   require_base: false
   require_head: true
-  
+
   # Show coverage for different test types
   show_carryforward_flags: true
   show_critical_paths: true
@@ -48,36 +48,36 @@ parsers:
 
 ignore:
   # Ignore test files
-  - "**/__tests__/**/*"
-  - "**/__mocks__/**/*"
-  - "**/test/**/*"
-  - "**/*.test.ts"
-  - "**/*.test.tsx"
-  - "**/*.spec.ts"
-  - "**/*.spec.tsx"
-  
+  - '**/__tests__/**/*'
+  - '**/__mocks__/**/*'
+  - '**/test/**/*'
+  - '**/*.test.ts'
+  - '**/*.test.tsx'
+  - '**/*.spec.ts'
+  - '**/*.spec.tsx'
+
   # Ignore configuration files
-  - "**/*.config.js"
-  - "**/*.config.ts"
-  - "**/next.config.mjs"
-  - "**/vitest.config.ts"
-  - "**/playwright.config.ts"
-  
+  - '**/*.config.js'
+  - '**/*.config.ts'
+  - '**/next.config.mjs'
+  - '**/vitest.config.ts'
+  - '**/playwright.config.ts'
+
   # Ignore build artifacts
-  - ".next/**/*"
-  - "out/**/*"
-  - "coverage/**/*"
-  - "playwright-report/**/*"
-  
+  - '.next/**/*'
+  - 'out/**/*'
+  - 'coverage/**/*'
+  - 'playwright-report/**/*'
+
   # Ignore documentation and scripts
-  - "docs/**/*"
-  - "scripts/**/*"
-  - "*.md"
-  
+  - 'docs/**/*'
+  - 'scripts/**/*'
+  - '*.md'
+
   # Ignore generated files
-  - "**/generated/**/*"
-  - "public/sw.js"
-  - "public/workbox-*.js"
+  - '**/generated/**/*'
+  - 'public/sw.js'
+  - 'public/workbox-*.js'
 
 flags:
   unittests:
@@ -86,7 +86,7 @@ flags:
       - components/
       - hooks/
     carryforward: true
-    
+
   e2e:
     paths:
       - app/
@@ -101,19 +101,19 @@ component_management:
       paths:
         - src/services/**
       target: 80%
-      
+
     - component_id: module_components
       name: Components
       paths:
         - components/**
       target: 75%
-      
+
     - component_id: module_utils
       name: Utilities
       paths:
         - src/utils/**
       target: 85%
-      
+
     - component_id: module_hooks
       name: Hooks
       paths:
