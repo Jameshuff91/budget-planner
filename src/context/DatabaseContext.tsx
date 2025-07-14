@@ -15,6 +15,8 @@ import { logger } from '../services/logger';
 import { pdfService } from '../services/pdfService'; // Fix import path
 import { Transaction, Category } from '../types';
 import { generateUUID } from '../utils/helpers';
+import { offlineQueue } from '../utils/offline-queue';
+import { useOfflineStatus } from '../hooks/useOfflineStatus';
 
 interface DatabaseContextType {
   transactions: Transaction[];
@@ -55,6 +57,9 @@ export function DatabaseProvider({ children }: { children: ReactNode }) {
   const [liabilities, setLiabilities] = useState<Liability[]>([]); // Added
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+
+  // Offline status
+  const { isOffline } = useOfflineStatus();
 
   const loadData = useCallback(async () => {
     try {
@@ -125,22 +130,90 @@ export function DatabaseProvider({ children }: { children: ReactNode }) {
     initializeData();
   }, [loadData]);
 
+  // Set up offline queue sync handler
+  useEffect(() => {
+    const unsubscribe = offlineQueue.onSync(async (operation) => {
+      try {
+        switch (operation.type) {
+          case 'ADD_TRANSACTION':
+            await dbService.addTransaction({
+              ...operation.payload,
+              id: generateUUID(),
+              date: new Date(operation.payload.date),
+            });
+            break;
+          case 'UPDATE_TRANSACTION':
+            await dbService.updateTransaction({
+              ...operation.payload,
+              date: new Date(operation.payload.date),
+            });
+            break;
+          case 'DELETE_TRANSACTION':
+            await dbService.deleteTransaction(operation.payload.id);
+            break;
+          case 'ADD_ASSET':
+            await dbService.addAsset(operation.payload);
+            break;
+          case 'UPDATE_ASSET':
+            await dbService.updateAsset(operation.payload);
+            break;
+          case 'DELETE_ASSET':
+            await dbService.deleteAsset(operation.payload.id);
+            break;
+          case 'ADD_LIABILITY':
+            await dbService.addLiability(operation.payload);
+            break;
+          case 'UPDATE_LIABILITY':
+            await dbService.updateLiability(operation.payload);
+            break;
+          case 'DELETE_LIABILITY':
+            await dbService.deleteLiability(operation.payload.id);
+            break;
+        }
+        await loadData();
+        logger.info('Synced offline operation:', operation.type);
+      } catch (error) {
+        logger.error('Failed to sync operation:', error);
+        throw error;
+      }
+    });
+
+    return unsubscribe;
+  }, [loadData]);
+
   const addTransaction = useCallback(
     async (transaction: Omit<Transaction, 'id'>) => {
       try {
-        const id = await dbService.addTransaction({
-          ...transaction,
-          id: generateUUID(),
-          date: new Date(transaction.date),
-        });
-        await loadData(); // Refresh data after adding transaction
-        return id;
+        if (isOffline) {
+          // Queue for offline sync
+          const queueId = await offlineQueue.queueAddTransaction(transaction);
+          logger.info('Transaction queued for offline sync:', queueId);
+
+          // Add to local state optimistically
+          const newTransaction: Transaction = {
+            ...transaction,
+            id: generateUUID(),
+            date: transaction.date,
+          };
+          setTransactions((prev) => [...prev, newTransaction]);
+
+          return newTransaction.id;
+        } else {
+          // Normal online operation
+          const id = await dbService.addTransaction({
+            ...transaction,
+            id: generateUUID(),
+            date: new Date(transaction.date),
+          });
+          await loadData(); // Refresh data after adding transaction
+          return id;
+        }
       } catch (err) {
         logger.error('Error adding transaction:', err);
         throw err;
       }
     },
-    [loadData],
+    [loadData, isOffline],
   );
 
   const addTransactionsBatch = useCallback(
@@ -295,30 +368,50 @@ export function DatabaseProvider({ children }: { children: ReactNode }) {
   const updateTransaction = useCallback(
     async (transaction: Transaction) => {
       try {
-        await dbService.updateTransaction({
-          ...transaction,
-          date: new Date(transaction.date),
-        });
-        await loadData(); // Refresh data after updating transaction
+        if (isOffline) {
+          // Queue for offline sync
+          const queueId = await offlineQueue.queueUpdateTransaction(transaction);
+          logger.info('Transaction update queued for offline sync:', queueId);
+
+          // Update local state optimistically
+          setTransactions((prev) => prev.map((t) => (t.id === transaction.id ? transaction : t)));
+        } else {
+          // Normal online operation
+          await dbService.updateTransaction({
+            ...transaction,
+            date: new Date(transaction.date),
+          });
+          await loadData(); // Refresh data after updating transaction
+        }
       } catch (err) {
         logger.error('Error updating transaction:', err);
         throw err;
       }
     },
-    [loadData],
+    [loadData, isOffline],
   );
 
   const deleteTransaction = useCallback(
     async (id: string) => {
       try {
-        await dbService.deleteTransaction(id);
-        await loadData(); // Refresh data after deleting transaction
+        if (isOffline) {
+          // Queue for offline sync
+          const queueId = await offlineQueue.queueDeleteTransaction(id);
+          logger.info('Transaction deletion queued for offline sync:', queueId);
+
+          // Remove from local state optimistically
+          setTransactions((prev) => prev.filter((t) => t.id !== id));
+        } else {
+          // Normal online operation
+          await dbService.deleteTransaction(id);
+          await loadData(); // Refresh data after deleting transaction
+        }
       } catch (err) {
         logger.error('Error deleting transaction:', err);
         throw err;
       }
     },
-    [loadData],
+    [loadData, isOffline],
   );
 
   const clearTransactions = useCallback(async () => {
