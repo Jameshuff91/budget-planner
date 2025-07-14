@@ -59,7 +59,9 @@ export class DataMigration {
       }
 
       if (!this.SUPPORTED_VERSIONS.includes(data.version)) {
-        errors.push(`Unsupported backup version: ${data.version}. Supported versions: ${this.SUPPORTED_VERSIONS.join(', ')}`);
+        errors.push(
+          `Unsupported backup version: ${data.version}. Supported versions: ${this.SUPPORTED_VERSIONS.join(', ')}`,
+        );
         return { success: false, errors, warnings, migratedData: null };
       }
 
@@ -154,9 +156,9 @@ export class DataMigration {
    */
   private static migrateV1ToV2(data: BackupData, warnings: string[]): BackupData {
     warnings.push('Migrating from v1 to v2: Adding budget field to categories');
-    
+
     const migratedData = { ...data };
-    migratedData.data.categories = migratedData.data.categories.map(category => ({
+    migratedData.data.categories = migratedData.data.categories.map((category) => ({
       ...category,
       budget: category.budget || undefined, // Keep existing budget or make undefined
     }));
@@ -171,9 +173,9 @@ export class DataMigration {
    */
   private static migrateV2ToV3(data: BackupData, warnings: string[]): BackupData {
     warnings.push('Migrating from v2 to v3: Adding accountNumber field to transactions');
-    
+
     const migratedData = { ...data };
-    migratedData.data.transactions = migratedData.data.transactions.map(transaction => ({
+    migratedData.data.transactions = migratedData.data.transactions.map((transaction) => ({
       ...transaction,
       accountNumber: transaction.accountNumber || undefined,
     }));
@@ -187,7 +189,7 @@ export class DataMigration {
    */
   private static migrateV3ToV4(data: BackupData, warnings: string[]): BackupData {
     warnings.push('Migrating from v3 to v4: Adding recurring preferences');
-    
+
     const migratedData = { ...data };
     if (!migratedData.data.recurringPreferences) {
       migratedData.data.recurringPreferences = {};
@@ -202,7 +204,7 @@ export class DataMigration {
    */
   private static migrateV4ToV5(data: BackupData, warnings: string[]): BackupData {
     warnings.push('Migrating from v4 to v5: Adding assets and liabilities');
-    
+
     const migratedData = { ...data };
     if (!migratedData.data.assets) {
       migratedData.data.assets = [];
@@ -287,10 +289,10 @@ export class DataMigration {
       });
 
       // Check for duplicate IDs
-      const transactionIds = data.data.transactions.map(t => t.id);
-      const categoryIds = data.data.categories.map(c => c.id);
-      const assetIds = data.data.assets.map(a => a.id);
-      const liabilityIds = data.data.liabilities.map(l => l.id);
+      const transactionIds = data.data.transactions.map((t) => t.id);
+      const categoryIds = data.data.categories.map((c) => c.id);
+      const assetIds = data.data.assets.map((a) => a.id);
+      const liabilityIds = data.data.liabilities.map((l) => l.id);
 
       if (new Set(transactionIds).size !== transactionIds.length) {
         errors.push('Duplicate transaction IDs found');
@@ -306,13 +308,14 @@ export class DataMigration {
       }
 
       // Check for orphaned transactions (categories that don't exist)
-      const categoryNames = new Set(data.data.categories.map(c => c.name));
+      const categoryNames = new Set(data.data.categories.map((c) => c.name));
       data.data.transactions.forEach((transaction, index) => {
         if (!categoryNames.has(transaction.category)) {
-          warnings.push(`Transaction at index ${index} references non-existent category: ${transaction.category}`);
+          warnings.push(
+            `Transaction at index ${index} references non-existent category: ${transaction.category}`,
+          );
         }
       });
-
     } catch (error) {
       logger.error('Error validating migrated data:', error);
       errors.push('Failed to validate migrated data');
@@ -329,10 +332,13 @@ export class DataMigration {
 
     try {
       // Ensure all transactions have valid IDs
-      sanitized.data.transactions = sanitized.data.transactions.map(transaction => ({
+      sanitized.data.transactions = sanitized.data.transactions.map((transaction) => ({
         ...transaction,
         id: transaction.id || generateUUID(),
-        date: typeof transaction.date === 'string' ? transaction.date : new Date(transaction.date).toISOString(),
+        date:
+          typeof transaction.date === 'string'
+            ? transaction.date
+            : new Date(transaction.date).toISOString(),
         amount: Math.abs(Number(transaction.amount)) || 0,
         category: transaction.category?.trim() || 'Uncategorized',
         description: transaction.description?.trim() || 'Unknown Transaction',
@@ -340,7 +346,7 @@ export class DataMigration {
       }));
 
       // Ensure all categories have valid IDs
-      sanitized.data.categories = sanitized.data.categories.map(category => ({
+      sanitized.data.categories = sanitized.data.categories.map((category) => ({
         ...category,
         id: category.id || generateUUID(),
         name: category.name?.trim() || 'Unknown Category',
@@ -348,7 +354,7 @@ export class DataMigration {
       }));
 
       // Ensure all assets have valid IDs
-      sanitized.data.assets = sanitized.data.assets.map(asset => ({
+      sanitized.data.assets = sanitized.data.assets.map((asset) => ({
         ...asset,
         id: asset.id || generateUUID(),
         name: asset.name?.trim() || 'Unknown Asset',
@@ -358,7 +364,7 @@ export class DataMigration {
       }));
 
       // Ensure all liabilities have valid IDs
-      sanitized.data.liabilities = sanitized.data.liabilities.map(liability => ({
+      sanitized.data.liabilities = sanitized.data.liabilities.map((liability) => ({
         ...liability,
         id: liability.id || generateUUID(),
         name: liability.name?.trim() || 'Unknown Liability',
@@ -368,7 +374,10 @@ export class DataMigration {
       }));
 
       // Ensure recurring preferences is an object
-      if (!sanitized.data.recurringPreferences || typeof sanitized.data.recurringPreferences !== 'object') {
+      if (
+        !sanitized.data.recurringPreferences ||
+        typeof sanitized.data.recurringPreferences !== 'object'
+      ) {
         sanitized.data.recurringPreferences = {};
       }
 
@@ -410,13 +419,18 @@ export class DataMigration {
     const recurringPreferences = data.data.recurringPreferences || {};
 
     // Calculate date range
-    const dates = transactions.map(t => new Date(t.date)).filter(d => !isNaN(d.getTime()));
-    const earliest = dates.length > 0 ? new Date(Math.min(...dates.map(d => d.getTime()))).toISOString() : null;
-    const latest = dates.length > 0 ? new Date(Math.max(...dates.map(d => d.getTime()))).toISOString() : null;
+    const dates = transactions.map((t) => new Date(t.date)).filter((d) => !isNaN(d.getTime()));
+    const earliest =
+      dates.length > 0 ? new Date(Math.min(...dates.map((d) => d.getTime()))).toISOString() : null;
+    const latest =
+      dates.length > 0 ? new Date(Math.max(...dates.map((d) => d.getTime()))).toISOString() : null;
 
     // Calculate total values
     const totalAssets = assets.reduce((sum, asset) => sum + (asset.currentValue || 0), 0);
-    const totalLiabilities = liabilities.reduce((sum, liability) => sum + (liability.currentBalance || 0), 0);
+    const totalLiabilities = liabilities.reduce(
+      (sum, liability) => sum + (liability.currentBalance || 0),
+      0,
+    );
     const netWorth = totalAssets - totalLiabilities;
 
     return {

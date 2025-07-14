@@ -205,7 +205,7 @@ describe('Category Rules - applyCategoryRules', () => {
     });
 
     test('should handle special characters in description', () => {
-      expect(applyCategoryRules('Joe\'s Coffee & Donuts', rules)).toBe('Coffee Shops');
+      expect(applyCategoryRules("Joe's Coffee & Donuts", rules)).toBe('Coffee Shops');
       expect(applyCategoryRules('Coffee (Specialty)', rules)).toBe('Coffee Shops');
       expect(applyCategoryRules('Coffee-Shop', rules)).toBe('Coffee Shops');
     });
@@ -593,7 +593,9 @@ describe('Category Rules - applyCategoryRules', () => {
         },
       ];
 
-      expect(applyCategoryRules('B'.repeat(500) + longPattern + 'C'.repeat(500), rules)).toBe('Long Pattern');
+      expect(applyCategoryRules('B'.repeat(500) + longPattern + 'C'.repeat(500), rules)).toBe(
+        'Long Pattern',
+      );
       expect(applyCategoryRules('Different description', rules)).toBeNull();
     });
 
@@ -739,9 +741,7 @@ describe('Category Rules - applyCategoryRules', () => {
 
       applyCategoryRules('Starbucks Coffee', rules);
 
-      expect(logger.info).toHaveBeenCalledWith(
-        expect.stringContaining('Category rule matched')
-      );
+      expect(logger.info).toHaveBeenCalledWith(expect.stringContaining('Category rule matched'));
     });
 
     test('should log regex errors', async () => {
@@ -761,7 +761,7 @@ describe('Category Rules - applyCategoryRules', () => {
 
       expect(logger.error).toHaveBeenCalledWith(
         expect.stringContaining('Invalid regex pattern'),
-        expect.any(Error)
+        expect.any(Error),
       );
     });
   });
@@ -802,10 +802,7 @@ describe('Category Rules - loadCategoryRules', () => {
 
     const result = loadCategoryRules();
     expect(result).toEqual([]);
-    expect(logger.error).toHaveBeenCalledWith(
-      'Failed to parse category rules',
-      expect.any(Error)
-    );
+    expect(logger.error).toHaveBeenCalledWith('Failed to parse category rules', expect.any(Error));
   });
 
   test('should return empty array when window is undefined (SSR)', () => {
@@ -831,7 +828,7 @@ describe('Category Rules - loadCategoryRules', () => {
 
   test('should handle localStorage access errors', async () => {
     const { logger } = await import('@services/logger');
-    
+
     // Mock localStorage.getItem to throw an error for this test only
     const originalGetItem = localStorageMock.getItem;
     localStorageMock.getItem = vi.fn(() => {
@@ -985,24 +982,15 @@ describe('Category Rules - Integration Tests', () => {
       },
     ];
 
-    const amazonVariations = [
-      'AMAZON.COM',
-      'AMAZON MARKETPLACE',
-      'AMZN MKTP',
-      'AMZN DIGITAL',
-    ];
+    const amazonVariations = ['AMAZON.COM', 'AMAZON MARKETPLACE', 'AMZN MKTP', 'AMZN DIGITAL'];
 
-    const starbucksVariations = [
-      'STARBUCKS STORE #1234',
-      'STARBUCKS COFFEE',
-      'SBX DOWNTOWN',
-    ];
+    const starbucksVariations = ['STARBUCKS STORE #1234', 'STARBUCKS COFFEE', 'SBX DOWNTOWN'];
 
-    amazonVariations.forEach(description => {
+    amazonVariations.forEach((description) => {
       expect(applyCategoryRules(description, rules)).toBe('Amazon');
     });
 
-    starbucksVariations.forEach(description => {
+    starbucksVariations.forEach((description) => {
       expect(applyCategoryRules(description, rules)).toBe('Coffee');
     });
   });
@@ -1051,13 +1039,7 @@ describe('Category Rules - Integration Tests', () => {
       'MONTHLY MAINTENANCE FEE',
     ];
 
-    const expectedResults = [
-      'Transfers',
-      'Transfers',
-      'Interest Income',
-      'Bank Fees',
-      'Bank Fees',
-    ];
+    const expectedResults = ['Transfers', 'Transfers', 'Interest Income', 'Bank Fees', 'Bank Fees'];
 
     testCases.forEach((description, index) => {
       expect(applyCategoryRules(description, rules)).toBe(expectedResults[index]);
@@ -1094,10 +1076,10 @@ describe('Category Rules - Integration Tests', () => {
 
     // More specific rule should win
     expect(applyCategoryRules('AMAZON PRIME MEMBERSHIP', rules)).toBe('Subscriptions');
-    
+
     // General Amazon rule should apply
     expect(applyCategoryRules('AMAZON MARKETPLACE', rules)).toBe('Shopping');
-    
+
     // Prime without Amazon should match entertainment
     expect(applyCategoryRules('PRIME VIDEO', rules)).toBe('Entertainment');
   });
@@ -1157,7 +1139,7 @@ describe('Category Rules - Match Type Edge Cases', () => {
       'McDONALDS Restaurant',
     ];
 
-    variations.forEach(description => {
+    variations.forEach((description) => {
       expect(applyCategoryRules(description, rules)).toBe('Fast Food');
     });
   });

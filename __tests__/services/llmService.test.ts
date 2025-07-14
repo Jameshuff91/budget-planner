@@ -1,5 +1,10 @@
 import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest';
-import { LLMService, createLLMService, TransactionForCategorization, CategorySuggestion } from '@services/llmService';
+import {
+  LLMService,
+  createLLMService,
+  TransactionForCategorization,
+  CategorySuggestion,
+} from '@services/llmService';
 
 // Mock logger
 vi.mock('@services/logger', () => ({
@@ -18,7 +23,7 @@ global.fetch = mockFetch;
 describe('LLMService', () => {
   let llmService: LLMService;
   const mockApiKey = 'test-api-key-12345';
-  
+
   beforeEach(() => {
     vi.clearAllMocks();
     llmService = new LLMService({ apiKey: mockApiKey });
@@ -55,7 +60,7 @@ describe('LLMService', () => {
   describe('Single Transaction Categorization', () => {
     const mockTransaction: TransactionForCategorization = {
       description: 'Whole Foods Market Purchase',
-      amount: -125.50,
+      amount: -125.5,
       date: '2024-01-15',
       existingCategory: 'Uncategorized',
     };
@@ -64,15 +69,17 @@ describe('LLMService', () => {
       const mockResponse = {
         ok: true,
         json: async () => ({
-          choices: [{
-            message: {
-              content: JSON.stringify({
-                category: 'Groceries',
-                confidence: 0.85,
-                reasoning: 'Whole Foods is a grocery store',
-              }),
+          choices: [
+            {
+              message: {
+                content: JSON.stringify({
+                  category: 'Groceries',
+                  confidence: 0.85,
+                  reasoning: 'Whole Foods is a grocery store',
+                }),
+              },
             },
-          }],
+          ],
         }),
       };
 
@@ -104,14 +111,16 @@ describe('LLMService', () => {
       const mockResponse = {
         ok: true,
         json: async () => ({
-          choices: [{
-            message: {
-              content: JSON.stringify({
-                category: 'Custom Groceries',
-                confidence: 0.90,
-              }),
+          choices: [
+            {
+              message: {
+                content: JSON.stringify({
+                  category: 'Custom Groceries',
+                  confidence: 0.9,
+                }),
+              },
             },
-          }],
+          ],
         }),
       };
 
@@ -121,7 +130,7 @@ describe('LLMService', () => {
 
       const apiCall = mockFetch.mock.calls[0];
       const requestBody = JSON.parse(apiCall[1].body);
-      
+
       expect(requestBody.messages[1].content).toContain('Custom Groceries');
       expect(requestBody.messages[1].content).toContain('Custom Transportation');
     });
@@ -130,11 +139,13 @@ describe('LLMService', () => {
       const mockResponse = {
         ok: true,
         json: async () => ({
-          choices: [{
-            message: {
-              content: 'Invalid JSON response',
+          choices: [
+            {
+              message: {
+                content: 'Invalid JSON response',
+              },
             },
-          }],
+          ],
         }),
       };
 
@@ -156,17 +167,17 @@ describe('LLMService', () => {
 
       mockFetch.mockResolvedValueOnce(mockResponse);
 
-      await expect(llmService.categorizeTransaction(mockTransaction))
-        .rejects
-        .toThrow('OpenAI API error: Bad Request');
+      await expect(llmService.categorizeTransaction(mockTransaction)).rejects.toThrow(
+        'OpenAI API error: Bad Request',
+      );
     });
 
     test('should handle network errors', async () => {
       mockFetch.mockRejectedValueOnce(new Error('Network error'));
 
-      await expect(llmService.categorizeTransaction(mockTransaction))
-        .rejects
-        .toThrow('Network error');
+      await expect(llmService.categorizeTransaction(mockTransaction)).rejects.toThrow(
+        'Network error',
+      );
     });
 
     test('should handle rate limiting (429 status)', async () => {
@@ -178,9 +189,9 @@ describe('LLMService', () => {
 
       mockFetch.mockResolvedValueOnce(mockResponse);
 
-      await expect(llmService.categorizeTransaction(mockTransaction))
-        .rejects
-        .toThrow('OpenAI API error: Too Many Requests');
+      await expect(llmService.categorizeTransaction(mockTransaction)).rejects.toThrow(
+        'OpenAI API error: Too Many Requests',
+      );
     });
 
     test('should handle unauthorized access (401 status)', async () => {
@@ -192,23 +203,25 @@ describe('LLMService', () => {
 
       mockFetch.mockResolvedValueOnce(mockResponse);
 
-      await expect(llmService.categorizeTransaction(mockTransaction))
-        .rejects
-        .toThrow('OpenAI API error: Unauthorized');
+      await expect(llmService.categorizeTransaction(mockTransaction)).rejects.toThrow(
+        'OpenAI API error: Unauthorized',
+      );
     });
 
     test('should build correct prompt with transaction details', async () => {
       const mockResponse = {
         ok: true,
         json: async () => ({
-          choices: [{
-            message: {
-              content: JSON.stringify({
-                category: 'Groceries',
-                confidence: 0.85,
-              }),
+          choices: [
+            {
+              message: {
+                content: JSON.stringify({
+                  category: 'Groceries',
+                  confidence: 0.85,
+                }),
+              },
             },
-          }],
+          ],
         }),
       };
 
@@ -229,21 +242,23 @@ describe('LLMService', () => {
     test('should handle positive amounts as income', async () => {
       const incomeTransaction: TransactionForCategorization = {
         description: 'Salary Payment',
-        amount: 5000.00,
+        amount: 5000.0,
         date: '2024-01-15',
       };
 
       const mockResponse = {
         ok: true,
         json: async () => ({
-          choices: [{
-            message: {
-              content: JSON.stringify({
-                category: 'Salary',
-                confidence: 0.95,
-              }),
+          choices: [
+            {
+              message: {
+                content: JSON.stringify({
+                  category: 'Salary',
+                  confidence: 0.95,
+                }),
+              },
             },
-          }],
+          ],
         }),
       };
 
@@ -263,12 +278,12 @@ describe('LLMService', () => {
     const mockTransactions: TransactionForCategorization[] = [
       {
         description: 'Starbucks Coffee',
-        amount: -4.50,
+        amount: -4.5,
         date: '2024-01-15',
       },
       {
         description: 'Gas Station',
-        amount: -35.00,
+        amount: -35.0,
         date: '2024-01-16',
       },
       {
@@ -282,15 +297,17 @@ describe('LLMService', () => {
       const mockResponse = {
         ok: true,
         json: async () => ({
-          choices: [{
-            message: {
-              content: JSON.stringify([
-                { index: 1, category: 'Dining Out', confidence: 0.90 },
-                { index: 2, category: 'Transportation', confidence: 0.85 },
-                { index: 3, category: 'Groceries', confidence: 0.95 },
-              ]),
+          choices: [
+            {
+              message: {
+                content: JSON.stringify([
+                  { index: 1, category: 'Dining Out', confidence: 0.9 },
+                  { index: 2, category: 'Transportation', confidence: 0.85 },
+                  { index: 3, category: 'Groceries', confidence: 0.95 },
+                ]),
+              },
             },
-          }],
+          ],
         }),
       };
 
@@ -301,7 +318,7 @@ describe('LLMService', () => {
       expect(results).toHaveLength(3);
       expect(results[0]).toEqual({
         category: 'Dining Out',
-        confidence: 0.90,
+        confidence: 0.9,
       });
       expect(results[1]).toEqual({
         category: 'Transportation',
@@ -316,20 +333,22 @@ describe('LLMService', () => {
     test('should handle batch API errors', async () => {
       mockFetch.mockRejectedValueOnce(new Error('API Error'));
 
-      await expect(llmService.categorizeTransactionsBatch(mockTransactions))
-        .rejects
-        .toThrow('API Error');
+      await expect(llmService.categorizeTransactionsBatch(mockTransactions)).rejects.toThrow(
+        'API Error',
+      );
     });
 
     test('should handle malformed batch response', async () => {
       const mockResponse = {
         ok: true,
         json: async () => ({
-          choices: [{
-            message: {
-              content: 'Invalid batch JSON',
+          choices: [
+            {
+              message: {
+                content: 'Invalid batch JSON',
+              },
             },
-          }],
+          ],
         }),
       };
 
@@ -343,15 +362,17 @@ describe('LLMService', () => {
       const mockResponse = {
         ok: true,
         json: async () => ({
-          choices: [{
-            message: {
-              content: JSON.stringify([
-                { index: 1, category: 'Test', confidence: 0.8 },
-                { index: 2, category: 'Test', confidence: 0.8 },
-                { index: 3, category: 'Test', confidence: 0.8 },
-              ]),
+          choices: [
+            {
+              message: {
+                content: JSON.stringify([
+                  { index: 1, category: 'Test', confidence: 0.8 },
+                  { index: 2, category: 'Test', confidence: 0.8 },
+                  { index: 3, category: 'Test', confidence: 0.8 },
+                ]),
+              },
             },
-          }],
+          ],
         }),
       };
 
@@ -361,7 +382,7 @@ describe('LLMService', () => {
 
       const apiCall = mockFetch.mock.calls[0];
       const requestBody = JSON.parse(apiCall[1].body);
-      
+
       // Default max_tokens is 150, so for 3 transactions it should be 450
       expect(requestBody.max_tokens).toBe(450);
     });
@@ -370,11 +391,13 @@ describe('LLMService', () => {
       const mockResponse = {
         ok: true,
         json: async () => ({
-          choices: [{
-            message: {
-              content: JSON.stringify([]),
+          choices: [
+            {
+              message: {
+                content: JSON.stringify([]),
+              },
             },
-          }],
+          ],
         }),
       };
 
@@ -397,7 +420,7 @@ describe('LLMService', () => {
     const mockTransactions: TransactionForCategorization[] = [
       {
         description: 'Uber Eats Delivery',
-        amount: -25.50,
+        amount: -25.5,
         date: '2024-01-15',
       },
       {
@@ -411,11 +434,14 @@ describe('LLMService', () => {
       const mockResponse = {
         ok: true,
         json: async () => ({
-          choices: [{
-            message: {
-              content: 'Food Delivery\nStreaming Services\nSubscriptions\nOnline Services\nDigital Entertainment',
+          choices: [
+            {
+              message: {
+                content:
+                  'Food Delivery\nStreaming Services\nSubscriptions\nOnline Services\nDigital Entertainment',
+              },
             },
-          }],
+          ],
         }),
       };
 
@@ -443,11 +469,13 @@ describe('LLMService', () => {
       const mockResponse = {
         ok: true,
         json: async () => ({
-          choices: [{
-            message: {
-              content: 'Food Delivery\n\nStreaming Services\n\n\nSubscriptions\n',
+          choices: [
+            {
+              message: {
+                content: 'Food Delivery\n\nStreaming Services\n\n\nSubscriptions\n',
+              },
             },
-          }],
+          ],
         }),
       };
 
@@ -455,22 +483,20 @@ describe('LLMService', () => {
 
       const suggestions = await llmService.suggestCustomCategories(mockTransactions);
 
-      expect(suggestions).toEqual([
-        'Food Delivery',
-        'Streaming Services',
-        'Subscriptions',
-      ]);
+      expect(suggestions).toEqual(['Food Delivery', 'Streaming Services', 'Subscriptions']);
     });
 
     test('should use appropriate temperature for creativity', async () => {
       const mockResponse = {
         ok: true,
         json: async () => ({
-          choices: [{
-            message: {
-              content: 'Test Category',
+          choices: [
+            {
+              message: {
+                content: 'Test Category',
+              },
             },
-          }],
+          ],
         }),
       };
 
@@ -480,7 +506,7 @@ describe('LLMService', () => {
 
       const apiCall = mockFetch.mock.calls[0];
       const requestBody = JSON.parse(apiCall[1].body);
-      
+
       expect(requestBody.temperature).toBe(0.5); // Higher than categorization
     });
   });
@@ -490,15 +516,17 @@ describe('LLMService', () => {
       const mockResponse = {
         ok: true,
         json: async () => ({
-          choices: [{
-            message: {
-              content: JSON.stringify({
-                category: 'Test Category',
-                confidence: 0.75,
-                reasoning: 'Test reasoning',
-              }),
+          choices: [
+            {
+              message: {
+                content: JSON.stringify({
+                  category: 'Test Category',
+                  confidence: 0.75,
+                  reasoning: 'Test reasoning',
+                }),
+              },
             },
-          }],
+          ],
         }),
       };
 
@@ -521,14 +549,16 @@ describe('LLMService', () => {
       const mockResponse = {
         ok: true,
         json: async () => ({
-          choices: [{
-            message: {
-              content: JSON.stringify({
-                category: 'Test Category',
-                // Missing confidence and reasoning
-              }),
+          choices: [
+            {
+              message: {
+                content: JSON.stringify({
+                  category: 'Test Category',
+                  // Missing confidence and reasoning
+                }),
+              },
             },
-          }],
+          ],
         }),
       };
 
@@ -551,15 +581,17 @@ describe('LLMService', () => {
       const mockResponse = {
         ok: true,
         json: async () => ({
-          choices: [{
-            message: {
-              content: JSON.stringify([
-                { index: 1, category: 'Valid Category', confidence: 0.8 },
-                { index: 2 }, // Missing category and confidence
-                { index: 3, category: 'Another Category' }, // Missing confidence
-              ]),
+          choices: [
+            {
+              message: {
+                content: JSON.stringify([
+                  { index: 1, category: 'Valid Category', confidence: 0.8 },
+                  { index: 2 }, // Missing category and confidence
+                  { index: 3, category: 'Another Category' }, // Missing confidence
+                ]),
+              },
             },
-          }],
+          ],
         }),
       };
 
@@ -575,10 +607,10 @@ describe('LLMService', () => {
 
       expect(results[0].category).toBe('Valid Category');
       expect(results[0].confidence).toBe(0.8);
-      
+
       expect(results[1].category).toBe('Other Expenses'); // Default
       expect(results[1].confidence).toBe(0.5); // Default
-      
+
       expect(results[2].category).toBe('Another Category');
       expect(results[2].confidence).toBe(0.5); // Default
     });
@@ -596,14 +628,16 @@ describe('LLMService', () => {
       const mockResponse = {
         ok: true,
         json: async () => ({
-          choices: [{
-            message: {
-              content: JSON.stringify({
-                category: 'Groceries',
-                confidence: 0.8,
-              }),
+          choices: [
+            {
+              message: {
+                content: JSON.stringify({
+                  category: 'Groceries',
+                  confidence: 0.8,
+                }),
+              },
             },
-          }],
+          ],
         }),
       };
 
@@ -616,21 +650,23 @@ describe('LLMService', () => {
     test('should handle special characters in descriptions', async () => {
       const transaction: TransactionForCategorization = {
         description: 'AT&T Payment - $100.50 "AutoPay"',
-        amount: -100.50,
+        amount: -100.5,
         date: '2024-01-15',
       };
 
       const mockResponse = {
         ok: true,
         json: async () => ({
-          choices: [{
-            message: {
-              content: JSON.stringify({
-                category: 'Utilities',
-                confidence: 0.9,
-              }),
+          choices: [
+            {
+              message: {
+                content: JSON.stringify({
+                  category: 'Utilities',
+                  confidence: 0.9,
+                }),
+              },
             },
-          }],
+          ],
         }),
       };
 
@@ -650,14 +686,16 @@ describe('LLMService', () => {
       const mockResponse = {
         ok: true,
         json: async () => ({
-          choices: [{
-            message: {
-              content: JSON.stringify({
-                category: 'Other',
-                confidence: 0.6,
-              }),
+          choices: [
+            {
+              message: {
+                content: JSON.stringify({
+                  category: 'Other',
+                  confidence: 0.6,
+                }),
+              },
             },
-          }],
+          ],
         }),
       };
 
@@ -683,14 +721,16 @@ describe('LLMService', () => {
       const mockResponse = {
         ok: true,
         json: async () => ({
-          choices: [{
-            message: {
-              content: JSON.stringify({
-                category: 'Large Expenses',
-                confidence: 0.7,
-              }),
+          choices: [
+            {
+              message: {
+                content: JSON.stringify({
+                  category: 'Large Expenses',
+                  confidence: 0.7,
+                }),
+              },
             },
-          }],
+          ],
         }),
       };
 
@@ -710,14 +750,16 @@ describe('LLMService', () => {
       const mockResponse = {
         ok: true,
         json: async () => ({
-          choices: [{
-            message: {
-              content: JSON.stringify({
-                category: 'Unknown',
-                confidence: 0.3,
-              }),
+          choices: [
+            {
+              message: {
+                content: JSON.stringify({
+                  category: 'Unknown',
+                  confidence: 0.3,
+                }),
+              },
             },
-          }],
+          ],
         }),
       };
 
@@ -732,16 +774,18 @@ describe('LLMService', () => {
         ok: true,
         json: async () => {
           // Simulate slow response
-          await new Promise(resolve => setTimeout(resolve, 100));
+          await new Promise((resolve) => setTimeout(resolve, 100));
           return {
-            choices: [{
-              message: {
-                content: JSON.stringify({
-                  category: 'Test',
-                  confidence: 0.8,
-                }),
+            choices: [
+              {
+                message: {
+                  content: JSON.stringify({
+                    category: 'Test',
+                    confidence: 0.8,
+                  }),
+                },
               },
-            }],
+            ],
           };
         },
       };
@@ -763,10 +807,9 @@ describe('LLMService', () => {
 
     test('should handle timeout scenarios', async () => {
       // Mock a very slow response that times out
-      mockFetch.mockImplementationOnce(() => 
-        new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Request timeout')), 100)
-        )
+      mockFetch.mockImplementationOnce(
+        () =>
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Request timeout')), 100)),
       );
 
       const transaction: TransactionForCategorization = {
@@ -775,9 +818,9 @@ describe('LLMService', () => {
         date: '2024-01-15',
       };
 
-      await expect(llmService.categorizeTransaction(transaction))
-        .rejects
-        .toThrow('Request timeout');
+      await expect(llmService.categorizeTransaction(transaction)).rejects.toThrow(
+        'Request timeout',
+      );
     });
   });
 
@@ -786,14 +829,16 @@ describe('LLMService', () => {
       const mockResponse = {
         ok: true,
         json: async () => ({
-          choices: [{
-            message: {
-              content: JSON.stringify({
-                category: 'Test',
-                confidence: 0.8,
-              }),
+          choices: [
+            {
+              message: {
+                content: JSON.stringify({
+                  category: 'Test',
+                  confidence: 0.8,
+                }),
+              },
             },
-          }],
+          ],
         }),
       };
 
@@ -830,14 +875,16 @@ describe('LLMService', () => {
       const mockResponse = {
         ok: true,
         json: async () => ({
-          choices: [{
-            message: {
-              content: JSON.stringify({
-                category: 'Test',
-                confidence: 0.8,
-              }),
+          choices: [
+            {
+              message: {
+                content: JSON.stringify({
+                  category: 'Test',
+                  confidence: 0.8,
+                }),
+              },
             },
-          }],
+          ],
         }),
       };
 
@@ -863,14 +910,16 @@ describe('LLMService', () => {
       const mockResponse = {
         ok: true,
         json: async () => ({
-          choices: [{
-            message: {
-              content: JSON.stringify({
-                category: 'Test',
-                confidence: 0.8,
-              }),
+          choices: [
+            {
+              message: {
+                content: JSON.stringify({
+                  category: 'Test',
+                  confidence: 0.8,
+                }),
+              },
             },
-          }],
+          ],
         }),
       };
 
@@ -889,7 +938,9 @@ describe('LLMService', () => {
 
       expect(requestBody.messages).toHaveLength(2);
       expect(requestBody.messages[0].role).toBe('system');
-      expect(requestBody.messages[0].content).toContain('financial transaction categorization assistant');
+      expect(requestBody.messages[0].content).toContain(
+        'financial transaction categorization assistant',
+      );
       expect(requestBody.messages[1].role).toBe('user');
     });
   });
@@ -948,9 +999,9 @@ describe('LLMService Rate Limiting and Error Recovery', () => {
       date: '2024-01-15',
     };
 
-    await expect(llmService.categorizeTransaction(transaction))
-      .rejects
-      .toThrow('OpenAI API error: Too Many Requests');
+    await expect(llmService.categorizeTransaction(transaction)).rejects.toThrow(
+      'OpenAI API error: Too Many Requests',
+    );
   });
 
   test('should handle 503 service unavailable errors', async () => {
@@ -968,9 +1019,9 @@ describe('LLMService Rate Limiting and Error Recovery', () => {
       date: '2024-01-15',
     };
 
-    await expect(llmService.categorizeTransaction(transaction))
-      .rejects
-      .toThrow('OpenAI API error: Service Unavailable');
+    await expect(llmService.categorizeTransaction(transaction)).rejects.toThrow(
+      'OpenAI API error: Service Unavailable',
+    );
   });
 
   test('should handle quota exceeded errors', async () => {
@@ -988,16 +1039,15 @@ describe('LLMService Rate Limiting and Error Recovery', () => {
       date: '2024-01-15',
     };
 
-    await expect(llmService.categorizeTransaction(transaction))
-      .rejects
-      .toThrow('OpenAI API error: Quota exceeded');
+    await expect(llmService.categorizeTransaction(transaction)).rejects.toThrow(
+      'OpenAI API error: Quota exceeded',
+    );
   });
 
   test('should handle connection timeout', async () => {
-    mockFetch.mockImplementationOnce(() =>
-      new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Connection timeout')), 100)
-      )
+    mockFetch.mockImplementationOnce(
+      () =>
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Connection timeout')), 100)),
     );
 
     const transaction: TransactionForCategorization = {
@@ -1006,9 +1056,9 @@ describe('LLMService Rate Limiting and Error Recovery', () => {
       date: '2024-01-15',
     };
 
-    await expect(llmService.categorizeTransaction(transaction))
-      .rejects
-      .toThrow('Connection timeout');
+    await expect(llmService.categorizeTransaction(transaction)).rejects.toThrow(
+      'Connection timeout',
+    );
   });
 
   test('should handle DNS resolution errors', async () => {
@@ -1020,8 +1070,8 @@ describe('LLMService Rate Limiting and Error Recovery', () => {
       date: '2024-01-15',
     };
 
-    await expect(llmService.categorizeTransaction(transaction))
-      .rejects
-      .toThrow('getaddrinfo ENOTFOUND api.openai.com');
+    await expect(llmService.categorizeTransaction(transaction)).rejects.toThrow(
+      'getaddrinfo ENOTFOUND api.openai.com',
+    );
   });
 });

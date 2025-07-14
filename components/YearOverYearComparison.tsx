@@ -40,8 +40,18 @@ interface TooltipPayload {
 
 // Memoized month names
 const monthNames = [
-  'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec',
 ];
 
 // Memoized TrendIcon component
@@ -65,7 +75,7 @@ const YearOverYearComparison = ({ selectedYear }: YearOverYearComparisonProps) =
 
   const comparisonData = useMemo(() => {
     const marker = createPerformanceMarker('yoy-comparison-data');
-    
+
     const currentYearData = spendingOverview.filter((d) => d.year === selectedYear);
     const previousYearData = spendingOverview.filter((d) => d.year === selectedYear - 1);
 
@@ -114,28 +124,30 @@ const YearOverYearComparison = ({ selectedYear }: YearOverYearComparisonProps) =
 
   // Memoized CustomTooltip component
   const CustomTooltip = useMemo(() => {
-    return React.memo(({
-      active,
-      payload,
-      label,
-    }: {
-      active?: boolean;
-      payload?: TooltipPayload[];
-      label?: string;
-    }) => {
-      if (!active || !payload) return null;
+    return React.memo(
+      ({
+        active,
+        payload,
+        label,
+      }: {
+        active?: boolean;
+        payload?: TooltipPayload[];
+        label?: string;
+      }) => {
+        if (!active || !payload) return null;
 
-      return (
-        <div className='bg-white p-3 border rounded-lg shadow-lg'>
-          <p className='font-semibold'>{label}</p>
-          {payload.map((entry, index) => (
-            <p key={index} style={{ color: entry.color }}>
-              {entry.name}: {formatCurrency(entry.value)}
-            </p>
-          ))}
-        </div>
-      );
-    });
+        return (
+          <div className='bg-white p-3 border rounded-lg shadow-lg'>
+            <p className='font-semibold'>{label}</p>
+            {payload.map((entry, index) => (
+              <p key={index} style={{ color: entry.color }}>
+                {entry.name}: {formatCurrency(entry.value)}
+              </p>
+            ))}
+          </div>
+        );
+      },
+    );
   }, []);
 
   // Memoize chart animation props

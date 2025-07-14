@@ -51,7 +51,7 @@ describe('Smart Categorization - getSmartCategorizationSettings', () => {
 
   test('should return default settings when localStorage is empty', () => {
     const settings = getSmartCategorizationSettings();
-    
+
     expect(settings).toEqual({
       enabled: false,
       apiKey: '',
@@ -65,7 +65,7 @@ describe('Smart Categorization - getSmartCategorizationSettings', () => {
     localStorageMock.setItem('smartCategorization.model', 'gpt-4');
 
     const settings = getSmartCategorizationSettings();
-    
+
     expect(settings).toEqual({
       enabled: true,
       apiKey: 'test-api-key',
@@ -79,7 +79,7 @@ describe('Smart Categorization - getSmartCategorizationSettings', () => {
     // Missing model setting
 
     const settings = getSmartCategorizationSettings();
-    
+
     expect(settings).toEqual({
       enabled: true,
       apiKey: 'partial-key',
@@ -89,7 +89,7 @@ describe('Smart Categorization - getSmartCategorizationSettings', () => {
 
   test('should handle invalid boolean values gracefully', () => {
     localStorageMock.setItem('smartCategorization.enabled', 'invalid');
-    
+
     const settings = getSmartCategorizationSettings();
     expect(settings.enabled).toBe(false); // Should default to false
   });
@@ -100,7 +100,7 @@ describe('Smart Categorization - getSmartCategorizationSettings', () => {
     localStorageMock.setItem('smartCategorization.model', '');
 
     const settings = getSmartCategorizationSettings();
-    
+
     expect(settings).toEqual({
       enabled: false, // Empty string is falsy
       apiKey: '',
@@ -112,7 +112,7 @@ describe('Smart Categorization - getSmartCategorizationSettings', () => {
 describe('Smart Categorization - categorizeTransactionWithAI', () => {
   const mockTransaction: TransactionForCategorization = {
     description: 'Whole Foods Market',
-    amount: -125.50,
+    amount: -125.5,
     date: '2024-01-15',
     existingCategory: 'Uncategorized',
   };
@@ -122,12 +122,12 @@ describe('Smart Categorization - categorizeTransactionWithAI', () => {
   beforeEach(async () => {
     vi.clearAllMocks();
     localStorageMock.clear();
-    
+
     // Mock LLM service
     mockLLMService = {
       categorizeTransaction: vi.fn(),
     };
-    
+
     const { createLLMService } = await import('@services/llmService');
     vi.mocked(createLLMService).mockReturnValue(mockLLMService);
   });
@@ -138,7 +138,7 @@ describe('Smart Categorization - categorizeTransactionWithAI', () => {
       localStorageMock.setItem('smartCategorization.apiKey', 'test-key');
 
       const result = await categorizeTransactionWithAI(mockTransaction);
-      
+
       expect(result).toBe('Uncategorized');
       expect(mockLLMService.categorizeTransaction).not.toHaveBeenCalled();
     });
@@ -148,7 +148,7 @@ describe('Smart Categorization - categorizeTransactionWithAI', () => {
       // No API key set
 
       const result = await categorizeTransactionWithAI(mockTransaction);
-      
+
       expect(result).toBe('Uncategorized');
       expect(mockLLMService.categorizeTransaction).not.toHaveBeenCalled();
     });
@@ -158,7 +158,7 @@ describe('Smart Categorization - categorizeTransactionWithAI', () => {
       localStorageMock.setItem('smartCategorization.apiKey', '');
 
       const result = await categorizeTransactionWithAI(mockTransaction);
-      
+
       expect(result).toBe('Uncategorized');
       expect(mockLLMService.categorizeTransaction).not.toHaveBeenCalled();
     });
@@ -167,11 +167,11 @@ describe('Smart Categorization - categorizeTransactionWithAI', () => {
       localStorageMock.setItem('smartCategorization.enabled', 'true');
       localStorageMock.setItem('smartCategorization.apiKey', 'test-key');
 
-      const { createLLMService } = require('@services/llmService');
+      const { createLLMService } = await import('@services/llmService');
       createLLMService.mockReturnValue(null); // Service creation failed
 
       const result = await categorizeTransactionWithAI(mockTransaction);
-      
+
       expect(result).toBe('Uncategorized');
     });
   });
@@ -190,11 +190,11 @@ describe('Smart Categorization - categorizeTransactionWithAI', () => {
       });
 
       const result = await categorizeTransactionWithAI(mockTransaction);
-      
+
       expect(result).toBe('Groceries');
       expect(mockLLMService.categorizeTransaction).toHaveBeenCalledWith(
         mockTransaction,
-        undefined // No custom categories
+        undefined, // No custom categories
       );
     });
 
@@ -205,7 +205,7 @@ describe('Smart Categorization - categorizeTransactionWithAI', () => {
       });
 
       const result = await categorizeTransactionWithAI(mockTransaction);
-      
+
       expect(result).toBe('Groceries');
     });
 
@@ -216,7 +216,7 @@ describe('Smart Categorization - categorizeTransactionWithAI', () => {
       });
 
       const result = await categorizeTransactionWithAI(mockTransaction);
-      
+
       expect(result).toBe('Uncategorized'); // Uses existing category
     });
 
@@ -227,7 +227,7 @@ describe('Smart Categorization - categorizeTransactionWithAI', () => {
       });
 
       const result = await categorizeTransactionWithAI(mockTransaction);
-      
+
       expect(result).toBe('Uncategorized');
     });
 
@@ -238,7 +238,7 @@ describe('Smart Categorization - categorizeTransactionWithAI', () => {
       });
 
       const result = await categorizeTransactionWithAI(mockTransaction);
-      
+
       expect(result).toBe('Groceries');
     });
 
@@ -270,18 +270,18 @@ describe('Smart Categorization - categorizeTransactionWithAI', () => {
 
     test('should pass custom categories to LLM service', async () => {
       const customCategories = ['Custom Groceries', 'Custom Transportation'];
-      
+
       mockLLMService.categorizeTransaction.mockResolvedValue({
         category: 'Custom Groceries',
         confidence: 0.8,
       });
 
       const result = await categorizeTransactionWithAI(mockTransaction, customCategories);
-      
+
       expect(result).toBe('Custom Groceries');
       expect(mockLLMService.categorizeTransaction).toHaveBeenCalledWith(
         mockTransaction,
-        customCategories
+        customCategories,
       );
     });
 
@@ -292,12 +292,9 @@ describe('Smart Categorization - categorizeTransactionWithAI', () => {
       });
 
       const result = await categorizeTransactionWithAI(mockTransaction, []);
-      
+
       expect(result).toBe('Groceries');
-      expect(mockLLMService.categorizeTransaction).toHaveBeenCalledWith(
-        mockTransaction,
-        []
-      );
+      expect(mockLLMService.categorizeTransaction).toHaveBeenCalledWith(mockTransaction, []);
     });
   });
 
@@ -311,7 +308,7 @@ describe('Smart Categorization - categorizeTransactionWithAI', () => {
       mockLLMService.categorizeTransaction.mockRejectedValue(new Error('API Error'));
 
       const result = await categorizeTransactionWithAI(mockTransaction);
-      
+
       expect(result).toBe('Uncategorized'); // Fallback to existing category
     });
 
@@ -319,7 +316,7 @@ describe('Smart Categorization - categorizeTransactionWithAI', () => {
       mockLLMService.categorizeTransaction.mockRejectedValue(new Error('Network error'));
 
       const result = await categorizeTransactionWithAI(mockTransaction);
-      
+
       expect(result).toBe('Uncategorized');
     });
 
@@ -327,7 +324,7 @@ describe('Smart Categorization - categorizeTransactionWithAI', () => {
       mockLLMService.categorizeTransaction.mockRejectedValue(new Error('Rate limit exceeded'));
 
       const result = await categorizeTransactionWithAI(mockTransaction);
-      
+
       expect(result).toBe('Uncategorized');
     });
 
@@ -335,7 +332,7 @@ describe('Smart Categorization - categorizeTransactionWithAI', () => {
       mockLLMService.categorizeTransaction.mockRejectedValue(new Error('Request timeout'));
 
       const result = await categorizeTransactionWithAI(mockTransaction);
-      
+
       expect(result).toBe('Uncategorized');
     });
 
@@ -343,7 +340,7 @@ describe('Smart Categorization - categorizeTransactionWithAI', () => {
       mockLLMService.categorizeTransaction.mockResolvedValue(null);
 
       const result = await categorizeTransactionWithAI(mockTransaction);
-      
+
       expect(result).toBe('Uncategorized');
     });
 
@@ -354,7 +351,7 @@ describe('Smart Categorization - categorizeTransactionWithAI', () => {
       });
 
       const result = await categorizeTransactionWithAI(mockTransaction);
-      
+
       // Should treat missing confidence as below threshold
       expect(result).toBe('Uncategorized');
     });
@@ -367,45 +364,49 @@ describe('Smart Categorization - categorizeTransactionWithAI', () => {
     });
 
     test('should log successful high-confidence categorization', async () => {
-      const { logger } = require('@services/logger');
-      
+      const { logger } = await import('@services/logger');
+
       mockLLMService.categorizeTransaction.mockResolvedValue({
         category: 'Groceries',
         confidence: 0.85,
       });
 
       await categorizeTransactionWithAI(mockTransaction);
-      
+
       expect(logger.info).toHaveBeenCalledWith(
-        expect.stringContaining('AI categorized "Whole Foods Market" as "Groceries" with 85% confidence')
+        expect.stringContaining(
+          'AI categorized "Whole Foods Market" as "Groceries" with 85% confidence',
+        ),
       );
     });
 
     test('should log low-confidence fallback', async () => {
-      const { logger } = require('@services/logger');
-      
+      const { logger } = await import('@services/logger');
+
       mockLLMService.categorizeTransaction.mockResolvedValue({
         category: 'Uncertain',
         confidence: 0.4,
       });
 
       await categorizeTransactionWithAI(mockTransaction);
-      
+
       expect(logger.info).toHaveBeenCalledWith(
-        expect.stringContaining('AI categorization confidence too low for "Whole Foods Market" (40%), using default')
+        expect.stringContaining(
+          'AI categorization confidence too low for "Whole Foods Market" (40%), using default',
+        ),
       );
     });
 
     test('should log errors during categorization', async () => {
-      const { logger } = require('@services/logger');
-      
+      const { logger } = await import('@services/logger');
+
       mockLLMService.categorizeTransaction.mockRejectedValue(new Error('Test error'));
 
       await categorizeTransactionWithAI(mockTransaction);
-      
+
       expect(logger.error).toHaveBeenCalledWith(
         'Error during AI categorization:',
-        expect.any(Error)
+        expect.any(Error),
       );
     });
   });
@@ -486,7 +487,7 @@ describe('Smart Categorization - categorizeTransactionWithAI', () => {
     test('should handle special characters in description', async () => {
       const specialTransaction: TransactionForCategorization = {
         description: 'AT&T Payment - $100.50 "AutoPay"',
-        amount: -100.50,
+        amount: -100.5,
         date: '2024-01-15',
         existingCategory: 'Bills',
       };
@@ -506,13 +507,13 @@ describe('Smart Categorization - categorizeTransactionsBatchWithAI', () => {
   const mockTransactions: TransactionForCategorization[] = [
     {
       description: 'Starbucks Coffee',
-      amount: -4.50,
+      amount: -4.5,
       date: '2024-01-15',
       existingCategory: 'Dining',
     },
     {
       description: 'Gas Station',
-      amount: -35.00,
+      amount: -35.0,
       date: '2024-01-16',
       existingCategory: 'Transport',
     },
@@ -529,11 +530,11 @@ describe('Smart Categorization - categorizeTransactionsBatchWithAI', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     localStorageMock.clear();
-    
+
     mockLLMService = {
       categorizeTransactionsBatch: vi.fn(),
     };
-    
+
     const { createLLMService } = require('@services/llmService');
     createLLMService.mockReturnValue(mockLLMService);
   });
@@ -544,7 +545,7 @@ describe('Smart Categorization - categorizeTransactionsBatchWithAI', () => {
       localStorageMock.setItem('smartCategorization.apiKey', 'test-key');
 
       const results = await categorizeTransactionsBatchWithAI(mockTransactions);
-      
+
       expect(results).toEqual(['Dining', 'Transport', 'Food']);
       expect(mockLLMService.categorizeTransactionsBatch).not.toHaveBeenCalled();
     });
@@ -553,20 +554,20 @@ describe('Smart Categorization - categorizeTransactionsBatchWithAI', () => {
       localStorageMock.setItem('smartCategorization.enabled', 'true');
 
       const results = await categorizeTransactionsBatchWithAI(mockTransactions);
-      
+
       expect(results).toEqual(['Dining', 'Transport', 'Food']);
     });
 
     test('should handle transactions without existing categories', async () => {
       localStorageMock.setItem('smartCategorization.enabled', 'false');
-      
-      const transactionsNoCategories = mockTransactions.map(t => ({
+
+      const transactionsNoCategories = mockTransactions.map((t) => ({
         ...t,
         existingCategory: undefined,
       }));
 
       const results = await categorizeTransactionsBatchWithAI(transactionsNoCategories);
-      
+
       expect(results).toEqual(['Uncategorized', 'Uncategorized', 'Uncategorized']);
     });
   });
@@ -587,12 +588,12 @@ describe('Smart Categorization - categorizeTransactionsBatchWithAI', () => {
       mockLLMService.categorizeTransactionsBatch.mockResolvedValue(mockResults);
 
       const results = await categorizeTransactionsBatchWithAI(mockTransactions);
-      
+
       expect(results).toEqual(['Coffee Shops', 'Transportation', 'Groceries']);
       expect(mockLLMService.categorizeTransactionsBatch).toHaveBeenCalledTimes(1);
       expect(mockLLMService.categorizeTransactionsBatch).toHaveBeenCalledWith(
         mockTransactions,
-        undefined
+        undefined,
       );
     });
 
@@ -605,9 +606,18 @@ describe('Smart Categorization - categorizeTransactionsBatchWithAI', () => {
       }));
 
       // Mock responses for 3 batches (10, 10, 5)
-      const batch1Results = Array.from({ length: 10 }, () => ({ category: 'Batch1', confidence: 0.8 }));
-      const batch2Results = Array.from({ length: 10 }, () => ({ category: 'Batch2', confidence: 0.8 }));
-      const batch3Results = Array.from({ length: 5 }, () => ({ category: 'Batch3', confidence: 0.8 }));
+      const batch1Results = Array.from({ length: 10 }, () => ({
+        category: 'Batch1',
+        confidence: 0.8,
+      }));
+      const batch2Results = Array.from({ length: 10 }, () => ({
+        category: 'Batch2',
+        confidence: 0.8,
+      }));
+      const batch3Results = Array.from({ length: 5 }, () => ({
+        category: 'Batch3',
+        confidence: 0.8,
+      }));
 
       mockLLMService.categorizeTransactionsBatch
         .mockResolvedValueOnce(batch1Results)
@@ -633,7 +643,7 @@ describe('Smart Categorization - categorizeTransactionsBatchWithAI', () => {
       mockLLMService.categorizeTransactionsBatch.mockResolvedValue(mockResults);
 
       const results = await categorizeTransactionsBatchWithAI(mockTransactions);
-      
+
       expect(results).toEqual([
         'Coffee Shops', // High confidence
         'Transport', // Low confidence, use existing
@@ -651,7 +661,7 @@ describe('Smart Categorization - categorizeTransactionsBatchWithAI', () => {
       mockLLMService.categorizeTransactionsBatch.mockResolvedValue(mockResults);
 
       const results = await categorizeTransactionsBatchWithAI(mockTransactions);
-      
+
       expect(results).toEqual([
         'Coffee Shops',
         'Transport', // Fallback to existing
@@ -670,7 +680,7 @@ describe('Smart Categorization - categorizeTransactionsBatchWithAI', () => {
       mockLLMService.categorizeTransactionsBatch.mockRejectedValue(new Error('API Error'));
 
       const results = await categorizeTransactionsBatchWithAI(mockTransactions);
-      
+
       expect(results).toEqual(['Dining', 'Transport', 'Food']); // Fallback to existing
     });
 
@@ -683,8 +693,11 @@ describe('Smart Categorization - categorizeTransactionsBatchWithAI', () => {
       }));
 
       // First batch succeeds, second batch fails
-      const batch1Results = Array.from({ length: 10 }, () => ({ category: 'Success', confidence: 0.8 }));
-      
+      const batch1Results = Array.from({ length: 10 }, () => ({
+        category: 'Success',
+        confidence: 0.8,
+      }));
+
       mockLLMService.categorizeTransactionsBatch
         .mockResolvedValueOnce(batch1Results)
         .mockRejectedValueOnce(new Error('Second batch failed'));
@@ -693,16 +706,22 @@ describe('Smart Categorization - categorizeTransactionsBatchWithAI', () => {
 
       expect(results).toHaveLength(15);
       expect(results.slice(0, 10)).toEqual(Array(10).fill('Success'));
-      expect(results.slice(10, 15)).toEqual(['Original11', 'Original12', 'Original13', 'Original14', 'Original15']);
+      expect(results.slice(10, 15)).toEqual([
+        'Original11',
+        'Original12',
+        'Original13',
+        'Original14',
+        'Original15',
+      ]);
     });
 
     test('should handle timeout in batch processing', async () => {
-      mockLLMService.categorizeTransactionsBatch.mockImplementation(() =>
-        new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 100))
+      mockLLMService.categorizeTransactionsBatch.mockImplementation(
+        () => new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 100)),
       );
 
       const results = await categorizeTransactionsBatchWithAI(mockTransactions);
-      
+
       expect(results).toEqual(['Dining', 'Transport', 'Food']);
     });
 
@@ -710,7 +729,7 @@ describe('Smart Categorization - categorizeTransactionsBatchWithAI', () => {
       mockLLMService.categorizeTransactionsBatch.mockRejectedValue(new Error('Network error'));
 
       const results = await categorizeTransactionsBatchWithAI(mockTransactions);
-      
+
       expect(results).toEqual(['Dining', 'Transport', 'Food']);
     });
   });
@@ -732,11 +751,11 @@ describe('Smart Categorization - categorizeTransactionsBatchWithAI', () => {
       mockLLMService.categorizeTransactionsBatch.mockResolvedValue(mockResults);
 
       const results = await categorizeTransactionsBatchWithAI(mockTransactions, customCategories);
-      
+
       expect(results).toEqual(['Custom Coffee', 'Custom Transport', 'Custom Food']);
       expect(mockLLMService.categorizeTransactionsBatch).toHaveBeenCalledWith(
         expect.any(Array),
-        customCategories
+        customCategories,
       );
     });
   });
@@ -749,7 +768,7 @@ describe('Smart Categorization - categorizeTransactionsBatchWithAI', () => {
 
     test('should handle empty transaction array', async () => {
       const results = await categorizeTransactionsBatchWithAI([]);
-      
+
       expect(results).toEqual([]);
       expect(mockLLMService.categorizeTransactionsBatch).not.toHaveBeenCalled();
     });
@@ -761,7 +780,7 @@ describe('Smart Categorization - categorizeTransactionsBatchWithAI', () => {
       mockLLMService.categorizeTransactionsBatch.mockResolvedValue(mockResults);
 
       const results = await categorizeTransactionsBatchWithAI(singleTransaction);
-      
+
       expect(results).toEqual(['Coffee Shops']);
     });
 
@@ -781,7 +800,7 @@ describe('Smart Categorization - categorizeTransactionsBatchWithAI', () => {
       mockLLMService.categorizeTransactionsBatch.mockResolvedValue(mockResults);
 
       const results = await categorizeTransactionsBatchWithAI(orderedTransactions);
-      
+
       expect(results).toEqual(['Result1', 'Result2', 'Result3']);
     });
 
@@ -795,11 +814,11 @@ describe('Smart Categorization - categorizeTransactionsBatchWithAI', () => {
 
       // Mock 10 batch responses (10 transactions each)
       const mockBatchResults = Array.from({ length: 10 }, () =>
-        Array.from({ length: 10 }, () => ({ category: 'BatchResult', confidence: 0.8 }))
+        Array.from({ length: 10 }, () => ({ category: 'BatchResult', confidence: 0.8 })),
       );
 
       mockLLMService.categorizeTransactionsBatch.mockImplementation((batch) =>
-        Promise.resolve(mockBatchResults[Math.floor(mockBatchResults.length * Math.random())])
+        Promise.resolve(mockBatchResults[Math.floor(mockBatchResults.length * Math.random())]),
       );
 
       const startTime = performance.now();
@@ -807,9 +826,9 @@ describe('Smart Categorization - categorizeTransactionsBatchWithAI', () => {
       const endTime = performance.now();
 
       expect(results).toHaveLength(100);
-      expect(results.every(r => r === 'BatchResult')).toBe(true);
+      expect(results.every((r) => r === 'BatchResult')).toBe(true);
       expect(mockLLMService.categorizeTransactionsBatch).toHaveBeenCalledTimes(10);
-      
+
       // Should process 100 transactions reasonably quickly
       expect(endTime - startTime).toBeLessThan(1000);
     });
@@ -822,7 +841,7 @@ describe('Smart Categorization - categorizeTransactionsBatchWithAI', () => {
       ]);
 
       const results = await categorizeTransactionsBatchWithAI(mockTransactions);
-      
+
       expect(results).toEqual([
         'Dining', // Fallback for malformed result
         'Valid',
@@ -839,30 +858,27 @@ describe('Smart Categorization - categorizeTransactionsBatchWithAI', () => {
 
     test('should log batch processing errors', async () => {
       const { logger } = require('@services/logger');
-      
+
       mockLLMService.categorizeTransactionsBatch.mockRejectedValue(new Error('Batch error'));
 
       await categorizeTransactionsBatchWithAI(mockTransactions);
-      
-      expect(logger.error).toHaveBeenCalledWith(
-        'Error categorizing batch 1:',
-        expect.any(Error)
-      );
+
+      expect(logger.error).toHaveBeenCalledWith('Error categorizing batch 1:', expect.any(Error));
     });
 
     test('should log overall batch processing errors', async () => {
       const { logger } = require('@services/logger');
-      
-      const { createLLMService } = require('@services/llmService');
+
+      const { createLLMService } = await import('@services/llmService');
       createLLMService.mockImplementation(() => {
         throw new Error('Service creation failed');
       });
 
       await categorizeTransactionsBatchWithAI(mockTransactions);
-      
+
       expect(logger.error).toHaveBeenCalledWith(
         'Error during batch AI categorization:',
-        expect.any(Error)
+        expect.any(Error),
       );
     });
   });
@@ -874,12 +890,12 @@ describe('Smart Categorization - Integration Tests', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     localStorageMock.clear();
-    
+
     mockLLMService = {
       categorizeTransaction: vi.fn(),
       categorizeTransactionsBatch: vi.fn(),
     };
-    
+
     const { createLLMService } = require('@services/llmService');
     createLLMService.mockReturnValue(mockLLMService);
   });
@@ -893,13 +909,13 @@ describe('Smart Categorization - Integration Tests', () => {
     const transactions: TransactionForCategorization[] = [
       {
         description: 'Whole Foods Market',
-        amount: -125.50,
+        amount: -125.5,
         date: '2024-01-15',
         existingCategory: 'Shopping',
       },
       {
         description: 'Shell Gas Station',
-        amount: -45.00,
+        amount: -45.0,
         date: '2024-01-16',
         existingCategory: 'Transport',
       },
@@ -930,7 +946,7 @@ describe('Smart Categorization - Integration Tests', () => {
 
     expect(mockLLMService.categorizeTransactionsBatch).toHaveBeenCalledWith(
       transactions,
-      undefined
+      undefined,
     );
   });
 
@@ -948,13 +964,13 @@ describe('Smart Categorization - Integration Tests', () => {
     const batchTransactions: TransactionForCategorization[] = [
       {
         description: 'Coffee Shop',
-        amount: -5.50,
+        amount: -5.5,
         date: '2024-01-16',
         existingCategory: 'Food',
       },
       {
         description: 'Gas Station',
-        amount: -40.00,
+        amount: -40.0,
         date: '2024-01-17',
         existingCategory: 'Transport',
       },
@@ -986,7 +1002,7 @@ describe('Smart Categorization - Integration Tests', () => {
 
     const boundaryTests = [
       { confidence: 0.59, expected: 'Original' }, // Just below threshold
-      { confidence: 0.60, expected: 'AI Category' }, // At threshold
+      { confidence: 0.6, expected: 'AI Category' }, // At threshold
       { confidence: 0.61, expected: 'AI Category' }, // Just above threshold
     ];
 
@@ -1020,7 +1036,7 @@ describe('Smart Categorization - Integration Tests', () => {
         existingCategory: 'Shopping',
       },
       {
-        description: 'UBER EATS * MCDONALD\'S',
+        description: "UBER EATS * MCDONALD'S",
         amount: -12.45,
         date: '2024-01-16',
         existingCategory: 'Dining',
@@ -1033,7 +1049,7 @@ describe('Smart Categorization - Integration Tests', () => {
       },
       {
         description: 'ATM WITHDRAWAL CASH',
-        amount: -100.00,
+        amount: -100.0,
         date: '2024-01-18',
         existingCategory: 'Cash',
       },
@@ -1048,12 +1064,7 @@ describe('Smart Categorization - Integration Tests', () => {
 
     const results = await categorizeTransactionsBatchWithAI(realWorldTransactions);
 
-    expect(results).toEqual([
-      'Groceries',
-      'Food Delivery',
-      'Online Shopping',
-      'ATM & Cash',
-    ]);
+    expect(results).toEqual(['Groceries', 'Food Delivery', 'Online Shopping', 'ATM & Cash']);
   });
 
   test('should handle error recovery and fallback chains', async () => {
@@ -1078,13 +1089,11 @@ describe('Smart Categorization - Integration Tests', () => {
     // First call fails, second call succeeds
     mockLLMService.categorizeTransactionsBatch
       .mockRejectedValueOnce(new Error('First attempt failed'))
-      .mockResolvedValueOnce([
-        { category: 'Success Category', confidence: 0.8 },
-      ]);
+      .mockResolvedValueOnce([{ category: 'Success Category', confidence: 0.8 }]);
 
     // Should handle the error gracefully and fall back to existing categories
     const results = await categorizeTransactionsBatchWithAI(transactions);
-    
+
     expect(results).toEqual(['Existing1', 'Existing2']);
   });
 });

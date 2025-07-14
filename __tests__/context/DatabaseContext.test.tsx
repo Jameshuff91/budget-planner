@@ -73,7 +73,7 @@ function TestWrapper({ children }: { children: React.ReactNode }) {
 describe('DatabaseContext', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    
+
     // Reset mock implementations
     mockDbService.getTransactions.mockResolvedValue([]);
     mockDbService.getCategories.mockResolvedValue([]);
@@ -429,7 +429,7 @@ describe('DatabaseContext', () => {
       await expect(
         act(async () => {
           await result.current.addTransaction(transactionData);
-        })
+        }),
       ).rejects.toThrow('Add failed');
     });
   });
@@ -438,13 +438,13 @@ describe('DatabaseContext', () => {
     test('should render children correctly', () => {
       const TestComponent = () => {
         const { loading } = useDBContext();
-        return <div data-testid="test-component">Loading: {loading.toString()}</div>;
+        return <div data-testid='test-component'>Loading: {loading.toString()}</div>;
       };
 
       const { getByTestId } = render(
         <DatabaseProvider>
           <TestComponent />
-        </DatabaseProvider>
+        </DatabaseProvider>,
       );
 
       expect(getByTestId('test-component')).toBeInTheDocument();
@@ -454,10 +454,10 @@ describe('DatabaseContext', () => {
       const TestComponent = () => {
         const context = useDBContext();
         return (
-          <div data-testid="context-values">
-            <div data-testid="transactions-count">{context.transactions.length}</div>
-            <div data-testid="categories-count">{context.categories.length}</div>
-            <div data-testid="loading">{context.loading.toString()}</div>
+          <div data-testid='context-values'>
+            <div data-testid='transactions-count'>{context.transactions.length}</div>
+            <div data-testid='categories-count'>{context.categories.length}</div>
+            <div data-testid='loading'>{context.loading.toString()}</div>
           </div>
         );
       };
@@ -465,7 +465,7 @@ describe('DatabaseContext', () => {
       const { getByTestId } = render(
         <DatabaseProvider>
           <TestComponent />
-        </DatabaseProvider>
+        </DatabaseProvider>,
       );
 
       expect(getByTestId('transactions-count')).toBeInTheDocument();

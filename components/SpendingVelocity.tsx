@@ -49,7 +49,7 @@ const SpendingVelocity = ({ selectedYear }: SpendingVelocityProps) => {
 
   const velocityData = useMemo(() => {
     const marker = createPerformanceMarker('velocity-data-calculation');
-    
+
     const currentDate = new Date();
     const currentMonth = currentDate.getMonth();
     const currentDay = currentDate.getDate();
@@ -152,28 +152,22 @@ const SpendingVelocity = ({ selectedYear }: SpendingVelocityProps) => {
 
   // Memoized CustomTooltip component
   const CustomTooltip = useMemo(() => {
-    return React.memo(({
-      active,
-      payload,
-      label,
-    }: {
-      active?: boolean;
-      payload?: any;
-      label?: any;
-    }) => {
-      if (!active || !payload) return null;
+    return React.memo(
+      ({ active, payload, label }: { active?: boolean; payload?: any; label?: any }) => {
+        if (!active || !payload) return null;
 
-      return (
-        <div className='bg-white p-3 border rounded-lg shadow-lg'>
-          <p className='font-semibold'>Day {label}</p>
-          {payload.map((entry: any, index: number) => (
-            <p key={index} style={{ color: entry.color }}>
-              {entry.name}: {formatCurrency(entry.value)}
-            </p>
-          ))}
-        </div>
-      );
-    });
+        return (
+          <div className='bg-white p-3 border rounded-lg shadow-lg'>
+            <p className='font-semibold'>Day {label}</p>
+            {payload.map((entry: any, index: number) => (
+              <p key={index} style={{ color: entry.color }}>
+                {entry.name}: {formatCurrency(entry.value)}
+              </p>
+            ))}
+          </div>
+        );
+      },
+    );
   }, []);
 
   // Memoized utility functions

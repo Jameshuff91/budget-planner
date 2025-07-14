@@ -76,7 +76,7 @@ describe('DatabaseContext Basic Tests', () => {
       render(
         <DatabaseProvider>
           <TestComponent />
-        </DatabaseProvider>
+        </DatabaseProvider>,
       );
     }).not.toThrow();
   });
@@ -95,13 +95,13 @@ describe('DatabaseContext Basic Tests', () => {
   test('should provide context when used within provider', () => {
     const TestComponent = () => {
       const context = useDBContext();
-      return <div data-testid="context-test">{typeof context}</div>;
+      return <div data-testid='context-test'>{typeof context}</div>;
     };
 
     const { getByTestId } = render(
       <DatabaseProvider>
         <TestComponent />
-      </DatabaseProvider>
+      </DatabaseProvider>,
     );
 
     expect(getByTestId('context-test')).toHaveTextContent('object');
@@ -110,13 +110,13 @@ describe('DatabaseContext Basic Tests', () => {
   test('should provide loading state initially', () => {
     const TestComponent = () => {
       const { loading } = useDBContext();
-      return <div data-testid="loading-state">{loading.toString()}</div>;
+      return <div data-testid='loading-state'>{loading.toString()}</div>;
     };
 
     const { getByTestId } = render(
       <DatabaseProvider>
         <TestComponent />
-      </DatabaseProvider>
+      </DatabaseProvider>,
     );
 
     expect(getByTestId('loading-state')).toHaveTextContent('true');
@@ -127,10 +127,10 @@ describe('DatabaseContext Basic Tests', () => {
       const { transactions, categories, assets, liabilities } = useDBContext();
       return (
         <div>
-          <div data-testid="transactions-length">{transactions.length}</div>
-          <div data-testid="categories-length">{categories.length}</div>
-          <div data-testid="assets-length">{assets.length}</div>
-          <div data-testid="liabilities-length">{liabilities.length}</div>
+          <div data-testid='transactions-length'>{transactions.length}</div>
+          <div data-testid='categories-length'>{categories.length}</div>
+          <div data-testid='assets-length'>{assets.length}</div>
+          <div data-testid='liabilities-length'>{liabilities.length}</div>
         </div>
       );
     };
@@ -138,7 +138,7 @@ describe('DatabaseContext Basic Tests', () => {
     const { getByTestId } = render(
       <DatabaseProvider>
         <TestComponent />
-      </DatabaseProvider>
+      </DatabaseProvider>,
     );
 
     expect(getByTestId('transactions-length')).toHaveTextContent('0');
@@ -170,15 +170,15 @@ describe('DatabaseContext Basic Tests', () => {
         'getTransactionsByMonth',
       ];
 
-      const allMethodsPresent = methods.every(method => typeof context[method] === 'function');
+      const allMethodsPresent = methods.every((method) => typeof context[method] === 'function');
 
-      return <div data-testid="methods-check">{allMethodsPresent.toString()}</div>;
+      return <div data-testid='methods-check'>{allMethodsPresent.toString()}</div>;
     };
 
     const { getByTestId } = render(
       <DatabaseProvider>
         <TestComponent />
-      </DatabaseProvider>
+      </DatabaseProvider>,
     );
 
     expect(getByTestId('methods-check')).toHaveTextContent('true');
@@ -187,13 +187,13 @@ describe('DatabaseContext Basic Tests', () => {
   test('should provide error state as null initially', () => {
     const TestComponent = () => {
       const { error } = useDBContext();
-      return <div data-testid="error-state">{error ? 'error' : 'null'}</div>;
+      return <div data-testid='error-state'>{error ? 'error' : 'null'}</div>;
     };
 
     const { getByTestId } = render(
       <DatabaseProvider>
         <TestComponent />
-      </DatabaseProvider>
+      </DatabaseProvider>,
     );
 
     expect(getByTestId('error-state')).toHaveTextContent('null');

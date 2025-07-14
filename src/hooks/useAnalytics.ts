@@ -161,14 +161,14 @@ export const useAnalytics = (timeRange?: { startDate?: Date; endDate?: Date }) =
   const { startDate = defaultStartDate, endDate = defaultEndDate } = timeRange || {};
 
   // Memoized months array to avoid recreation
-  const months = useMemo(() => [
-    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
-  ], []);
+  const months = useMemo(
+    () => ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+    [],
+  );
 
   const spendingTrend = useMemo((): SpendingTrendData[] => {
     const marker = createPerformanceMarker('spending-trend-calculation');
-    
+
     try {
       const monthlySpending = new Map<string, number>();
 
@@ -237,7 +237,7 @@ export const useAnalytics = (timeRange?: { startDate?: Date; endDate?: Date }) =
 
   const spendingOverview = useMemo((): SpendingOverviewData[] => {
     const marker = createPerformanceMarker('spending-overview-calculation');
-    
+
     try {
       const monthlyData = new Map<string, { totalSpending: number; totalIncome: number }>();
 
@@ -314,10 +314,10 @@ export const useAnalytics = (timeRange?: { startDate?: Date; endDate?: Date }) =
   // Memoize filtered transactions to avoid recalculating when same period is requested
   const filteredTransactions = useMemo(() => {
     const periodKey = `filtered-${startDate.getTime()}-${endDate.getTime()}-${transactions.length}`;
-    
+
     return getCachedData(periodKey, () => {
       const marker = createPerformanceMarker('filter-transactions');
-      
+
       logger.info(
         `Calculating category spending for period: ${startDate.toISOString()} - ${endDate.toISOString()}`,
       );
@@ -335,7 +335,7 @@ export const useAnalytics = (timeRange?: { startDate?: Date; endDate?: Date }) =
 
   const categorySpending = useMemo((): CategoryData[] => {
     const marker = createPerformanceMarker('category-spending-calculation');
-    
+
     try {
       const categoryTotals = new Map<string, number>();
 
@@ -403,7 +403,7 @@ export const useAnalytics = (timeRange?: { startDate?: Date; endDate?: Date }) =
 
   const monthlyTrends = useMemo((): MonthlyTrends => {
     const marker = createPerformanceMarker('monthly-trends-calculation');
-    
+
     try {
       const now = new Date();
       const currentMonth = now.getMonth();
@@ -531,7 +531,7 @@ export const useAnalytics = (timeRange?: { startDate?: Date; endDate?: Date }) =
 
   const merchantSpending = useMemo((): MerchantSpendingData[] => {
     const marker = createPerformanceMarker('merchant-spending-calculation');
-    
+
     try {
       const merchantTotals = new Map<string, { value: number; transactionCount: number }>();
 

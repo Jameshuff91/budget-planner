@@ -47,8 +47,14 @@ describe('Chart Optimization Utilities', () => {
     });
 
     it('should return true for arrays with identical objects by key', () => {
-      const arr1 = [{ id: 1, name: 'test' }, { id: 2, name: 'test2' }];
-      const arr2 = [{ id: 1, name: 'test' }, { id: 2, name: 'test2' }];
+      const arr1 = [
+        { id: 1, name: 'test' },
+        { id: 2, name: 'test2' },
+      ];
+      const arr2 = [
+        { id: 1, name: 'test' },
+        { id: 2, name: 'test2' },
+      ];
       expect(compareArrayProps(arr1, arr2, 'id')).toBe(true);
     });
   });
@@ -110,10 +116,10 @@ describe('Chart Optimization Utilities', () => {
         callCount++;
         return 'computed-value';
       };
-      
+
       const result1 = getCachedData('test-key', computeFn);
       const result2 = getCachedData('test-key', computeFn);
-      
+
       expect(result1).toBe('computed-value');
       expect(result2).toBe('computed-value');
       expect(callCount).toBe(1);
@@ -125,20 +131,20 @@ describe('Chart Optimization Utilities', () => {
         callCount++;
         return 'computed-value';
       };
-      
+
       // Mock Date.now to simulate cache expiry
       const originalNow = Date.now;
       Date.now = () => 0;
-      
+
       getCachedData('test-key', computeFn);
-      
+
       // Fast forward time beyond cache TTL
       Date.now = () => 6 * 60 * 1000; // 6 minutes
-      
+
       getCachedData('test-key', computeFn);
-      
+
       expect(callCount).toBe(2);
-      
+
       // Restore Date.now
       Date.now = originalNow;
     });

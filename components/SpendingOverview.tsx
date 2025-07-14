@@ -45,13 +45,21 @@ const MemoizedTrendIndicator = React.memo<{ value: number }>(({ value }) => {
 
 // Memoized month names to avoid recreation
 const monthNames = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December',
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
 ];
 
-const SpendingOverview = ({
-  selectedYear: propSelectedYear,
-}: SpendingOverviewProps) => {
+const SpendingOverview = ({ selectedYear: propSelectedYear }: SpendingOverviewProps) => {
   // Memoize analytics data to prevent unnecessary recalculations
   const analyticsData = useMemo(() => {
     const marker = createPerformanceMarker('overview-analytics-data');
@@ -113,26 +121,33 @@ const SpendingOverview = ({
   }, [yearData.length]);
 
   // Memoized chart props
-  const chartTooltipProps = useMemo(() => memoizeChartProps({
-    content: ({ active, payload }: { active?: boolean; payload?: any }) => {
-      if (active && payload && payload.length) {
-        return (
-          <div className='bg-white p-4 rounded-lg shadow-lg border'>
-            <p className='text-sm text-gray-600'>
-              {payload[0].payload.name} {payload[0].payload.year}
-            </p>
-            <p className='font-semibold text-red-600'>
-              Spending: {formatCurrency(payload[0].payload.totalSpending)}
-            </p>
-            <p className='font-semibold text-green-600'>
-              Income: {formatCurrency(payload[0].payload.totalIncome)}
-            </p>
-          </div>
-        );
-      }
-      return null;
-    },
-  }, []), []);
+  const chartTooltipProps = useMemo(
+    () =>
+      memoizeChartProps(
+        {
+          content: ({ active, payload }: { active?: boolean; payload?: any }) => {
+            if (active && payload && payload.length) {
+              return (
+                <div className='bg-white p-4 rounded-lg shadow-lg border'>
+                  <p className='text-sm text-gray-600'>
+                    {payload[0].payload.name} {payload[0].payload.year}
+                  </p>
+                  <p className='font-semibold text-red-600'>
+                    Spending: {formatCurrency(payload[0].payload.totalSpending)}
+                  </p>
+                  <p className='font-semibold text-green-600'>
+                    Income: {formatCurrency(payload[0].payload.totalIncome)}
+                  </p>
+                </div>
+              );
+            }
+            return null;
+          },
+        },
+        [],
+      ),
+    [],
+  );
 
   const tickFormatter = useCallback((value: number) => `${formatCurrency(value)}`, []);
 
@@ -152,12 +167,16 @@ const SpendingOverview = ({
             <div className='grid grid-cols-2 gap-4'>
               <div>
                 <p className='text-sm font-medium text-muted-foreground'>Spending</p>
-                <p className='text-2xl font-bold'>{formatCurrency(monthlyTrends.spending.current)}</p>
+                <p className='text-2xl font-bold'>
+                  {formatCurrency(monthlyTrends.spending.current)}
+                </p>
                 <MemoizedTrendIndicator value={monthlyTrends.spending.percentageChange} />
               </div>
               <div>
                 <p className='text-sm font-medium text-muted-foreground'>Savings</p>
-                <p className='text-2xl font-bold'>{formatCurrency(monthlyTrends.netSavings.current)}</p>
+                <p className='text-2xl font-bold'>
+                  {formatCurrency(monthlyTrends.netSavings.current)}
+                </p>
                 <MemoizedTrendIndicator value={monthlyTrends.netSavings.percentageChange} />
               </div>
             </div>
@@ -167,11 +186,15 @@ const SpendingOverview = ({
             <div className='grid grid-cols-2 gap-4'>
               <div>
                 <p className='text-sm font-medium text-muted-foreground'>Spending</p>
-                <p className='text-2xl font-bold'>{formatCurrency(monthlyTrends.spending.previous)}</p>
+                <p className='text-2xl font-bold'>
+                  {formatCurrency(monthlyTrends.spending.previous)}
+                </p>
               </div>
               <div>
                 <p className='text-sm font-medium text-muted-foreground'>Savings</p>
-                <p className='text-2xl font-bold'>{formatCurrency(monthlyTrends.netSavings.previous)}</p>
+                <p className='text-2xl font-bold'>
+                  {formatCurrency(monthlyTrends.netSavings.previous)}
+                </p>
               </div>
             </div>
           </div>

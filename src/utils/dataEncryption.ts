@@ -34,7 +34,7 @@ export class DataEncryption {
         new TextEncoder().encode(password),
         { name: 'PBKDF2' },
         false,
-        ['deriveKey']
+        ['deriveKey'],
       );
 
       // Derive the actual encryption key
@@ -48,7 +48,7 @@ export class DataEncryption {
         keyMaterial,
         { name: this.ALGORITHM, length: this.KEY_LENGTH },
         false,
-        ['encrypt', 'decrypt']
+        ['encrypt', 'decrypt'],
       );
     } catch (error) {
       logger.error('Error deriving encryption key:', error);
@@ -76,7 +76,7 @@ export class DataEncryption {
           iv: iv,
         },
         key,
-        encodedData
+        encodedData,
       );
 
       // Convert to base64 for storage
@@ -111,7 +111,7 @@ export class DataEncryption {
           iv: new Uint8Array(iv),
         },
         key,
-        encryptedData
+        encryptedData,
       );
 
       // Convert back to string
@@ -150,8 +150,8 @@ export class DataEncryption {
     const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
     const array = new Uint8Array(length);
     crypto.getRandomValues(array);
-    
-    return Array.from(array, byte => charset[byte % charset.length]).join('');
+
+    return Array.from(array, (byte) => charset[byte % charset.length]).join('');
   }
 
   /**

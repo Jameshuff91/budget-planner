@@ -107,12 +107,15 @@ export const createDataTransformer = <TInput, TOutput>(
   dependencyExtractor?: (data: TInput) => any[],
 ) => {
   return (data: TInput): TOutput => {
-    return useMemo(() => {
-      const marker = createPerformanceMarker('dataTransformation');
-      const result = transformer(data);
-      marker.end();
-      return result;
-    }, dependencyExtractor ? dependencyExtractor(data) : [data]);
+    return useMemo(
+      () => {
+        const marker = createPerformanceMarker('dataTransformation');
+        const result = transformer(data);
+        marker.end();
+        return result;
+      },
+      dependencyExtractor ? dependencyExtractor(data) : [data],
+    );
   };
 };
 
@@ -129,15 +132,15 @@ export const optimizeChartData = <T extends Record<string, any>>(
   const step = Math.ceil(data.length / maxDataPoints);
   const optimized = data.filter((_, index) => index % step === 0);
 
-  logger.info(
-    `Chart data optimized: ${data.length} -> ${optimized.length} points (step: ${step})`,
-  );
+  logger.info(`Chart data optimized: ${data.length} -> ${optimized.length} points (step: ${step})`);
 
   return optimized;
 };
 
-export const memoizeChartProps = <T>(props: T, deps: any[]): T => {
-  return useMemo(() => props, deps);
+export const memoizeChartProps = <T>(props: T, _deps: any[]): T => {
+  // Note: This is a utility function, not a React component or hook
+  // It should be used within React components where useMemo is available
+  return props;
 };
 
 // Animation control utilities
@@ -242,7 +245,7 @@ export const withPerformanceMonitoring = <P extends object>(
 ) => {
   const WrappedComponent = React.memo((props: P) => {
     const renderStartTime = useRef<number>();
-    const [metrics, setMetrics] = useState<PerformanceMetrics | null>(null);
+    const [, setMetrics] = useState<PerformanceMetrics | null>(null);
 
     useEffect(() => {
       renderStartTime.current = performance.now();
@@ -264,6 +267,7 @@ export const withPerformanceMonitoring = <P extends object>(
     return React.createElement(Component, props);
   });
 
+  WrappedComponent.displayName = `withPerformanceMonitoring(${componentName})`;
   return WrappedComponent;
 };
 

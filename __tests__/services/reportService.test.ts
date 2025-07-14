@@ -6,7 +6,7 @@ import { Transaction } from '../../src/types/index';
 vi.mock('jspdf', () => {
   const mockPDF = {
     internal: {
-      pageSize: { width: 210, height: 297 }
+      pageSize: { width: 210, height: 297 },
     },
     setFontSize: vi.fn(),
     setFont: vi.fn(),
@@ -19,11 +19,11 @@ vi.mock('jspdf', () => {
     setTextColor: vi.fn(),
     getTextWidth: vi.fn().mockReturnValue(50),
     splitTextToSize: vi.fn().mockReturnValue(['test line']),
-    output: vi.fn().mockReturnValue(new ArrayBuffer(8))
+    output: vi.fn().mockReturnValue(new ArrayBuffer(8)),
   };
 
   return {
-    default: vi.fn(() => mockPDF)
+    default: vi.fn(() => mockPDF),
   };
 });
 
@@ -31,15 +31,15 @@ vi.mock('html2canvas', () => ({
   default: vi.fn().mockResolvedValue({
     toDataURL: vi.fn().mockReturnValue('data:image/png;base64,test'),
     width: 100,
-    height: 100
-  })
+    height: 100,
+  }),
 }));
 
 vi.mock('date-fns', async () => {
   const actual = await vi.importActual('date-fns');
   return {
     ...actual,
-    format: vi.fn().mockReturnValue('2024-01-01')
+    format: vi.fn().mockReturnValue('2024-01-01'),
   };
 });
 
@@ -56,7 +56,7 @@ describe('ReportService', () => {
         category: 'Salary',
         description: 'Monthly salary',
         date: '2024-01-01',
-        type: 'income'
+        type: 'income',
       },
       {
         id: '2',
@@ -64,7 +64,7 @@ describe('ReportService', () => {
         category: 'Groceries',
         description: 'Weekly groceries',
         date: '2024-01-05',
-        type: 'expense'
+        type: 'expense',
       },
       {
         id: '3',
@@ -72,28 +72,24 @@ describe('ReportService', () => {
         category: 'Rent',
         description: 'Monthly rent',
         date: '2024-01-01',
-        type: 'expense'
-      }
+        type: 'expense',
+      },
     ];
 
     mockReportData = {
       transactions: mockTransactions,
       categorySpending: [
         { name: 'Groceries', value: 500 },
-        { name: 'Rent', value: 800 }
+        { name: 'Rent', value: 800 },
       ],
-      spendingTrend: [
-        { name: 'Jan', spending: 1300 }
-      ],
+      spendingTrend: [{ name: 'Jan', spending: 1300 }],
       monthlyTrends: {},
-      merchantSpending: [
-        { name: 'Grocery Store', value: 500, transactionCount: 1 }
-      ],
+      merchantSpending: [{ name: 'Grocery Store', value: 500, transactionCount: 1 }],
       potentialRecurringTransactions: [],
       totalIncome: 1000,
       totalExpenses: 1300,
       netSavings: -300,
-      periodLabel: 'January 2024'
+      periodLabel: 'January 2024',
     };
 
     mockOptions = {
@@ -105,14 +101,14 @@ describe('ReportService', () => {
       includeTaxReport: false,
       includeRecurringAnalysis: false,
       includeNetWorth: false,
-      reportType: 'monthly'
+      reportType: 'monthly',
     };
   });
 
   describe('generatePDFReport', () => {
     it('should generate a PDF report successfully', async () => {
       const result = await reportService.generatePDFReport(mockReportData, mockOptions);
-      
+
       expect(result).toBeInstanceOf(Blob);
       expect(result.type).toBe('application/pdf');
     });
@@ -120,14 +116,14 @@ describe('ReportService', () => {
     it('should include transaction details when requested', async () => {
       const optionsWithDetails = { ...mockOptions, includeTransactionDetails: true };
       const result = await reportService.generatePDFReport(mockReportData, optionsWithDetails);
-      
+
       expect(result).toBeInstanceOf(Blob);
     });
 
     it('should include category summary when requested', async () => {
       const optionsWithCategories = { ...mockOptions, includeCategorySummary: true };
       const result = await reportService.generatePDFReport(mockReportData, optionsWithCategories);
-      
+
       expect(result).toBeInstanceOf(Blob);
     });
 
@@ -136,9 +132,9 @@ describe('ReportService', () => {
         ...mockReportData,
         transactions: [],
         categorySpending: [],
-        merchantSpending: []
+        merchantSpending: [],
       };
-      
+
       const result = await reportService.generatePDFReport(emptyReportData, mockOptions);
       expect(result).toBeInstanceOf(Blob);
     });
@@ -146,7 +142,7 @@ describe('ReportService', () => {
     it('should include tax report when requested', async () => {
       const taxOptions = { ...mockOptions, includeTaxReport: true };
       const result = await reportService.generatePDFReport(mockReportData, taxOptions);
-      
+
       expect(result).toBeInstanceOf(Blob);
     });
   });
@@ -154,21 +150,21 @@ describe('ReportService', () => {
   describe('generateCSVReport', () => {
     it('should generate a CSV report successfully', () => {
       const result = reportService.generateCSVReport(mockReportData, mockOptions);
-      
+
       expect(result).toBeInstanceOf(Blob);
       expect(result.type).toBe('text/csv');
     });
 
     it('should include all transactions in CSV format', () => {
       const result = reportService.generateCSVReport(mockReportData, mockOptions);
-      
+
       expect(result.size).toBeGreaterThan(0);
     });
 
     it('should handle empty transactions', () => {
       const emptyReportData = { ...mockReportData, transactions: [] };
       const result = reportService.generateCSVReport(emptyReportData, mockOptions);
-      
+
       expect(result).toBeInstanceOf(Blob);
     });
 
@@ -180,13 +176,13 @@ describe('ReportService', () => {
           category: 'Test',
           description: 'Description with "quotes" and, commas',
           date: '2024-01-01',
-          type: 'expense' as const
-        }
+          type: 'expense' as const,
+        },
       ];
 
       const reportDataWithSpecialChars = {
         ...mockReportData,
-        transactions: transactionsWithSpecialChars
+        transactions: transactionsWithSpecialChars,
       };
 
       const result = reportService.generateCSVReport(reportDataWithSpecialChars, mockOptions);
@@ -202,18 +198,18 @@ describe('ReportService', () => {
         throw mockError;
       });
 
-      await expect(
-        reportService.generatePDFReport(mockReportData, mockOptions)
-      ).rejects.toThrow('Failed to generate PDF report');
+      await expect(reportService.generatePDFReport(mockReportData, mockOptions)).rejects.toThrow(
+        'Failed to generate PDF report',
+      );
     });
 
     it('should throw error when CSV generation fails', () => {
       // Mock a scenario where CSV generation would fail
       const invalidReportData = null as any;
 
-      expect(() => 
-        reportService.generateCSVReport(invalidReportData, mockOptions)
-      ).toThrow('Failed to generate CSV report');
+      expect(() => reportService.generateCSVReport(invalidReportData, mockOptions)).toThrow(
+        'Failed to generate CSV report',
+      );
     });
   });
 
@@ -221,7 +217,7 @@ describe('ReportService', () => {
     it('should use custom report title', async () => {
       const optionsWithTitle = {
         ...mockOptions,
-        reportTitle: 'Custom Financial Report'
+        reportTitle: 'Custom Financial Report',
       };
 
       const result = await reportService.generatePDFReport(mockReportData, optionsWithTitle);
@@ -231,14 +227,14 @@ describe('ReportService', () => {
     it('should handle different report types', async () => {
       const yearlyOptions = { ...mockOptions, reportType: 'yearly' as const };
       const result = await reportService.generatePDFReport(mockReportData, yearlyOptions);
-      
+
       expect(result).toBeInstanceOf(Blob);
     });
 
     it('should handle custom date ranges', async () => {
       const customOptions = { ...mockOptions, reportType: 'custom' as const };
       const result = await reportService.generatePDFReport(mockReportData, customOptions);
-      
+
       expect(result).toBeInstanceOf(Blob);
     });
   });

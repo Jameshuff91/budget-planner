@@ -1,0 +1,56 @@
+# Page snapshot
+
+```yaml
+- region "Notifications (F8)":
+  - list:
+    - status:
+      - text: Success Successfully processed 1 file(s)
+      - button:
+        - img
+- dialog "Export Transactions":
+  - heading "Export Transactions" [level=2]
+  - paragraph: Choose your export options and download your financial data as CSV.
+  - text: Date Range
+  - radiogroup:
+    - radio "All transactions" [checked]:
+      - img
+    - text: All transactions
+    - radio "Custom date range"
+    - text: Custom date range
+    - radio "Specific month"
+    - text: Specific month
+    - radio "Specific year"
+    - text: Specific year
+  - text: Categories (select all that apply)
+  - checkbox "Food"
+  - text: Food
+  - checkbox "Groceries"
+  - text: Groceries
+  - checkbox "Income"
+  - text: Income
+  - checkbox "Other Income"
+  - text: Other Income
+  - checkbox "Rent"
+  - text: Rent
+  - checkbox "Salary"
+  - text: Salary
+  - checkbox "Transportation"
+  - text: Transportation
+  - checkbox "Utilities"
+  - text: Utilities
+  - paragraph: All categories will be included
+  - text: Export Format
+  - radiogroup:
+    - radio "Detailed transactions (all individual transactions)" [checked]:
+      - img
+    - text: Detailed transactions (all individual transactions)
+    - radio "Category summary (totals by category)"
+    - text: Category summary (totals by category)
+  - button "Cancel"
+  - button "Export to CSV":
+    - img
+    - text: Export to CSV
+  - button "Close":
+    - img
+    - text: Close
+```

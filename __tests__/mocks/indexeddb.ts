@@ -19,15 +19,18 @@ export function clearAllDatabases(): void {
     try {
       // Most implementations don't have this method, so just ignore errors
       if (typeof global.indexedDB.databases === 'function') {
-        global.indexedDB.databases().then((databases: any[]) => {
-          databases.forEach(db => {
-            if (db.name && global.indexedDB && global.indexedDB.deleteDatabase) {
-              global.indexedDB.deleteDatabase(db.name);
-            }
+        global.indexedDB
+          .databases()
+          .then((databases: any[]) => {
+            databases.forEach((db) => {
+              if (db.name && global.indexedDB && global.indexedDB.deleteDatabase) {
+                global.indexedDB.deleteDatabase(db.name);
+              }
+            });
+          })
+          .catch(() => {
+            // Ignore errors - not all implementations support this
           });
-        }).catch(() => {
-          // Ignore errors - not all implementations support this
-        });
       }
     } catch (error) {
       // Ignore errors - not all implementations support this
@@ -54,11 +57,11 @@ export function setupIndexedDBMocks(): void {
 
   // Create new instances for isolation
   const fdbFactory = new FDBFactory();
-  
+
   // Mock global IndexedDB with fake-indexeddb
   global.indexedDB = fdbFactory;
   global.IDBKeyRange = FDBKeyRange;
-  
+
   // Also set on globalThis for broader compatibility
   if (typeof globalThis !== 'undefined') {
     (globalThis as any).indexedDB = fdbFactory;
@@ -72,7 +75,7 @@ export function setupIndexedDBMocks(): void {
     source: any = null;
     transaction: any = null;
     readyState: string = 'pending';
-    
+
     constructor() {
       super();
     }
@@ -204,20 +207,20 @@ export function setupIndexedDBMocks(): void {
 export function teardownIndexedDBMocks(): void {
   // Clear all databases
   clearAllDatabases();
-  
+
   // Restore original values
   if (originalIndexedDB !== undefined) {
     global.indexedDB = originalIndexedDB;
   } else {
     delete (global as any).indexedDB;
   }
-  
+
   if (originalIDBKeyRange !== undefined) {
     global.IDBKeyRange = originalIDBKeyRange;
   } else {
     delete (global as any).IDBKeyRange;
   }
-  
+
   // Clean up globalThis
   if (typeof globalThis !== 'undefined') {
     if (originalIndexedDB !== undefined) {
@@ -225,7 +228,7 @@ export function teardownIndexedDBMocks(): void {
     } else {
       delete (globalThis as any).indexedDB;
     }
-    
+
     if (originalIDBKeyRange !== undefined) {
       (globalThis as any).IDBKeyRange = originalIDBKeyRange;
     } else {

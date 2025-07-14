@@ -34,36 +34,31 @@ type SpendingTrendData = {
   incomeTrend?: number; // Changed from savingsTrend
 };
 
-// Memoized helper function to calculate linear regression
-const calculateTrendLine = useMemo(() => {
-  return (data: { x: number; y: number }[]): { slope: number; intercept: number } => {
-    const n = data.length;
-    if (n < 2) return { slope: 0, intercept: 0 };
+// Helper function to calculate linear regression
+const calculateTrendLine = (data: { x: number; y: number }[]): { slope: number; intercept: number } => {
+  const n = data.length;
+  if (n < 2) return { slope: 0, intercept: 0 };
 
-    let sumX = 0;
-    let sumY = 0;
-    let sumXY = 0;
-    let sumXX = 0;
+  let sumX = 0;
+  let sumY = 0;
+  let sumXY = 0;
+  let sumXX = 0;
 
-    for (let i = 0; i < n; i++) {
-      sumX += data[i].x;
-      sumY += data[i].y;
-      sumXY += data[i].x * data[i].y;
-      sumXX += data[i].x * data[i].x;
-    }
+  for (let i = 0; i < n; i++) {
+    sumX += data[i].x;
+    sumY += data[i].y;
+    sumXY += data[i].x * data[i].y;
+    sumXX += data[i].x * data[i].x;
+  }
 
-    const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
-    const intercept = (sumY - slope * sumX) / n;
+  const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+  const intercept = (sumY - slope * sumX) / n;
 
-    return { slope, intercept };
-  };
-}, []);
+  return { slope, intercept };
+};
 
-// Memoized month abbreviations
-const monthsAbbrev = useMemo(() => [
-  'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
-], []);
+// Month abbreviations
+const monthsAbbrev = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 interface SpendingTrendProps {
   selectedYear?: number;
@@ -71,16 +66,9 @@ interface SpendingTrendProps {
 
 const SpendingTrend = ({ selectedYear }: SpendingTrendProps) => {
   const [trendData, setTrendData] = useState<SpendingTrendData[]>([]);
-  
-  // Memoize analytics data to prevent unnecessary recalculations
-  const analyticsData = useMemo(() => {
-    const marker = createPerformanceMarker('trend-analytics-data');
-    const result = useAnalytics();
-    marker.end();
-    return result;
-  }, []);
 
-  const { spendingOverview } = analyticsData;
+  // Get analytics data
+  const { spendingOverview } = useAnalytics();
   const { loading } = useDBContext();
 
   // Memoize the trend data calculation for performance
@@ -149,7 +137,7 @@ const SpendingTrend = ({ selectedYear }: SpendingTrendProps) => {
 
     marker.end();
     return optimizeChartData(dataWithTrends, 100); // Limit data points for performance
-  }, [spendingOverview, selectedYear, calculateTrendLine, monthsAbbrev]);
+  }, [spendingOverview, selectedYear]);
 
   useEffect(() => {
     setTrendData(processedTrendData);
@@ -168,16 +156,19 @@ const SpendingTrend = ({ selectedYear }: SpendingTrendProps) => {
   }, []);
 
   const tickFormatter = useCallback((value: number) => `${formatCurrency(value)}`, []);
-  const xAxisTickFormatter = useCallback((value: string, index: number) => {
-    const item = trendData[index];
-    const prevItem = index > 0 ? trendData[index - 1] : null;
+  const xAxisTickFormatter = useCallback(
+    (value: string, index: number) => {
+      const item = trendData[index];
+      const prevItem = index > 0 ? trendData[index - 1] : null;
 
-    // Show year if it's the first item or if the year changed
-    if (index === 0 || (prevItem && prevItem.year !== item?.year)) {
-      return `${value} ${item?.year || ''}`;
-    }
-    return value;
-  }, [trendData]);
+      // Show year if it's the first item or if the year changed
+      if (index === 0 || (prevItem && prevItem.year !== item?.year)) {
+        return `${value} ${item?.year || ''}`;
+      }
+      return value;
+    },
+    [trendData],
+  );
 
   if (loading) {
     return <ChartSkeleton />;
@@ -213,10 +204,7 @@ const SpendingTrend = ({ selectedYear }: SpendingTrendProps) => {
                   tickFormatter={tickFormatter}
                   width={60}
                 />
-                <Tooltip
-                  formatter={tooltipFormatter}
-                  labelFormatter={labelFormatter}
-                />
+                <Tooltip formatter={tooltipFormatter} labelFormatter={labelFormatter} />
                 <Legend />
                 <Line
                   type='monotone'

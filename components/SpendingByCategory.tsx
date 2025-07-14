@@ -48,121 +48,127 @@ const MemoizedCategoryDetail = React.memo<{
   onBudgetSave: (categoryName: string) => void;
   onCategoryClick: (categoryName: string) => void;
   getDetailedSpending: (categoryName: string) => any[];
-}>(({
-  category,
-  totalSpending,
-  trend,
-  budgetInput,
-  selectedCategory,
-  onBudgetChange,
-  onBudgetSave,
-  onCategoryClick,
-  getDetailedSpending,
-}) => {
-  const handleClick = useCallback(() => {
-    onCategoryClick(category.name);
-  }, [category.name, onCategoryClick]);
+}>(
+  ({
+    category,
+    totalSpending,
+    trend,
+    budgetInput,
+    selectedCategory,
+    onBudgetChange,
+    onBudgetSave,
+    onCategoryClick,
+    getDetailedSpending,
+  }) => {
+    const handleClick = useCallback(() => {
+      onCategoryClick(category.name);
+    }, [category.name, onCategoryClick]);
 
-  const handleBudgetChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    onBudgetChange(category.name, e.target.value);
-  }, [category.name, onBudgetChange]);
+    const handleBudgetChange = useCallback(
+      (e: React.ChangeEvent<HTMLInputElement>) => {
+        onBudgetChange(category.name, e.target.value);
+      },
+      [category.name, onBudgetChange],
+    );
 
-  const handleBudgetBlur = useCallback(() => {
-    onBudgetSave(category.name);
-  }, [category.name, onBudgetSave]);
+    const handleBudgetBlur = useCallback(() => {
+      onBudgetSave(category.name);
+    }, [category.name, onBudgetSave]);
 
-  // Memoize budget calculation
-  const budgetInfo = useMemo(() => {
-    const spending = category.value;
-    const budget = category.target || 0;
-    let percentageConsumed = 0;
-    let percentageText = '0% of budget used';
-    let progressBarColor = 'bg-blue-600';
+    // Memoize budget calculation
+    const budgetInfo = useMemo(() => {
+      const spending = category.value;
+      const budget = category.target || 0;
+      let percentageConsumed = 0;
+      let percentageText = '0% of budget used';
+      let progressBarColor = 'bg-blue-600';
 
-    if (budget > 0) {
-      percentageConsumed = (spending / budget) * 100;
-      percentageText = `${Math.abs(percentageConsumed).toFixed(1)}% of budget used`;
-      if (percentageConsumed > 100) {
+      if (budget > 0) {
+        percentageConsumed = (spending / budget) * 100;
+        percentageText = `${Math.abs(percentageConsumed).toFixed(1)}% of budget used`;
+        if (percentageConsumed > 100) {
+          progressBarColor = 'bg-red-500';
+        } else if (percentageConsumed > 75) {
+          progressBarColor = 'bg-yellow-500';
+        }
+      } else if (spending > 0) {
+        percentageText = 'Over budget (no budget set)';
+        percentageConsumed = 101;
         progressBarColor = 'bg-red-500';
-      } else if (percentageConsumed > 75) {
-        progressBarColor = 'bg-yellow-500';
+      } else if (budget === 0 && spending === 0) {
+        percentageText = 'No spending, no budget';
+        percentageConsumed = 0;
       }
-    } else if (spending > 0) {
-      percentageText = 'Over budget (no budget set)';
-      percentageConsumed = 101;
-      progressBarColor = 'bg-red-500';
-    } else if (budget === 0 && spending === 0) {
-      percentageText = 'No spending, no budget';
-      percentageConsumed = 0;
-    }
 
-    return { percentageConsumed, percentageText, progressBarColor };
-  }, [category.value, category.target]);
+      return { percentageConsumed, percentageText, progressBarColor };
+    }, [category.value, category.target]);
 
-  return (
-    <div
-      className={`p-3 rounded border border-gray-100 mb-2 hover:bg-gray-50 transition-colors cursor-pointer ${
-        selectedCategory === category.name ? 'bg-gray-100' : 'bg-white'
-      }`}
-      onClick={handleClick}
-    >
-      <div className='flex items-center justify-between'>
-        <div>
-          <p className='font-semibold text-gray-900'>{category.name}</p>
-          <p className='text-sm font-medium text-muted-foreground'>
-            {formatCurrency(category.value)} (
-            {totalSpending > 0 ? ((category.value / totalSpending) * 100).toFixed(1) : '0.0'}
-            %)
-          </p>
-          {trend && <MemoizedTrendIndicator value={trend.percentageChange} />}
+    return (
+      <div
+        className={`p-3 rounded border border-gray-100 mb-2 hover:bg-gray-50 transition-colors cursor-pointer ${
+          selectedCategory === category.name ? 'bg-gray-100' : 'bg-white'
+        }`}
+        onClick={handleClick}
+      >
+        <div className='flex items-center justify-between'>
+          <div>
+            <p className='font-semibold text-gray-900'>{category.name}</p>
+            <p className='text-sm font-medium text-muted-foreground'>
+              {formatCurrency(category.value)} (
+              {totalSpending > 0 ? ((category.value / totalSpending) * 100).toFixed(1) : '0.0'}
+              %)
+            </p>
+            {trend && <MemoizedTrendIndicator value={trend.percentageChange} />}
+          </div>
+          <div className='space-y-1' onClick={(e) => e.stopPropagation()}>
+            <Label htmlFor={`budget-${category.name}`} className='font-medium'>
+              Budget
+            </Label>
+            <Input
+              id={`budget-${category.name}`}
+              type='number'
+              value={budgetInput}
+              onChange={handleBudgetChange}
+              onBlur={handleBudgetBlur}
+              className='w-[120px] font-medium'
+            />
+          </div>
         </div>
-        <div className='space-y-1' onClick={(e) => e.stopPropagation()}>
-          <Label htmlFor={`budget-${category.name}`} className='font-medium'>
-            Budget
-          </Label>
-          <Input
-            id={`budget-${category.name}`}
-            type='number'
-            value={budgetInput}
-            onChange={handleBudgetChange}
-            onBlur={handleBudgetBlur}
-            className='w-[120px] font-medium'
-          />
+        <div className='mt-2'>
+          <p className='text-xs text-gray-600 mb-1'>{budgetInfo.percentageText}</p>
+          <div className='w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700'>
+            <div
+              className={`${budgetInfo.progressBarColor} h-2.5 rounded-full`}
+              style={{ width: `${Math.min(Math.abs(budgetInfo.percentageConsumed), 100)}%` }}
+            />
+          </div>
         </div>
+        {selectedCategory === category.name && (
+          <div className='mt-3 pt-2 border-t border-gray-200 space-y-1'>
+            <h4 className='text-sm font-semibold'>Details:</h4>
+            {getDetailedSpending(category.name).map((item, index) => (
+              <div key={index} className='text-xs flex justify-between text-gray-700'>
+                <span>{item.name}</span>
+                <span>{formatCurrency(item.value)}</span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
-      <div className='mt-2'>
-        <p className='text-xs text-gray-600 mb-1'>{budgetInfo.percentageText}</p>
-        <div className='w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700'>
-          <div
-            className={`${budgetInfo.progressBarColor} h-2.5 rounded-full`}
-            style={{ width: `${Math.min(Math.abs(budgetInfo.percentageConsumed), 100)}%` }}
-          />
-        </div>
-      </div>
-      {selectedCategory === category.name && (
-        <div className='mt-3 pt-2 border-t border-gray-200 space-y-1'>
-          <h4 className='text-sm font-semibold'>Details:</h4>
-          {getDetailedSpending(category.name).map((item, index) => (
-            <div key={index} className='text-xs flex justify-between text-gray-700'>
-              <span>{item.name}</span>
-              <span>{formatCurrency(item.value)}</span>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}, (prevProps, nextProps) => {
-  return (
-    prevProps.category.name === nextProps.category.name &&
-    prevProps.category.value === nextProps.category.value &&
-    prevProps.category.target === nextProps.category.target &&
-    prevProps.totalSpending === nextProps.totalSpending &&
-    prevProps.budgetInput === nextProps.budgetInput &&
-    prevProps.selectedCategory === nextProps.selectedCategory &&
-    JSON.stringify(prevProps.trend) === JSON.stringify(nextProps.trend)
-  );
-});
+    );
+  },
+  (prevProps, nextProps) => {
+    return (
+      prevProps.category.name === nextProps.category.name &&
+      prevProps.category.value === nextProps.category.value &&
+      prevProps.category.target === nextProps.category.target &&
+      prevProps.totalSpending === nextProps.totalSpending &&
+      prevProps.budgetInput === nextProps.budgetInput &&
+      prevProps.selectedCategory === nextProps.selectedCategory &&
+      JSON.stringify(prevProps.trend) === JSON.stringify(nextProps.trend)
+    );
+  },
+);
 
 const SpendingByCategory = ({ selectedYear }: SpendingByCategoryProps) => {
   const [currentTimeRange, setCurrentTimeRange] = useState<{ startDate: Date; endDate: Date }>(
@@ -279,22 +285,38 @@ const SpendingByCategory = ({ selectedYear }: SpendingByCategoryProps) => {
     }));
   }, []);
 
-  const handleSaveBudget = useCallback(async (categoryName: string) => {
-    const budgetValueStr = budgetInputs[categoryName];
-    if (budgetValueStr === undefined) return; // Should not happen if input is used
+  const handleSaveBudget = useCallback(
+    async (categoryName: string) => {
+      const budgetValueStr = budgetInputs[categoryName];
+      if (budgetValueStr === undefined) return; // Should not happen if input is used
 
-    let numValue: number;
-    if (budgetValueStr.trim() === '') {
-      numValue = 0; // Treat empty string as 0 budget
-    } else {
-      numValue = parseFloat(budgetValueStr);
-      if (isNaN(numValue)) {
+      let numValue: number;
+      if (budgetValueStr.trim() === '') {
+        numValue = 0; // Treat empty string as 0 budget
+      } else {
+        numValue = parseFloat(budgetValueStr);
+        if (isNaN(numValue)) {
+          toast({
+            title: 'Invalid Input',
+            description: 'Budget value must be a number.',
+            variant: 'destructive',
+          });
+          // Optionally revert input to original value
+          const originalCategory = categorySpending.find((cat) => cat.name === categoryName);
+          setBudgetInputs((prev) => ({
+            ...prev,
+            [categoryName]: (originalCategory?.target || '').toString(),
+          }));
+          return;
+        }
+      }
+
+      if (numValue < 0) {
         toast({
           title: 'Invalid Input',
-          description: 'Budget value must be a number.',
+          description: 'Budget value cannot be negative.',
           variant: 'destructive',
         });
-        // Optionally revert input to original value
         const originalCategory = categorySpending.find((cat) => cat.name === categoryName);
         setBudgetInputs((prev) => ({
           ...prev,
@@ -302,82 +324,89 @@ const SpendingByCategory = ({ selectedYear }: SpendingByCategoryProps) => {
         }));
         return;
       }
-    }
 
-    if (numValue < 0) {
-      toast({
-        title: 'Invalid Input',
-        description: 'Budget value cannot be negative.',
-        variant: 'destructive',
-      });
-      const originalCategory = categorySpending.find((cat) => cat.name === categoryName);
-      setBudgetInputs((prev) => ({
-        ...prev,
-        [categoryName]: (originalCategory?.target || '').toString(),
-      }));
-      return;
-    }
+      const categoryToUpdate = allCategories.find((cat) => cat.name === categoryName);
+      if (!categoryToUpdate) {
+        toast({
+          title: 'Error',
+          description: `Category ${categoryName} not found.`,
+          variant: 'destructive',
+        });
+        return;
+      }
+      const categoryId = categoryToUpdate.id;
 
-    const categoryToUpdate = allCategories.find((cat) => cat.name === categoryName);
-    if (!categoryToUpdate) {
-      toast({
-        title: 'Error',
-        description: `Category ${categoryName} not found.`,
-        variant: 'destructive',
-      });
-      return;
-    }
-    const categoryId = categoryToUpdate.id;
+      try {
+        await updateCategoryBudget(categoryId, numValue);
+        toast({
+          title: 'Budget Updated',
+          description: `Budget for ${categoryName} set to ${formatCurrency(numValue)}.`,
+        });
+        // Data will refresh via context, which updates categorySpending, then useEffect updates budgetInputs.
+      } catch (error: any) {
+        toast({
+          title: 'Error Updating Budget',
+          description: error.message || 'Could not update budget.',
+          variant: 'destructive',
+        });
+      }
+    },
+    [budgetInputs, allCategories, updateCategoryBudget, toast, categorySpending],
+  );
 
-    try {
-      await updateCategoryBudget(categoryId, numValue);
-      toast({
-        title: 'Budget Updated',
-        description: `Budget for ${categoryName} set to ${formatCurrency(numValue)}.`,
-      });
-      // Data will refresh via context, which updates categorySpending, then useEffect updates budgetInputs.
-    } catch (error: any) {
-      toast({
-        title: 'Error Updating Budget',
-        description: error.message || 'Could not update budget.',
-        variant: 'destructive',
-      });
-    }
-  }, [budgetInputs, allCategories, updateCategoryBudget, toast, categorySpending]);
-
-  const getDetailedSpending = useCallback((category: string) => {
-    return detailedCategorySpending[category] || [];
-  }, [detailedCategorySpending]);
+  const getDetailedSpending = useCallback(
+    (category: string) => {
+      return detailedCategorySpending[category] || [];
+    },
+    [detailedCategorySpending],
+  );
 
   const handleCategoryClick = useCallback((categoryName: string) => {
-    setSelectedCategory(prev => prev === categoryName ? null : categoryName);
+    setSelectedCategory((prev) => (prev === categoryName ? null : categoryName));
   }, []);
 
-  const handlePieClick = useCallback((data: any) => {
-    handleCategoryClick(data.name);
-  }, [handleCategoryClick]);
+  const handlePieClick = useCallback(
+    (data: any) => {
+      handleCategoryClick(data.name);
+    },
+    [handleCategoryClick],
+  );
 
   // Memoized tooltip and chart props
-  const tooltipProps = useMemo(() => memoizeChartProps({
-    formatter: (value: number) => formatCurrency(value),
-    labelStyle: { color: '#000' },
-    contentStyle: {
-      backgroundColor: '#fff',
-      border: '1px solid #ccc',
-      borderRadius: '4px',
-    },
-  }, []), []);
+  const tooltipProps = useMemo(
+    () =>
+      memoizeChartProps(
+        {
+          formatter: (value: number) => formatCurrency(value),
+          labelStyle: { color: '#000' },
+          contentStyle: {
+            backgroundColor: '#fff',
+            border: '1px solid #ccc',
+            borderRadius: '4px',
+          },
+        },
+        [],
+      ),
+    [],
+  );
 
-  const pieChartProps = useMemo(() => memoizeChartProps({
-    cx: '50%',
-    cy: '50%',
-    innerRadius: 60,
-    outerRadius: 80,
-    paddingAngle: 5,
-    dataKey: 'value',
-    onClick: handlePieClick,
-    ...animationProps,
-  }, [handlePieClick, animationProps]), [handlePieClick, animationProps]);
+  const pieChartProps = useMemo(
+    () =>
+      memoizeChartProps(
+        {
+          cx: '50%',
+          cy: '50%',
+          innerRadius: 60,
+          outerRadius: 80,
+          paddingAngle: 5,
+          dataKey: 'value',
+          onClick: handlePieClick,
+          ...animationProps,
+        },
+        [handlePieClick, animationProps],
+      ),
+    [handlePieClick, animationProps],
+  );
 
   if (loading) {
     return <ChartSkeleton />;
@@ -407,14 +436,11 @@ const SpendingByCategory = ({ selectedYear }: SpendingByCategoryProps) => {
             {chartData.length > 0 ? (
               <ResponsiveContainer width='100%' height='100%'>
                 <PieChart>
-                  <Pie
-                    data={chartData}
-                    {...pieChartProps}
-                  >
+                  <Pie data={chartData} {...pieChartProps}>
                     {chartData.map((entry, index) => (
-                      <Cell 
-                        key={`cell-${entry.name}-${index}`} 
-                        fill={getOptimizedColor(entry.name, COLORS)} 
+                      <Cell
+                        key={`cell-${entry.name}-${index}`}
+                        fill={getOptimizedColor(entry.name, COLORS)}
                       />
                     ))}
                   </Pie>
@@ -437,10 +463,11 @@ const SpendingByCategory = ({ selectedYear }: SpendingByCategoryProps) => {
               <ScrollArea className='h-[250px] pr-4'>
                 {categorySpending.map((category) => {
                   const trend = monthlyTrends.categorySpending[category.name];
-                  const budgetInput = budgetInputs[category.name] !== undefined
-                    ? budgetInputs[category.name]
-                    : (category.target || '').toString();
-                  
+                  const budgetInput =
+                    budgetInputs[category.name] !== undefined
+                      ? budgetInputs[category.name]
+                      : (category.target || '').toString();
+
                   return (
                     <MemoizedCategoryDetail
                       key={category.name}

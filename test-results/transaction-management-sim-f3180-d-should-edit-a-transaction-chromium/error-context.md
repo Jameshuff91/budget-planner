@@ -1,28 +1,182 @@
 # Page snapshot
 
 ```yaml
+- main:
+  - paragraph: Budget Planner Dashboard
+  - button "Reset Dashboard"
+  - heading "Upload Financial Information" [level=2]
+  - img
+  - heading "Upload PDF or CSV Files" [level=3]
+  - paragraph: Drag and drop your PDF or CSV files here or click to browse
+  - text: Choose Files
+  - button "Show Financial Statements (0)":
+    - text: Show Financial Statements (0)
+    - img
+  - button "Jul 2025"
+  - button "Jun 2025"
+  - button "May 2025"
+  - button "Apr 2025"
+  - button "Mar 2025"
+  - button "Feb 2025"
+  - button "Jan 2025"
+  - button "Dec 2024"
+  - button "Nov 2024"
+  - button "Oct 2024"
+  - button "Sep 2024"
+  - button "Aug 2024"
+  - button "Jul 2024"
+  - button "Jun 2024"
+  - button "May 2024"
+  - button "Apr 2024"
+  - button "Mar 2024"
+  - button "Feb 2024"
+  - button "Jan 2024"
+  - button "Individual Transactions":
+    - heading "Individual Transactions" [level=3]
+    - img
+  - text: Financial Dashboard
+  - heading "Financial Dashboard" [level=2]
+  - button "Export Data":
+    - img
+    - text: Export Data
+  - text: "Year:"
+  - combobox "Year:":
+    - option "2025" [selected]
+  - text: Total Annual Income
+  - img
+  - text: $17,900
+  - paragraph: Combined disposable income
+  - text: Annual Spending
+  - img
+  - text: $1,850
+  - paragraph: 10.34% of income
+  - text: Annual Savings
+  - img
+  - text: $16,050
+  - paragraph: 89.66% of income
+  - text: "Monthly Overview Current Month: July"
+  - img
+  - alert:
+    - img
+    - paragraph: Unable to render Monthly Overview
+    - paragraph: This might be due to invalid data or a rendering issue. Try refreshing the page.
+  - tablist:
+    - tab "Overview"
+    - tab "Categories"
+    - tab "Trends"
+    - tab "Analytics"
+    - tab "Transactions" [selected]
+    - tab "Settings"
+    - tab "Diagnostics"
+  - tabpanel "Transactions":
+    - text: Transaction History
+    - button "Export Transactions":
+      - img
+      - text: Export Transactions
+    - button "Export Summary":
+      - img
+      - text: Export Summary
+    - img
+    - textbox "Search transactions..."
+    - combobox:
+      - option "All Categories" [selected]
+      - option "Food"
+      - option "Groceries"
+      - option "Other Income"
+      - option "Rent"
+      - option "Salary"
+      - option "Transportation"
+      - option "Utilities"
+    - table:
+      - rowgroup:
+        - row "Date Description Category Amount Actions":
+          - cell "Date"
+          - cell "Description"
+          - cell "Category"
+          - cell "Amount"
+          - cell "Actions"
+      - rowgroup:
+        - row "Jan 14, 2024 Updated Transaction Food $50.00":
+          - cell "Jan 14, 2024"
+          - cell "Updated Transaction"
+          - cell "Food"
+          - cell "$50.00"
+          - cell:
+            - button:
+              - img
+            - button:
+              - img
+        - row "Jul 14, 2025 Monthly Rent Rent $1,200.00":
+          - cell "Jul 14, 2025"
+          - cell "Monthly Rent"
+          - cell "Rent"
+          - cell "$1,200.00"
+          - cell:
+            - button:
+              - img
+            - button:
+              - img
+        - row "Jul 14, 2025 Weekly Groceries Groceries $300.00":
+          - cell "Jul 14, 2025"
+          - cell "Weekly Groceries"
+          - cell "Groceries"
+          - cell "$300.00"
+          - cell:
+            - button:
+              - img
+            - button:
+              - img
+        - row "Jul 14, 2025 Electricity Bill Utilities $150.00":
+          - cell "Jul 14, 2025"
+          - cell "Electricity Bill"
+          - cell "Utilities"
+          - cell "$150.00"
+          - cell:
+            - button:
+              - img
+            - button:
+              - img
+        - row "Jul 14, 2025 Monthly Transport Transportation $200.00":
+          - cell "Jul 14, 2025"
+          - cell "Monthly Transport"
+          - cell "Transportation"
+          - cell "$200.00"
+          - cell:
+            - button:
+              - img
+            - button:
+              - img
+        - row "Jul 14, 2025 Freelance Work Other Income +$100.00":
+          - cell "Jul 14, 2025"
+          - cell "Freelance Work"
+          - cell "Other Income"
+          - cell "+$100.00"
+          - cell:
+            - button:
+              - img
+            - button:
+              - img
+        - row "Jul 14, 2025 Monthly Income Salary +$17,800.00":
+          - cell "Jul 14, 2025"
+          - cell "Monthly Income"
+          - cell "Salary"
+          - cell "+$17,800.00"
+          - cell:
+            - button:
+              - img
+            - button:
+              - img
+    - text: "Total Transactions: 7 Total: $19,700.00"
+- region "Notifications (F8)":
+  - list:
+    - status:
+      - text: Success Transaction updated successfully
+      - button:
+        - img
 - alert
-- dialog "Server Error":
-  - navigation:
-    - button "previous" [disabled]:
-      - img "previous"
-    - button "next" [disabled]:
-      - img "next"
-    - text: 1 of 1 error Next.js (14.2.16) is outdated
-    - link "(learn more)":
-      - /url: https://nextjs.org/docs/messages/version-staleness
-  - heading "Server Error" [level=1]
-  - paragraph: "Error: Cannot find module '/Users/jimhuff/Documents/Github/budget-planner/.next/server/app/page.js' Require stack: - /Users/jimhuff/Documents/Github/budget-planner/node_modules/next/dist/server/require.js - /Users/jimhuff/Documents/Github/budget-planner/node_modules/next/dist/server/load-components.js - /Users/jimhuff/Documents/Github/budget-planner/node_modules/next/dist/build/utils.js - /Users/jimhuff/Documents/Github/budget-planner/node_modules/next/dist/server/dev/hot-middleware.js - /Users/jimhuff/Documents/Github/budget-planner/node_modules/next/dist/server/dev/hot-reloader-webpack.js - /Users/jimhuff/Documents/Github/budget-planner/node_modules/next/dist/server/lib/router-utils/setup-dev-bundler.js - /Users/jimhuff/Documents/Github/budget-planner/node_modules/next/dist/server/lib/router-server.js - /Users/jimhuff/Documents/Github/budget-planner/node_modules/next/dist/server/lib/start-server.js"
-  - text: This error happened while generating the page. Any console logs will be displayed in the terminal window.
-  - heading "Call Stack" [level=2]
-  - group:
-    - img
-    - img
-    - text: Next.js
-  - heading "TracingChannel.traceSync" [level=3]
-  - text: node:diagnostics_channel (322:14)
-  - group:
-    - img
-    - img
-    - text: Next.js
+- img
+- text: 2 errors
+- button "Hide Errors":
+  - img
+- status: Notification SuccessTransaction updated successfully
 ```

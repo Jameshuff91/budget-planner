@@ -2,7 +2,9 @@ import { describe, test, expect, beforeEach, vi } from 'vitest';
 import { Asset, Liability } from '@services/db';
 
 // Mock generateUUID to return predictable values for testing
-const mockGenerateUUID = vi.fn(() => `test-id-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
+const mockGenerateUUID = vi.fn(
+  () => `test-id-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+);
 vi.mock('@utils/helpers', () => ({
   generateUUID: mockGenerateUUID,
 }));
@@ -50,7 +52,7 @@ describe('DatabaseService', () => {
   describe('Initialization', () => {
     test('should initialize database successfully', async () => {
       await mockDbService.initialize();
-      
+
       expect(mockDbService.initialize).toHaveBeenCalledTimes(1);
     });
 
@@ -334,7 +336,9 @@ describe('DatabaseService', () => {
       const error = new Error('Update failed');
       mockDbService.updateCategoryBudget.mockRejectedValueOnce(error);
 
-      await expect(mockDbService.updateCategoryBudget('cat-1', 500)).rejects.toThrow('Update failed');
+      await expect(mockDbService.updateCategoryBudget('cat-1', 500)).rejects.toThrow(
+        'Update failed',
+      );
     });
 
     test('should handle asset operation errors', async () => {
@@ -362,7 +366,9 @@ describe('DatabaseService', () => {
         lastUpdated: '2024-01-01T00:00:00.000Z',
       };
 
-      await expect(mockDbService.addLiability(liabilityData)).rejects.toThrow('Liability add failed');
+      await expect(mockDbService.addLiability(liabilityData)).rejects.toThrow(
+        'Liability add failed',
+      );
     });
   });
 
@@ -370,7 +376,7 @@ describe('DatabaseService', () => {
     test('should handle multiple operations in sequence', async () => {
       // Test a realistic workflow
       await mockDbService.initialize();
-      
+
       const transaction = {
         id: 'workflow-tx',
         amount: 100,
@@ -437,9 +443,15 @@ describe('DatabaseService', () => {
       // Test with various parameter types to ensure robustness
       await mockDbService.setRecurringPreference('test-candidate', 'confirmed');
       await mockDbService.setRecurringPreference('test-candidate-2', 'dismissed');
-      
-      expect(mockDbService.setRecurringPreference).toHaveBeenCalledWith('test-candidate', 'confirmed');
-      expect(mockDbService.setRecurringPreference).toHaveBeenCalledWith('test-candidate-2', 'dismissed');
+
+      expect(mockDbService.setRecurringPreference).toHaveBeenCalledWith(
+        'test-candidate',
+        'confirmed',
+      );
+      expect(mockDbService.setRecurringPreference).toHaveBeenCalledWith(
+        'test-candidate-2',
+        'dismissed',
+      );
     });
   });
 
@@ -483,7 +495,7 @@ describe('DatabaseService', () => {
         category: `Category ${i % 10}`,
         description: `Large transaction ${i}`,
         date: new Date(2024, 0, 1 + (i % 365)),
-        type: i % 2 === 0 ? 'expense' as const : 'income' as const,
+        type: i % 2 === 0 ? ('expense' as const) : ('income' as const),
       }));
 
       mockDbService.getTransactions.mockResolvedValue(largeTransactionSet);

@@ -1,13 +1,13 @@
 import { dbService } from './db';
 import { logger } from './logger';
 import { DataEncryption, EncryptionResult } from '../utils/dataEncryption';
-import { 
-  DataMigration, 
-  BackupData, 
-  validateBackupData, 
-  migrateToCurrentVersion, 
+import {
+  DataMigration,
+  BackupData,
+  validateBackupData,
+  migrateToCurrentVersion,
   sanitizeBackupData,
-  createBackupSummary 
+  createBackupSummary,
 } from '../utils/dataMigration';
 import { generateUUID } from '../utils/helpers';
 
@@ -66,7 +66,7 @@ export class BackupService {
    */
   static async createBackup(
     options: BackupOptions,
-    onProgress?: (progress: BackupProgress) => void
+    onProgress?: (progress: BackupProgress) => void,
   ): Promise<string> {
     try {
       // Stage 1: Preparing
@@ -108,7 +108,7 @@ export class BackupService {
       // Export transactions
       if (options.includeTransactions) {
         const dbTransactions = await dbService.getTransactions();
-        backupData.data.transactions = dbTransactions.map(t => ({
+        backupData.data.transactions = dbTransactions.map((t) => ({
           ...t,
           date: t.date instanceof Date ? t.date.toISOString() : t.date,
         }));
@@ -136,7 +136,9 @@ export class BackupService {
       // Export recurring preferences
       if (options.includeRecurringPreferences) {
         backupData.data.recurringPreferences = await dbService.getAllRecurringPreferences();
-        backupData.metadata.totalRecurringPreferences = Object.keys(backupData.data.recurringPreferences).length;
+        backupData.metadata.totalRecurringPreferences = Object.keys(
+          backupData.data.recurringPreferences,
+        ).length;
       }
 
       // Create data hash for integrity verification
@@ -191,7 +193,6 @@ export class BackupService {
 
       logger.info('Backup created successfully:', { filename, encrypted: options.encrypt });
       return filename;
-
     } catch (error) {
       logger.error('Error creating backup:', error);
       onProgress?.({
@@ -200,7 +201,9 @@ export class BackupService {
         message: 'Backup failed',
         error: error instanceof Error ? error.message : 'Unknown error',
       });
-      throw new Error(`Failed to create backup: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to create backup: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -209,7 +212,7 @@ export class BackupService {
    */
   static async restoreBackup(
     options: RestoreOptions,
-    onProgress?: (progress: RestoreProgress) => void
+    onProgress?: (progress: RestoreProgress) => void,
   ): Promise<{ success: boolean; summary: any; warnings: string[] }> {
     try {
       // Stage 1: Reading backup file
@@ -236,7 +239,7 @@ export class BackupService {
       let parsedData: any;
       try {
         parsedData = JSON.parse(backupContent);
-        
+
         // Check if data is encrypted
         if (DataEncryption.validateEncryptedData(parsedData)) {
           if (!options.password) {
@@ -325,7 +328,6 @@ export class BackupService {
 
       logger.info('Backup restored successfully:', { summary, warnings });
       return { success: true, summary, warnings };
-
     } catch (error) {
       logger.error('Error restoring backup:', error);
       onProgress?.({
@@ -349,7 +351,7 @@ export class BackupService {
       if (!mergeData) {
         // Clear existing data if not merging
         await dbService.clearTransactions();
-        
+
         // Clear other stores
         const stores = ['categories', 'assets', 'liabilities', 'recurringPreferences'];
         for (const storeName of stores) {
@@ -386,7 +388,7 @@ export class BackupService {
             ...transaction,
             date: new Date(transaction.date),
           };
-          
+
           if (mergeData) {
             // Check if transaction exists
             const existing = await db.get('transactions', transaction.id);
@@ -449,10 +451,11 @@ export class BackupService {
           logger.warn('Failed to import recurring preference:', candidateId, error);
         }
       }
-
     } catch (error) {
       logger.error('Error importing backup data:', error);
-      throw new Error(`Failed to import backup data: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to import backup data: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -462,13 +465,13 @@ export class BackupService {
   static async setBackupSchedule(schedule: BackupSchedule): Promise<void> {
     try {
       localStorage.setItem(this.SCHEDULE_KEY, JSON.stringify(schedule));
-      
+
       if (schedule.enabled) {
         await this.scheduleNextBackup(schedule);
       } else {
         this.cancelScheduledBackup();
       }
-      
+
       logger.info('Backup schedule updated:', schedule);
     } catch (error) {
       logger.error('Error setting backup schedule:', error);
@@ -497,9 +500,9 @@ export class BackupService {
     const now = new Date();
     const nextBackup = new Date();
     const [hours, minutes] = schedule.time.split(':').map(Number);
-    
+
     nextBackup.setHours(hours, minutes, 0, 0);
-    
+
     // If time has passed today, schedule for tomorrow/next period
     if (nextBackup <= now) {
       switch (schedule.frequency) {
@@ -549,7 +552,7 @@ export class BackupService {
 
       // Update schedule with last backup time
       schedule.lastBackup = new Date().toISOString();
-      
+
       // Clean up old backups if enabled
       if (schedule.autoCleanup) {
         await this.cleanupOldBackups(schedule.keepCount);
@@ -557,7 +560,6 @@ export class BackupService {
 
       // Schedule next backup
       await this.scheduleNextBackup(schedule);
-
     } catch (error) {
       logger.error('Error performing scheduled backup:', error);
     }
@@ -583,7 +585,7 @@ export class BackupService {
       // Sort by timestamp and keep only the most recent
       history.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
       const toKeep = history.slice(0, keepCount);
-      
+
       localStorage.setItem(this.BACKUP_HISTORY_KEY, JSON.stringify(toKeep));
       logger.info(`Cleaned up old backups, kept ${keepCount} most recent`);
     } catch (error) {
@@ -598,14 +600,14 @@ export class BackupService {
     try {
       const blob = new Blob([content], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
-      
+
       const link = document.createElement('a');
       link.href = url;
       link.download = filename;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      
+
       URL.revokeObjectURL(url);
     } catch (error) {
       logger.error('Error downloading backup file:', error);
@@ -656,7 +658,7 @@ export class BackupService {
    */
   static async validateBackupFile(
     file: File | string,
-    password?: string
+    password?: string,
   ): Promise<{ valid: boolean; summary?: any; errors: string[]; warnings: string[] }> {
     try {
       const result = await this.restoreBackup({
