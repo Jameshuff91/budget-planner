@@ -289,6 +289,10 @@ This document provides a comprehensive summary of all features implemented in th
 
 - `/e2e/csv-export.spec.ts` - Comprehensive tests for CSV export functionality
 - `/e2e/spending-alerts.spec.ts` - Comprehensive tests for spending alerts configuration
+- `/e2e/transaction-management.spec.ts` - Transaction CRUD operations and filtering
+- `/e2e/category-rules.spec.ts` - Category rule creation, editing, and pattern matching
+- `/e2e/smart-categorization.spec.ts` - AI categorization settings and integration
+- `/e2e/plaid-connection.spec.ts` - Bank connection flow and account management
 
 ## Dependencies Added
 
@@ -456,15 +460,18 @@ PLAID_REDIRECT_URI=optional_redirect_uri
 
 ### 1. Enhanced Test Coverage
 
-- Additional E2E tests completed:
-  - ✅ Spending alerts configuration (accessing settings, creating rules, managing thresholds)
-  - ✅ Alert notifications and permissions handling
-  - ✅ Alert persistence and dismissal functionality
-- Additional E2E tests planned:
-  - Transaction editing flows
-  - Category rule management
-  - Bank connection flows
-  - Analytics features
+- E2E tests completed (July 2024):
+  - ✅ Transaction management (viewing, editing, deleting, searching, filtering)
+  - ✅ Category rules configuration (CRUD operations, pattern matching, priorities)
+  - ✅ Smart categorization settings (API configuration, model selection, testing)
+  - ✅ Spending alerts configuration (rule creation, thresholds, notifications)
+  - ✅ Plaid bank connections (connection flow, account management, sync)
+  - ✅ CSV export functionality (filters, date ranges, category summaries)
+- Next phase testing:
+  - Unit tests for analytics components
+  - Categorization pipeline integration tests
+  - Visual regression tests
+  - CI/CD pipeline integration
 
 ### 2. Performance Optimizations
 

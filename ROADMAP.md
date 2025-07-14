@@ -21,8 +21,13 @@ The Budget Planner has evolved from a basic PDF parsing tool to a comprehensive 
 
 ### 1. Complete Test Coverage 🎯
 
-- [ ] Expand E2E tests for all major user flows
-- [x] E2E tests for spending alerts configuration ✅
+- [x] Expand E2E tests for all major user flows ✅
+  - [x] Transaction management (create, edit, delete, search, filter)
+  - [x] Category rules configuration and testing
+  - [x] Smart categorization settings and API integration
+  - [x] Spending alerts configuration and notifications
+  - [x] Plaid bank connections and account management
+  - [x] CSV export functionality with filters
 - [ ] Add unit tests for analytics components
 - [ ] Test categorization pipeline end-to-end
 - [ ] Add visual regression tests
