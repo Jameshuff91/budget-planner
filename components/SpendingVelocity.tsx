@@ -16,13 +16,15 @@ import {
 } from 'recharts';
 
 import { formatCurrency } from '@utils/helpers';
+import { ChartSkeleton } from './skeletons/ChartSkeleton';
+import { StatCardGridSkeleton } from './skeletons/StatCardSkeleton';
 
 interface SpendingVelocityProps {
   selectedYear: number;
 }
 
 export default function SpendingVelocity({ selectedYear }: SpendingVelocityProps) {
-  const { transactions } = useDBContext();
+  const { transactions, loading } = useDBContext();
 
   const velocityData = useMemo(() => {
     const currentDate = new Date();
@@ -168,6 +170,16 @@ export default function SpendingVelocity({ selectedYear }: SpendingVelocityProps
         return <Activity className='h-5 w-5 text-blue-500' />;
     }
   };
+
+  if (loading) {
+    return (
+      <div className='space-y-4'>
+        <StatCardGridSkeleton count={3} />
+        <ChartSkeleton />
+        <ChartSkeleton />
+      </div>
+    );
+  }
 
   return (
     <div className='space-y-4'>

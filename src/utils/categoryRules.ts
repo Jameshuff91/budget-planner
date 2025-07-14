@@ -1,6 +1,6 @@
 import { logger } from '@services/logger';
 
-import { CategoryRule } from '@/components/CategoryRules';
+import { CategoryRule } from '../../components/CategoryRules';
 
 export function applyCategoryRules(description: string, rules: CategoryRule[]): string | null {
   // Sort rules by priority (highest first) and filter enabled ones

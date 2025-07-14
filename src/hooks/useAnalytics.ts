@@ -2,6 +2,7 @@ import { useMemo, useState, useEffect } from 'react';
 
 import { useDBContext } from '../context/DatabaseContext';
 import { logger } from '../services/logger';
+import { Transaction } from '../types';
 
 interface SpendingTrendData {
   name: string;
@@ -40,17 +41,7 @@ interface MerchantSpendingData {
   transactionCount: number; // Number of transactions for this merchant
 }
 
-interface Transaction {
-  // Ensuring Transaction type is available for RecurringTransactionCandidate
-  id: string;
-  amount: number;
-  category: string;
-  description: string;
-  date: Date;
-  type: 'income' | 'expense';
-  isMonthSummary?: boolean;
-  accountNumber?: string;
-}
+// Transaction type is imported from ../types
 
 interface RecurringTransactionCandidate {
   id: string;
@@ -604,7 +595,7 @@ export const useAnalytics = (timeRange?: { startDate?: Date; endDate?: Date }) =
       const normalizedName = normalizeMerchantNameForRecurring(t.description);
       // logger.debug(`Original: "${t.description}", Normalized for recurring: "${normalizedName}"`);
       const group = groupedByMerchant.get(normalizedName) || [];
-      group.push(t as Transaction); // Cast to ensure type compatibility
+      group.push(t);
       groupedByMerchant.set(normalizedName, group);
     });
 

@@ -1,6 +1,6 @@
-import { defineConfig } from 'vitest/config'
-import react from '@vitejs/plugin-react'
-import { resolve } from 'path'
+import { defineConfig } from 'vitest/config';
+import react from '@vitejs/plugin-react';
+import { resolve } from 'path';
 
 export default defineConfig({
   plugins: [react()],
@@ -12,11 +12,11 @@ export default defineConfig({
     pool: 'forks',
     poolOptions: {
       forks: {
-        singleFork: true
-      }
+        singleFork: true,
+      },
     },
     testTimeout: 10000,
-    hookTimeout: 10000
+    hookTimeout: 10000,
   },
   resolve: {
     alias: {
@@ -26,7 +26,7 @@ export default defineConfig({
       '@context': resolve(__dirname, './src/context'),
       '@lib': resolve(__dirname, './lib'),
       '@utils': resolve(__dirname, './src/utils'),
-      '@ui': resolve(__dirname, './components/ui')
-    }
-  }
-})
+      '@ui': resolve(__dirname, './components/ui'),
+    },
+  },
+});

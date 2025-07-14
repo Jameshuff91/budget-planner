@@ -1,4 +1,4 @@
-import { Transaction } from '@/src/types';
+import { Transaction } from '../types';
 
 /**
  * Convert transactions to CSV format

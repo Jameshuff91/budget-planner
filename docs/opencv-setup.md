@@ -5,6 +5,7 @@ The Budget Planner includes optional OpenCV.js support for enhanced PDF processi
 ## When to Enable OpenCV.js
 
 Consider enabling OpenCV.js if you frequently process:
+
 - Skewed or rotated bank statements
 - Poor quality scanned documents
 - Documents with complex layouts or backgrounds
@@ -22,11 +23,13 @@ Add this script tag to your `public/index.html` or load it dynamically:
 ### Option 2: Local Installation
 
 1. Download OpenCV.js from the official repository:
+
 ```bash
 wget https://docs.opencv.org/4.8.0/opencv.js -O public/opencv.js
 ```
 
 2. Add the script tag to load it:
+
 ```html
 <script async src="/opencv.js"></script>
 ```
@@ -48,11 +51,13 @@ Then import and initialize in your application.
 ## Verification
 
 When OpenCV.js is properly loaded, you'll see this message in the console:
+
 ```
 OpenCV.js detected and working. Using advanced image preprocessing.
 ```
 
 Without OpenCV.js, you'll see:
+
 ```
 OpenCV.js not detected. Using basic image preprocessing.
 ```
@@ -64,4 +69,4 @@ OpenCV.js not detected. Using basic image preprocessing.
 - **Adaptive thresholding** for better text contrast
 - **Contour-based text detection** for improved accuracy
 
-The application works perfectly fine without OpenCV.js - this is purely an optional enhancement for edge cases. 
+The application works perfectly fine without OpenCV.js - this is purely an optional enhancement for edge cases.

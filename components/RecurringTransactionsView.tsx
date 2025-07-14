@@ -13,6 +13,7 @@ import { useDBContext } from '@context/DatabaseContext'; // Import useDBContext
 import { useAnalytics } from '@hooks/useAnalytics';
 import { logger } from '@services/logger'; // Optional for debugging
 import { formatCurrency } from '@utils/helpers';
+import { TransactionListSkeleton } from './skeletons/TransactionListSkeleton';
 
 export default function RecurringTransactionsView() {
   const { potentialRecurringTransactions } = useAnalytics();
@@ -84,16 +85,7 @@ export default function RecurringTransactionsView() {
 
   if (dbLoading && !isDataAvailable) {
     // Show loading indicator if DB is loading and we don't have any candidates yet
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Potential Recurring Transactions</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p>Loading preferences and transactions...</p>
-        </CardContent>
-      </Card>
-    );
+    return <TransactionListSkeleton />;
   }
 
   return (

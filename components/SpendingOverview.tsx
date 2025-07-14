@@ -17,6 +17,8 @@ import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { useAnalytics } from '../src/hooks/useAnalytics';
 import { formatCurrency } from '../src/utils/helpers';
+import { useDBContext } from '../src/context/DatabaseContext';
+import { ChartSkeleton } from './skeletons/ChartSkeleton';
 
 import { ExpenseDetailsModal } from './ExpenseDetailsModal';
 
@@ -28,6 +30,7 @@ export default function SpendingOverview({
   selectedYear: propSelectedYear,
 }: SpendingOverviewProps) {
   const { spendingOverview, monthlyTrends } = useAnalytics();
+  const { loading } = useDBContext();
   const [selectedMonth, setSelectedMonth] = useState<(typeof spendingOverview)[0] | null>(null);
   const [internalSelectedYear, setInternalSelectedYear] = useState<number>(
     new Date().getFullYear(),
@@ -92,6 +95,10 @@ export default function SpendingOverview({
       </span>
     );
   };
+
+  if (loading) {
+    return <ChartSkeleton />;
+  }
 
   return (
     <Card>

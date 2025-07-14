@@ -7,9 +7,13 @@ import { Button } from '@components/ui/button';
 import { toast } from '@components/ui/use-toast';
 import { useDBContext } from '@context/DatabaseContext';
 import { pdfService } from '@services/pdfService';
+import {
+  categorizeTransactionsBatchWithAI,
+  getSmartCategorizationSettings,
+} from '@utils/smartCategorization';
 
 export default function Home() {
-  const { clearTransactions, addTransaction, refreshData } = useDBContext();
+  const { clearTransactions, addTransaction } = useDBContext();
 
   const handleReset = async () => {
     try {
@@ -17,17 +21,54 @@ export default function Home() {
       // Reprocess PDFs and get the extracted transactions
       const extractedTransactions = await pdfService.reprocessStoredPDFs();
 
+      // Check if AI categorization is enabled
+      const settings = getSmartCategorizationSettings();
+      const transactionsToAdd = extractedTransactions.map((transaction) => ({
+        date: transaction.date.toISOString().split('T')[0],
+        amount: transaction.amount,
+        description: transaction.description,
+        category: transaction.category || 'Uncategorized',
+        type: transaction.type,
+        isMonthSummary: transaction.isMonthSummary || false,
+        accountNumber: transaction.accountNumber,
+      }));
+
+      // Use AI to categorize transactions if enabled
+      if (settings.enabled && transactionsToAdd.length > 0) {
+        const transactionsForCategorization = transactionsToAdd
+          .filter((t) => !t.category || t.category === 'Uncategorized')
+          .map((t) => ({
+            description: t.description,
+            amount: t.amount,
+            date: t.date,
+            existingCategory: t.category,
+          }));
+
+        if (transactionsForCategorization.length > 0) {
+          toast({
+            title: 'Categorizing transactions...',
+            description: `Using AI to categorize ${transactionsForCategorization.length} transactions`,
+          });
+
+          const categories = await categorizeTransactionsBatchWithAI(transactionsForCategorization);
+
+          // Update transactions with AI categories
+          let currentIndex = 0;
+          for (let i = 0; i < transactionsToAdd.length; i++) {
+            if (
+              !transactionsToAdd[i].category ||
+              transactionsToAdd[i].category === 'Uncategorized'
+            ) {
+              transactionsToAdd[i].category = categories[currentIndex];
+              currentIndex++;
+            }
+          }
+        }
+      }
+
       // Add each transaction back to the database
-      for (const transaction of extractedTransactions) {
-        await addTransaction({
-          date: transaction.date.toISOString().split('T')[0],
-          amount: transaction.amount,
-          description: transaction.description,
-          category: transaction.category || 'Uncategorized',
-          type: transaction.type,
-          isMonthSummary: transaction.isMonthSummary || false,
-          accountNumber: transaction.accountNumber,
-        });
+      for (const transaction of transactionsToAdd) {
+        await addTransaction(transaction);
       }
 
       toast({

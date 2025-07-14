@@ -4,9 +4,12 @@ import { Edit2, Trash2, Search, Download, FileText } from 'lucide-react';
 import React, { useState, useMemo } from 'react';
 
 import { useDBContext } from '@context/DatabaseContext';
-import { formatCurrency } from '@utils/helpers';
 import { exportTransactionsToCSV, exportCategorySummaryToCSV } from '@utils/csvExport';
+import { formatCurrency } from '@utils/helpers';
 
+import { Transaction } from '../src/types';
+
+import { TransactionListSkeleton } from './skeletons/TransactionListSkeleton';
 import { TransactionEditModal } from './TransactionEditModal';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
@@ -14,10 +17,8 @@ import { Input } from './ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
 import { toast } from './ui/use-toast';
 
-import { Transaction } from '../src/types';
-
 export default function TransactionList() {
-  const { transactions, updateTransaction, deleteTransaction } = useDBContext();
+  const { transactions, updateTransaction, deleteTransaction, loading } = useDBContext();
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -64,7 +65,7 @@ export default function TransactionList() {
           title: 'Success',
           description: 'Transaction deleted successfully',
         });
-      } catch (error) {
+      } catch {
         toast({
           title: 'Error',
           description: 'Failed to delete transaction',
@@ -90,7 +91,7 @@ export default function TransactionList() {
         title: 'Success',
         description: `Exported ${filteredTransactions.length} transactions to CSV`,
       });
-    } catch (error) {
+    } catch {
       toast({
         title: 'Error',
         description: 'Failed to export transactions',
@@ -106,7 +107,7 @@ export default function TransactionList() {
         title: 'Success',
         description: 'Exported category summary to CSV',
       });
-    } catch (error) {
+    } catch {
       toast({
         title: 'Error',
         description: 'Failed to export summary',
@@ -114,6 +115,10 @@ export default function TransactionList() {
       });
     }
   };
+
+  if (loading) {
+    return <TransactionListSkeleton />;
+  }
 
   return (
     <Card>

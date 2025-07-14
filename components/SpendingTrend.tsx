@@ -17,6 +17,7 @@ import { useDBContext } from '@context/DatabaseContext';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { useAnalytics } from '../src/hooks/useAnalytics';
 import { formatCurrency } from '../src/utils/helpers';
+import { ChartSkeleton } from './skeletons/ChartSkeleton';
 
 type SpendingTrendData = {
   name: string; // Month name e.g., "Jan"
@@ -59,6 +60,7 @@ interface SpendingTrendProps {
 export default function SpendingTrend({ selectedYear }: SpendingTrendProps) {
   const [trendData, setTrendData] = useState<SpendingTrendData[]>([]);
   const { spendingOverview } = useAnalytics(); // Use the hook
+  const { loading } = useDBContext();
 
   useEffect(() => {
     if (spendingOverview && spendingOverview.length > 0) {
@@ -139,6 +141,10 @@ export default function SpendingTrend({ selectedYear }: SpendingTrendProps) {
     'Nov',
     'Dec',
   ];
+
+  if (loading) {
+    return <ChartSkeleton />;
+  }
 
   return (
     <Card className='bg-white shadow-lg rounded-lg overflow-hidden'>

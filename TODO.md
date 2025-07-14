@@ -1,6 +1,7 @@
 # Budget Planner TODO List
 
 ## Current Tasks
+
 - [x] Clone budget-planner repository
 - [x] Set up development environment
 - [x] Pull and merge Jules' improve-pdf-date-logging branch
@@ -10,6 +11,7 @@
 - [ ] Implement the recommender feature
 
 ## Recently Completed (Jules' Branch Merge - December 2024)
+
 - [x] **Asset and Liability Management**
   - [x] ManageAssetsPage.tsx - Complete asset tracking interface
   - [x] ManageLiabilitiesPage.tsx - Liability management system
@@ -37,6 +39,7 @@
   - [x] Improved component structure and organization
 
 ## Previously Completed Tasks
+
 - [x] Enhance PDF financial data extraction (completed in PR #1)
   - [x] Improve OCR preprocessing with OpenCV.js
   - [x] Enhance currency parsing for resilience to OCR errors
@@ -46,6 +49,7 @@
   - [x] Add comprehensive unit tests
 
 ## Future Enhancements
+
 - [ ] Improve mobile responsiveness
 - [ ] Add data visualization for budget analysis
 - [ ] Implement ML-based transaction categorization
@@ -54,8 +58,9 @@
 - [ ] Add notification system for budget alerts
 
 ## Technical Debt
+
 - [ ] Refactor PDF processing for better performance
 - [ ] Improve error handling and reporting
 - [ ] Add comprehensive test coverage for new components
 - [ ] Optimize bundle size and loading performance
-- [ ] Implement proper TypeScript interfaces for all components 
+- [ ] Implement proper TypeScript interfaces for all components

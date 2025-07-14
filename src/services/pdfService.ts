@@ -16,7 +16,11 @@ declare global {
 
 // Set worker path before any PDF operations
 if (typeof window !== 'undefined') {
+  // Use local worker file to avoid CORS issues
   pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
+  
+  logger.info('PDF.js version:', pdfjs.version);
+  logger.info('Worker URL:', pdfjs.GlobalWorkerOptions.workerSrc);
 }
 
 // Initialize PDF.js worker in a way that's compatible with Next.js
@@ -24,7 +28,8 @@ const initPdfWorker = async () => {
   if (typeof window === 'undefined') return; // Skip on server-side
 
   try {
-    logger.info('PDF.js worker path set to:', pdfjs.GlobalWorkerOptions.workerSrc);
+    logger.info('PDF.js worker initialized with path:', pdfjs.GlobalWorkerOptions.workerSrc);
+    logger.info('Current origin:', window.location.origin);
   } catch (error) {
     logger.error('Failed to initialize PDF worker:', error);
     throw new Error('Failed to initialize PDF processing');
@@ -1468,7 +1473,15 @@ class PDFService {
       logger.info('Document stored successfully');
 
       // Load PDF document
-      const pdfDoc = await pdfjs.getDocument({ data: arrayBuffer }).promise;
+      const loadingTask = pdfjs.getDocument({ 
+        data: arrayBuffer,
+        // Disable worker to use fake worker if needed
+        useWorkerFetch: false,
+        isEvalSupported: false,
+        useSystemFonts: true,
+      });
+      
+      const pdfDoc = await loadingTask.promise;
       const extractedData: ExtractedData[] = [];
 
       // Initialize Tesseract worker with optimized settings
@@ -1684,7 +1697,7 @@ class PDFService {
                     const suggestion = await llmService.categorizeTransaction({
                       description: cleanDesc,
                       amount: amount,
-                      date: transactionDate,
+                      date: transactionDate.toISOString(),
                     });
 
                     if (suggestion.confidence > 0.7) {

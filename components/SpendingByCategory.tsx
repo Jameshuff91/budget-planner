@@ -12,6 +12,7 @@ import { useToast } from '@components/ui/use-toast'; // Added
 import { useDBContext } from '@context/DatabaseContext'; // Added
 import { useAnalytics } from '@hooks/useAnalytics';
 import { formatCurrency } from '@utils/helpers';
+import { ChartSkeleton } from './skeletons/ChartSkeleton';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#FF6B6B'];
 
@@ -46,7 +47,7 @@ export default function SpendingByCategory({ selectedYear }: SpendingByCategoryP
 
   const { categorySpending, detailedCategorySpending, monthlyTrends } =
     useAnalytics(currentTimeRange);
-  const { updateCategoryBudget, categories: allCategories } = useDBContext(); // Added
+  const { updateCategoryBudget, categories: allCategories, loading } = useDBContext(); // Added
   const { toast } = useToast(); // Added
 
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -190,6 +191,10 @@ export default function SpendingByCategory({ selectedYear }: SpendingByCategoryP
       </span>
     );
   };
+
+  if (loading) {
+    return <ChartSkeleton />;
+  }
 
   return (
     <Card>

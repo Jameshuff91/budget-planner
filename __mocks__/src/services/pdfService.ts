@@ -3,7 +3,7 @@ export const pdfService = {
     Promise.resolve({
       transactions: [],
       metadata: {},
-    })
+    }),
   ),
   extractText: jest.fn(),
   validatePDF: jest.fn(),

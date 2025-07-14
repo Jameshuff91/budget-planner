@@ -13,26 +13,8 @@ import {
 import { dbService, Asset, Liability } from '../services/db'; // Import Asset and Liability
 import { logger } from '../services/logger';
 import { pdfService } from '../services/pdfService'; // Fix import path
+import { Transaction, Category } from '../types';
 import { generateUUID } from '../utils/helpers';
-
-interface Transaction {
-  id: string;
-  amount: number;
-  category: string;
-  categoryId?: string;
-  description: string;
-  date: string;
-  type: 'income' | 'expense';
-  isMonthSummary?: boolean;
-  accountNumber?: string;
-}
-
-interface Category {
-  id: string;
-  name: string;
-  type: 'income' | 'expense';
-  budget?: number;
-}
 
 interface DatabaseContextType {
   transactions: Transaction[];
@@ -146,7 +128,11 @@ export function DatabaseProvider({ children }: { children: ReactNode }) {
   const addTransaction = useCallback(
     async (transaction: Omit<Transaction, 'id'>) => {
       try {
-        const id = await dbService.addTransaction({ ...transaction, id: generateUUID() });
+        const id = await dbService.addTransaction({
+          ...transaction,
+          id: generateUUID(),
+          date: new Date(transaction.date),
+        });
         await loadData(); // Refresh data after adding transaction
         return id;
       } catch (err) {
@@ -162,7 +148,11 @@ export function DatabaseProvider({ children }: { children: ReactNode }) {
       try {
         const ids: string[] = [];
         for (const transaction of transactions) {
-          const id = await dbService.addTransaction({ ...transaction, id: generateUUID() });
+          const id = await dbService.addTransaction({
+            ...transaction,
+            id: generateUUID(),
+            date: new Date(transaction.date),
+          });
           ids.push(id);
         }
         await loadData(); // Refresh data only once after all transactions are added
@@ -305,7 +295,10 @@ export function DatabaseProvider({ children }: { children: ReactNode }) {
   const updateTransaction = useCallback(
     async (transaction: Transaction) => {
       try {
-        await dbService.updateTransaction(transaction);
+        await dbService.updateTransaction({
+          ...transaction,
+          date: new Date(transaction.date),
+        });
         await loadData(); // Refresh data after updating transaction
       } catch (err) {
         logger.error('Error updating transaction:', err);
@@ -376,13 +369,17 @@ export function DatabaseProvider({ children }: { children: ReactNode }) {
       // Clear existing transactions
       setTransactions([]);
 
-      // Get transactions from database
-      const dbTransactions = await dbService.getTransactions();
+      // Get transactions from database and convert dates to strings
+      const dbTransactions = (await dbService.getTransactions()).map((t) => ({
+        ...t,
+        date: t.date instanceof Date ? t.date.toISOString() : t.date,
+      }));
 
       // Get transactions from stored PDFs and convert to Transaction type
       const pdfTransactions = (await pdfService.reprocessStoredPDFs()).map((data) => ({
         ...data,
         id: generateUUID(),
+        date: data.date.toISOString(),
         category: data.category || 'Uncategorized',
       }));
 
@@ -393,7 +390,7 @@ export function DatabaseProvider({ children }: { children: ReactNode }) {
           index ===
           self.findIndex(
             (t) =>
-              t.date.getTime() === transaction.date.getTime() &&
+              t.date === transaction.date &&
               t.amount === transaction.amount &&
               t.description === transaction.description,
           ),

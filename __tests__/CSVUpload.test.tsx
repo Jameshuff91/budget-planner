@@ -17,14 +17,14 @@ vi.mock('papaparse', () => ({
         options.complete({
           data: [
             ['date', 'description', 'amount', 'category'],
-            ['2024-01-01', 'Test Transaction', '-100', 'Food']
-          ]
+            ['2024-01-01', 'Test Transaction', '-100', 'Food'],
+          ],
         });
       } else if (file.name === 'invalid.csv') {
         options.error(new Error('Parse error'));
       }
-    })
-  }
+    }),
+  },
 }));
 
 // Mock the entire module at the top level without spying on non-function values
@@ -32,7 +32,7 @@ vi.mock('../src/context/DatabaseContext', () => ({
   useDBContext: () => ({
     addTransaction: mockAddTransaction,
     refreshData: mockRefreshData,
-  })
+  }),
 }));
 
 // Mock logger
@@ -41,11 +41,10 @@ vi.mock('../src/services/logger', () => ({
     error: vi.fn(),
     info: vi.fn(),
     warn: vi.fn(),
-  }
+  },
 }));
 
 describe('CSVUpload Component', () => {
-
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -71,7 +70,7 @@ describe('CSVUpload Component', () => {
           description: 'Test Transaction',
           amount: -100,
           category: 'Food',
-        })
+        }),
       );
     });
   });
@@ -85,9 +84,12 @@ describe('CSVUpload Component', () => {
     await userEvent.upload(input, file);
 
     // The component doesn't handle invalid file types, so addTransaction should not be called
-    await waitFor(() => {
-      expect(mockAddTransaction).not.toHaveBeenCalled();
-    }, { timeout: 1000 });
+    await waitFor(
+      () => {
+        expect(mockAddTransaction).not.toHaveBeenCalled();
+      },
+      { timeout: 1000 },
+    );
   });
 
   test('handles CSV parsing errors', async () => {
@@ -100,8 +102,11 @@ describe('CSVUpload Component', () => {
     await userEvent.upload(input, file);
 
     // The component logs errors but doesn't show toast notifications
-    await waitFor(() => {
-      expect(mockAddTransaction).not.toHaveBeenCalled();
-    }, { timeout: 1000 });
+    await waitFor(
+      () => {
+        expect(mockAddTransaction).not.toHaveBeenCalled();
+      },
+      { timeout: 1000 },
+    );
   });
 });

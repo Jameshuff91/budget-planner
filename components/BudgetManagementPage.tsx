@@ -8,6 +8,7 @@ import { Label } from '@components/ui/label'; // For better accessibility with i
 import { useToast } from '@components/ui/use-toast';
 import { useDBContext } from '@context/DatabaseContext';
 import { formatCurrency } from '@utils/helpers'; // For toasts
+import { FormSkeleton } from './skeletons/FormSkeleton';
 
 export default function BudgetManagementPage() {
   const { categories, updateCategoryBudget, loading: categoriesLoading } = useDBContext();
@@ -103,7 +104,7 @@ export default function BudgetManagementPage() {
   );
 
   if (categoriesLoading) {
-    return <div>Loading categories...</div>;
+    return <FormSkeleton rows={6} />;
   }
 
   return (

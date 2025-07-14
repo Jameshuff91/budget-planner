@@ -22,29 +22,24 @@ async function generateIcons() {
     const svgBuffer = fs.readFileSync(svgPath);
 
     for (const { size, name } of sizes) {
-      await sharp(svgBuffer)
-        .resize(size, size)
-        .png()
-        .toFile(path.join(publicDir, name));
-      
+      await sharp(svgBuffer).resize(size, size).png().toFile(path.join(publicDir, name));
+
       console.log(`Generated ${name}`);
     }
 
     // Also create a favicon.ico from the 32x32 PNG
     const favicon32 = path.join(publicDir, 'favicon-32x32.png');
     const faviconIco = path.join(publicDir, 'favicon.ico');
-    
-    await sharp(favicon32)
-      .resize(32, 32)
-      .toFile(faviconIco.replace('.ico', '.png'));
-    
+
+    await sharp(favicon32).resize(32, 32).toFile(faviconIco.replace('.ico', '.png'));
+
     console.log('All icons generated successfully!');
   } catch (error) {
     console.error('Error generating icons:', error);
-    
+
     // Fallback: create simple colored squares as icons
     console.log('Creating fallback icons...');
-    
+
     for (const { size, name } of sizes) {
       const svg = `
         <svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}">
@@ -55,11 +50,9 @@ async function generateIcons() {
           </text>
         </svg>
       `;
-      
+
       try {
-        await sharp(Buffer.from(svg))
-          .png()
-          .toFile(path.join(publicDir, name));
+        await sharp(Buffer.from(svg)).png().toFile(path.join(publicDir, name));
         console.log(`Generated fallback ${name}`);
       } catch (err) {
         console.error(`Failed to generate ${name}:`, err);

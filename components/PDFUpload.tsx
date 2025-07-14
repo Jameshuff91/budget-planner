@@ -13,6 +13,10 @@ import Papa from 'papaparse';
 import { useState, useEffect } from 'react';
 
 import { showUserError } from '@utils/userErrors';
+import {
+  categorizeTransactionsBatchWithAI,
+  getSmartCategorizationSettings,
+} from '@utils/smartCategorization';
 
 import { useDBContext } from '../src/context/DatabaseContext';
 import { csvService } from '../src/services/csvService';
@@ -24,6 +28,7 @@ import { Button } from './ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible';
 import { Input } from './ui/input';
 import { useToast } from './ui/use-toast';
+import { AICategoryIndicator } from './AICategoryIndicator';
 
 interface CSVTransaction {
   date: Date;
@@ -40,7 +45,7 @@ export default function PDFUpload() {
   const [isDragging, setIsDragging] = useState(false);
   const [selectedPDFs, setSelectedPDFs] = useState<Set<string>>(new Set());
   const { toast } = useToast();
-  const { addTransactionsBatch } = useDBContext();
+  const { addTransactionsBatch, categories } = useDBContext();
 
   useEffect(() => {
     loadUploadedFiles();
@@ -103,11 +108,12 @@ export default function PDFUpload() {
 
           // Process extracted transactions
           const transactionsToAdd = [];
+          const transactionsForCategorization = [];
 
           // Collect all valid transactions first
           for (const transaction of extractedData) {
             if (transaction.date && transaction.amount && transaction.description) {
-              transactionsToAdd.push({
+              const baseTransaction = {
                 date: transaction.date.toISOString(),
                 amount: transaction.amount,
                 description: transaction.description,
@@ -115,6 +121,53 @@ export default function PDFUpload() {
                 type: transaction.type,
                 isMonthSummary: transaction.isMonthSummary || false,
                 accountNumber: transaction.accountNumber,
+              };
+
+              transactionsToAdd.push(baseTransaction);
+
+              // Prepare for AI categorization if enabled
+              if (!transaction.category || transaction.category === 'Uncategorized') {
+                transactionsForCategorization.push({
+                  description: transaction.description,
+                  amount: transaction.amount,
+                  date: transaction.date.toISOString(),
+                  existingCategory: transaction.category,
+                });
+              }
+            }
+          }
+
+          // Use AI to categorize transactions if enabled
+          const settings = getSmartCategorizationSettings();
+          if (settings.enabled && transactionsForCategorization.length > 0) {
+            toast({
+              title: 'Categorizing transactions...',
+              description: `Using AI to categorize ${transactionsForCategorization.length} transactions`,
+            });
+
+            const customCategories = categories.map((cat) => cat.name);
+            const aiCategories = await categorizeTransactionsBatchWithAI(
+              transactionsForCategorization,
+              customCategories,
+            );
+
+            // Update transactions with AI categories
+            let categorizedCount = 0;
+            let currentIndex = 0;
+            for (let i = 0; i < transactionsToAdd.length; i++) {
+              if (transactionsToAdd[i].category === 'Uncategorized') {
+                transactionsToAdd[i].category = aiCategories[currentIndex];
+                if (aiCategories[currentIndex] !== 'Uncategorized') {
+                  categorizedCount++;
+                }
+                currentIndex++;
+              }
+            }
+
+            if (categorizedCount > 0) {
+              toast({
+                title: 'AI Categorization Complete',
+                description: `Successfully categorized ${categorizedCount} transactions`,
               });
             }
           }
@@ -157,6 +210,55 @@ export default function PDFUpload() {
 
           // Convert to database format
           const transactionsToAdd = csvService.convertToTransactions(csvTransactions);
+
+          // Use AI to categorize transactions if enabled
+          const settings = getSmartCategorizationSettings();
+          if (settings.enabled && transactionsToAdd.length > 0) {
+            const transactionsForCategorization = transactionsToAdd
+              .filter((t) => !t.category || t.category === 'Uncategorized')
+              .map((t) => ({
+                description: t.description,
+                amount: t.amount,
+                date: t.date,
+                existingCategory: t.category,
+              }));
+
+            if (transactionsForCategorization.length > 0) {
+              toast({
+                title: 'Categorizing transactions...',
+                description: `Using AI to categorize ${transactionsForCategorization.length} transactions`,
+              });
+
+              const customCategories = categories.map((cat) => cat.name);
+              const aiCategories = await categorizeTransactionsBatchWithAI(
+                transactionsForCategorization,
+                customCategories,
+              );
+
+              // Update transactions with AI categories
+              let categorizedCount = 0;
+              let currentIndex = 0;
+              for (let i = 0; i < transactionsToAdd.length; i++) {
+                if (
+                  !transactionsToAdd[i].category ||
+                  transactionsToAdd[i].category === 'Uncategorized'
+                ) {
+                  transactionsToAdd[i].category = aiCategories[currentIndex];
+                  if (aiCategories[currentIndex] !== 'Uncategorized') {
+                    categorizedCount++;
+                  }
+                  currentIndex++;
+                }
+              }
+
+              if (categorizedCount > 0) {
+                toast({
+                  title: 'AI Categorization Complete',
+                  description: `Successfully categorized ${categorizedCount} transactions`,
+                });
+              }
+            }
+          }
 
           if (transactionsToAdd.length > 0) {
             await addTransactionsBatch(transactionsToAdd);
@@ -279,7 +381,10 @@ export default function PDFUpload() {
 
   return (
     <div className='mb-8 bg-white rounded-lg shadow-md p-6'>
-      <h2 className='text-2xl font-semibold mb-4 text-blue-600'>Upload Financial Information</h2>
+      <div className='flex items-center justify-between mb-4'>
+        <h2 className='text-2xl font-semibold text-blue-600'>Upload Financial Information</h2>
+        <AICategoryIndicator />
+      </div>
 
       <div
         className={`border-2 border-dashed rounded-lg p-8 text-center ${

@@ -12,13 +12,13 @@ vi.mock('../src/context/DatabaseContext', () => ({
   useDBContext: () => ({
     addTransaction: mockAddTransaction,
     refreshData: mockRefreshData,
-  })
+  }),
 }));
 
 vi.mock('../components/ui/use-toast', () => ({
   useToast: () => ({
     toast: mockToast,
-  })
+  }),
 }));
 
 vi.mock('../src/services/pdfService', () => ({
@@ -27,7 +27,7 @@ vi.mock('../src/services/pdfService', () => ({
     processPDF: vi.fn().mockResolvedValue([]),
     deletePDFDocument: vi.fn().mockResolvedValue(undefined),
     deleteDocuments: vi.fn().mockResolvedValue(undefined),
-  }
+  },
 }));
 
 vi.mock('../src/services/logger', () => ({
@@ -35,13 +35,12 @@ vi.mock('../src/services/logger', () => ({
     error: vi.fn(),
     info: vi.fn(),
     warn: vi.fn(),
-  }
+  },
 }));
 
 import PDFUpload from '../components/PDFUpload';
 
 describe('PDFUpload Component', () => {
-
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -51,14 +50,16 @@ describe('PDFUpload Component', () => {
       render(<PDFUpload />);
     });
     expect(screen.getByText(/Upload Financial Information/i)).toBeInTheDocument();
-    expect(screen.getByText(/Drag and drop your PDF or CSV files here or click to browse/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Drag and drop your PDF or CSV files here or click to browse/i),
+    ).toBeInTheDocument();
   });
 
   test('handles PDF file upload and processing', async () => {
     const pdfContent = '%PDF-1.4...'; // Mock PDF content
     const file = new File([pdfContent], 'test.pdf', { type: 'application/pdf' });
 
-    const { pdfService } = await vi.importMock('../src/services/pdfService') as any;
+    const { pdfService } = (await vi.importMock('../src/services/pdfService')) as any;
     pdfService.processPDF.mockResolvedValue([
       {
         date: new Date('2024-01-01'),
@@ -66,7 +67,7 @@ describe('PDFUpload Component', () => {
         amount: -100,
         category: 'Food',
         type: 'expense',
-      }
+      },
     ]);
 
     await act(async () => {
@@ -74,7 +75,7 @@ describe('PDFUpload Component', () => {
     });
 
     const input = screen.getByLabelText(/choose files/i);
-    
+
     await act(async () => {
       await userEvent.upload(input, file);
     });
@@ -87,7 +88,7 @@ describe('PDFUpload Component', () => {
           amount: -100,
           category: 'Food',
           type: 'expense',
-        })
+        }),
       );
     });
 
@@ -95,7 +96,7 @@ describe('PDFUpload Component', () => {
       expect.objectContaining({
         title: 'Success',
         description: expect.stringContaining('Processed 1 of 1 transactions from test.pdf'),
-      })
+      }),
     );
   });
 
@@ -107,23 +108,26 @@ describe('PDFUpload Component', () => {
     });
 
     const input = screen.getByLabelText(/choose files/i);
-    
+
     await act(async () => {
       await userEvent.upload(input, file);
     });
 
     // The component validates file types at the input level, so invalid files are rejected
     // We just verify that the component doesn't crash and no processing occurs
-    await waitFor(() => {
-      expect(mockAddTransaction).not.toHaveBeenCalled();
-    }, { timeout: 1000 });
+    await waitFor(
+      () => {
+        expect(mockAddTransaction).not.toHaveBeenCalled();
+      },
+      { timeout: 1000 },
+    );
   });
 
   test('handles PDF processing errors', async () => {
     const pdfContent = '%PDF-1.4...';
     const file = new File([pdfContent], 'invalid.pdf', { type: 'application/pdf' });
 
-    const { pdfService } = await vi.importMock('../src/services/pdfService') as any;
+    const { pdfService } = (await vi.importMock('../src/services/pdfService')) as any;
     pdfService.processPDF.mockRejectedValue(new Error('Processing failed'));
 
     await act(async () => {
@@ -131,7 +135,7 @@ describe('PDFUpload Component', () => {
     });
 
     const input = screen.getByLabelText(/choose files/i);
-    
+
     await act(async () => {
       await userEvent.upload(input, file);
     });
@@ -142,7 +146,7 @@ describe('PDFUpload Component', () => {
           title: 'Error',
           description: expect.stringContaining('Failed to process invalid.pdf'),
           variant: 'destructive',
-        })
+        }),
       );
     });
   });

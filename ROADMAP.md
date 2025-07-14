@@ -1,9 +1,11 @@
 # Budget Planner Roadmap
 
 ## Current Status
+
 The Budget Planner has evolved from a basic PDF parsing tool to a comprehensive personal finance management platform with AI categorization, bank connections, smart alerts, and advanced analytics. Recent additions include year-over-year comparisons, spending velocity tracking, and automated E2E testing.
 
 ## Recently Completed (July 2024)
+
 - ✅ Year-over-year spending comparison with variance analysis
 - ✅ Spending velocity tracking with daily rates and projections
 - ✅ Enhanced error handling with user-friendly messages
@@ -18,6 +20,7 @@ The Budget Planner has evolved from a basic PDF parsing tool to a comprehensive 
 ## Immediate Priorities (Next 2 Weeks)
 
 ### 1. Complete Test Coverage 🎯
+
 - [ ] Expand E2E tests for all major user flows
 - [ ] Add unit tests for analytics components
 - [ ] Test categorization pipeline end-to-end
@@ -25,6 +28,7 @@ The Budget Planner has evolved from a basic PDF parsing tool to a comprehensive 
 - [ ] Set up automated test runs in CI
 
 ### 2. Performance & Optimization 🚀
+
 - [ ] Implement code splitting for route-based chunks
 - [ ] Add service worker for offline support
 - [ ] Optimize chart rendering with memoization
@@ -32,6 +36,7 @@ The Budget Planner has evolved from a basic PDF parsing tool to a comprehensive 
 - [ ] Add performance monitoring (Web Vitals)
 
 ### 3. Data Export & Backup 💾
+
 - [x] CSV export for all transactions ✅
 - [ ] PDF report generation with charts
 - [ ] Backup/restore functionality
@@ -41,6 +46,7 @@ The Budget Planner has evolved from a basic PDF parsing tool to a comprehensive 
 ## Short Term Goals (1 Month)
 
 ### 1. Enhanced Analytics
+
 - [x] Year-over-year comparison charts ✅
 - [x] Spending velocity indicators ✅
 - [ ] Category trend analysis
@@ -49,6 +55,7 @@ The Budget Planner has evolved from a basic PDF parsing tool to a comprehensive 
 - [ ] Exportable reports (PDF/Excel)
 
 ### 2. Advanced Categorization
+
 - [ ] Machine learning model for categorization (train on user data)
 - [ ] Bulk re-categorization tools
 - [ ] Category merging and splitting
@@ -57,6 +64,7 @@ The Budget Planner has evolved from a basic PDF parsing tool to a comprehensive 
 - [ ] Smart category suggestions based on usage
 
 ### 3. Budget Management
+
 - [ ] Monthly/weekly/daily budget views
 - [ ] Budget templates (50/30/20 rule, etc.)
 - [ ] Budget vs actual visualizations
@@ -65,6 +73,7 @@ The Budget Planner has evolved from a basic PDF parsing tool to a comprehensive 
 - [ ] Bill tracking and reminders
 
 ### 4. Data Management
+
 - [ ] Data export (CSV, JSON, QIF)
 - [ ] Data backup/restore
 - [ ] Multi-device sync (using cloud storage)
@@ -75,6 +84,7 @@ The Budget Planner has evolved from a basic PDF parsing tool to a comprehensive 
 ## Medium Term Goals (3 Months)
 
 ### 1. Multi-User Support
+
 - [ ] User authentication system
 - [ ] Family/household accounts
 - [ ] Shared budgets with permissions
@@ -82,6 +92,7 @@ The Budget Planner has evolved from a basic PDF parsing tool to a comprehensive 
 - [ ] User activity logs
 
 ### 2. Investment Tracking
+
 - [ ] Portfolio integration
 - [ ] Stock/crypto price tracking
 - [ ] Investment performance analytics
@@ -89,6 +100,7 @@ The Budget Planner has evolved from a basic PDF parsing tool to a comprehensive 
 - [ ] Net worth tracking over time
 
 ### 3. Advanced Integrations
+
 - [ ] Email receipt parsing
 - [ ] SMS transaction alerts
 - [ ] Calendar integration for bills
@@ -96,6 +108,7 @@ The Budget Planner has evolved from a basic PDF parsing tool to a comprehensive 
 - [ ] Accounting software export (QuickBooks, Xero)
 
 ### 4. Mobile Apps
+
 - [ ] React Native mobile app
 - [ ] Offline-first architecture
 - [ ] Camera receipt scanning
@@ -103,6 +116,7 @@ The Budget Planner has evolved from a basic PDF parsing tool to a comprehensive 
 - [ ] Push notifications
 
 ### 5. AI Enhancements
+
 - [ ] Natural language queries ("How much did I spend on food last month?")
 - [ ] Spending insights and recommendations
 - [ ] Anomaly detection improvements
@@ -112,6 +126,7 @@ The Budget Planner has evolved from a basic PDF parsing tool to a comprehensive 
 ## Long Term Vision (6-12 Months)
 
 ### 1. Financial Planning
+
 - [ ] Retirement planning calculator
 - [ ] Debt payoff strategies
 - [ ] Tax optimization suggestions
@@ -119,6 +134,7 @@ The Budget Planner has evolved from a basic PDF parsing tool to a comprehensive 
 - [ ] Emergency fund calculator
 
 ### 2. Business Features
+
 - [ ] Expense report generation
 - [ ] Mileage tracking
 - [ ] Invoice management
@@ -126,6 +142,7 @@ The Budget Planner has evolved from a basic PDF parsing tool to a comprehensive 
 - [ ] Multi-currency support
 
 ### 3. Open Banking Expansion
+
 - [ ] Support for international banks
 - [ ] Credit score monitoring
 - [ ] Loan/mortgage tracking
@@ -133,6 +150,7 @@ The Budget Planner has evolved from a basic PDF parsing tool to a comprehensive 
 - [ ] Subscription management
 
 ### 4. Community Features
+
 - [ ] Anonymous spending comparisons
 - [ ] Budgeting tips and tricks
 - [ ] Financial literacy resources
@@ -140,6 +158,7 @@ The Budget Planner has evolved from a basic PDF parsing tool to a comprehensive 
 - [ ] Shared budget templates
 
 ### 5. Platform Expansion
+
 - [ ] Browser extension for receipt capture
 - [ ] Slack/Discord bots
 - [ ] Voice assistants integration
@@ -149,6 +168,7 @@ The Budget Planner has evolved from a basic PDF parsing tool to a comprehensive 
 ## Technical Debt & Infrastructure
 
 ### Immediate
+
 - [ ] Migrate to TypeScript strict mode
 - [ ] Implement proper error tracking (Sentry)
 - [ ] Add application monitoring
@@ -156,6 +176,7 @@ The Budget Planner has evolved from a basic PDF parsing tool to a comprehensive 
 - [ ] Improve build performance
 
 ### Short Term
+
 - [ ] Database migration system
 - [ ] API versioning
 - [ ] Rate limiting for external APIs
@@ -163,6 +184,7 @@ The Budget Planner has evolved from a basic PDF parsing tool to a comprehensive 
 - [ ] Background job processing
 
 ### Long Term
+
 - [ ] Microservices architecture
 - [ ] GraphQL API
 - [ ] Real-time sync with WebSockets
@@ -172,12 +194,14 @@ The Budget Planner has evolved from a basic PDF parsing tool to a comprehensive 
 ## Monetization Strategy (Future)
 
 ### Freemium Model
+
 - **Free Tier**: Basic features, 2 bank connections, 6 months history
 - **Pro Tier** ($9.99/month): Unlimited connections, full history, AI categorization
 - **Family Tier** ($14.99/month): Multi-user support, shared budgets
 - **Business Tier** ($29.99/month): Business features, priority support
 
 ### Additional Revenue Streams
+
 - White-label solution for banks/credit unions
 - API access for developers
 - Premium integrations
@@ -187,6 +211,7 @@ The Budget Planner has evolved from a basic PDF parsing tool to a comprehensive 
 ## Technical Achievements 🏆
 
 ### Architecture
+
 - ✅ Next.js 14 with App Router
 - ✅ TypeScript for type safety
 - ✅ Modular service architecture
@@ -194,12 +219,14 @@ The Budget Planner has evolved from a basic PDF parsing tool to a comprehensive 
 - ✅ PWA-ready with service workers
 
 ### Testing
+
 - ✅ 94.4% test pass rate achieved
 - ✅ E2E testing with Playwright
 - ✅ Component testing setup
 - ✅ Error boundary implementation
 
 ### Performance
+
 - ✅ Lazy loading for heavy components
 - ✅ Optimized PDF processing
 - ✅ Efficient transaction batching
@@ -208,6 +235,7 @@ The Budget Planner has evolved from a basic PDF parsing tool to a comprehensive 
 ## Success Metrics
 
 ### User Engagement
+
 - Daily active users
 - Transaction categorization accuracy (target: >95%)
 - Time to categorize transactions (<100ms)
@@ -215,6 +243,7 @@ The Budget Planner has evolved from a basic PDF parsing tool to a comprehensive 
 - User retention (30/60/90 day)
 
 ### Technical Metrics
+
 - Page load times < 2s (currently achieving)
 - API response times < 200ms
 - 99.9% uptime
@@ -223,6 +252,7 @@ The Budget Planner has evolved from a basic PDF parsing tool to a comprehensive 
 - Test coverage > 80%
 
 ### Business Metrics
+
 - User satisfaction (NPS > 50)
 - Conversion rate (free to paid)
 - Customer acquisition cost
@@ -232,6 +262,7 @@ The Budget Planner has evolved from a basic PDF parsing tool to a comprehensive 
 ## Open Source Considerations
 
 ### Community Building
+
 - [ ] Improve documentation
 - [ ] Create contribution guidelines
 - [ ] Set up Discord/Slack community
@@ -239,9 +270,11 @@ The Budget Planner has evolved from a basic PDF parsing tool to a comprehensive 
 - [ ] Transparent roadmap updates
 
 ### Licensing
+
 - Consider dual licensing (AGPL + Commercial)
 - Protect core IP while encouraging contributions
 - Clear CLA for contributors
 
 ## Conclusion
+
 The Budget Planner has strong foundations with modern architecture and innovative features. The roadmap focuses on stability, user experience, and gradual expansion into a comprehensive financial platform while maintaining simplicity and privacy as core values.
