@@ -1,7 +1,7 @@
 'use client';
 
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
-import React, { useMemo } from 'react';
+import React, { useMemo, useCallback } from 'react';
 import {
   Line,
   LineChart,
@@ -20,6 +20,13 @@ import { formatCurrency } from '@utils/helpers';
 import { useDBContext } from '@context/DatabaseContext';
 import { ChartSkeleton } from './skeletons/ChartSkeleton';
 import { StatCardGridSkeleton } from './skeletons/StatCardSkeleton';
+import {
+  shallowCompareProps,
+  getOptimizedAnimationProps,
+  memoizeChartProps,
+  createPerformanceMarker,
+  optimizeChartData,
+} from '@utils/chartOptimization';
 
 interface YearOverYearComparisonProps {
   selectedYear: number;
@@ -31,30 +38,38 @@ interface TooltipPayload {
   color: string;
 }
 
+// Memoized month names
 const monthNames = [
-  'Jan',
-  'Feb',
-  'Mar',
-  'Apr',
-  'May',
-  'Jun',
-  'Jul',
-  'Aug',
-  'Sep',
-  'Oct',
-  'Nov',
-  'Dec',
+  'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
 ];
 
-export default function YearOverYearComparison({ selectedYear }: YearOverYearComparisonProps) {
-  const { spendingOverview } = useAnalytics();
+// Memoized TrendIcon component
+const MemoizedTrendIcon = React.memo<{ value: number }>(({ value }) => {
+  if (value > 5) return <TrendingUp className='h-4 w-4 text-red-500' />;
+  if (value < -5) return <TrendingDown className='h-4 w-4 text-green-500' />;
+  return <Minus className='h-4 w-4 text-gray-500' />;
+});
+
+const YearOverYearComparison = ({ selectedYear }: YearOverYearComparisonProps) => {
+  // Memoize analytics data to prevent unnecessary recalculations
+  const analyticsData = useMemo(() => {
+    const marker = createPerformanceMarker('yoy-analytics-data');
+    const result = useAnalytics();
+    marker.end();
+    return result;
+  }, []);
+
+  const { spendingOverview } = analyticsData;
   const { loading } = useDBContext();
 
   const comparisonData = useMemo(() => {
+    const marker = createPerformanceMarker('yoy-comparison-data');
+    
     const currentYearData = spendingOverview.filter((d) => d.year === selectedYear);
     const previousYearData = spendingOverview.filter((d) => d.year === selectedYear - 1);
 
-    return monthNames.map((month) => {
+    const result = monthNames.map((month) => {
       const currentMonth = currentYearData.find((d) => d.month === month);
       const previousMonth = previousYearData.find((d) => d.month === month);
 
@@ -66,6 +81,9 @@ export default function YearOverYearComparison({ selectedYear }: YearOverYearCom
         previousIncome: previousMonth?.totalIncome || 0,
       };
     });
+
+    marker.end();
+    return optimizeChartData(result, 50); // Optimize for performance
   }, [spendingOverview, selectedYear]);
 
   const yearOverYearStats = useMemo(() => {
@@ -94,34 +112,39 @@ export default function YearOverYearComparison({ selectedYear }: YearOverYearCom
     };
   }, [comparisonData, selectedYear]);
 
-  const CustomTooltip = ({
-    active,
-    payload,
-    label,
-  }: {
-    active?: boolean;
-    payload?: TooltipPayload[];
-    label?: string;
-  }) => {
-    if (!active || !payload) return null;
+  // Memoized CustomTooltip component
+  const CustomTooltip = useMemo(() => {
+    return React.memo(({
+      active,
+      payload,
+      label,
+    }: {
+      active?: boolean;
+      payload?: TooltipPayload[];
+      label?: string;
+    }) => {
+      if (!active || !payload) return null;
 
-    return (
-      <div className='bg-white p-3 border rounded-lg shadow-lg'>
-        <p className='font-semibold'>{label}</p>
-        {payload.map((entry, index) => (
-          <p key={index} style={{ color: entry.color }}>
-            {entry.name}: {formatCurrency(entry.value)}
-          </p>
-        ))}
-      </div>
-    );
-  };
+      return (
+        <div className='bg-white p-3 border rounded-lg shadow-lg'>
+          <p className='font-semibold'>{label}</p>
+          {payload.map((entry, index) => (
+            <p key={index} style={{ color: entry.color }}>
+              {entry.name}: {formatCurrency(entry.value)}
+            </p>
+          ))}
+        </div>
+      );
+    });
+  }, []);
 
-  const TrendIcon = ({ value }: { value: number }) => {
-    if (value > 5) return <TrendingUp className='h-4 w-4 text-red-500' />;
-    if (value < -5) return <TrendingDown className='h-4 w-4 text-green-500' />;
-    return <Minus className='h-4 w-4 text-gray-500' />;
-  };
+  // Memoize chart animation props
+  const animationProps = useMemo(() => {
+    return getOptimizedAnimationProps(comparisonData.length);
+  }, [comparisonData.length]);
+
+  // Memoized chart formatters
+  const yAxisTickFormatter = useCallback((value: number) => `$${(value / 1000).toFixed(0)}k`, []);
 
   if (loading) {
     return (
@@ -158,7 +181,7 @@ export default function YearOverYearComparison({ selectedYear }: YearOverYearCom
               <div className='flex justify-between items-center pt-2 border-t'>
                 <span className='text-sm font-medium'>Change:</span>
                 <div className='flex items-center gap-1'>
-                  <TrendIcon value={yearOverYearStats.spendingChange} />
+                  <MemoizedTrendIcon value={yearOverYearStats.spendingChange} />
                   <span
                     className={`font-semibold ${
                       yearOverYearStats.spendingChange > 0 ? 'text-red-600' : 'text-green-600'
@@ -193,7 +216,7 @@ export default function YearOverYearComparison({ selectedYear }: YearOverYearCom
               <div className='flex justify-between items-center pt-2 border-t'>
                 <span className='text-sm font-medium'>Change:</span>
                 <div className='flex items-center gap-1'>
-                  <TrendIcon value={-yearOverYearStats.incomeChange} />
+                  <MemoizedTrendIcon value={-yearOverYearStats.incomeChange} />
                   <span
                     className={`font-semibold ${
                       yearOverYearStats.incomeChange > 0 ? 'text-green-600' : 'text-red-600'
@@ -224,7 +247,7 @@ export default function YearOverYearComparison({ selectedYear }: YearOverYearCom
               <YAxis
                 tick={{ fontSize: 12 }}
                 tickLine={{ stroke: '#e0e0e0' }}
-                tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
+                tickFormatter={yAxisTickFormatter}
               />
               <Tooltip content={<CustomTooltip />} />
               <Legend />
@@ -237,6 +260,7 @@ export default function YearOverYearComparison({ selectedYear }: YearOverYearCom
                 dot={{ r: 4 }}
                 activeDot={{ r: 6 }}
                 name={`${selectedYear - 1} Spending`}
+                {...animationProps}
               />
               <Line
                 type='monotone'
@@ -246,6 +270,7 @@ export default function YearOverYearComparison({ selectedYear }: YearOverYearCom
                 dot={{ r: 4 }}
                 activeDot={{ r: 6 }}
                 name={`${selectedYear} Spending`}
+                {...animationProps}
               />
             </LineChart>
           </ResponsiveContainer>
@@ -281,7 +306,7 @@ export default function YearOverYearComparison({ selectedYear }: YearOverYearCom
                       {formatCurrency(data[selectedYear])}
                     </span>
                     <div className='flex items-center gap-1 min-w-[100px] justify-end'>
-                      <TrendIcon value={percentChange} />
+                      <MemoizedTrendIcon value={percentChange} />
                       <span
                         className={`text-sm font-medium ${
                           variance > 0
@@ -305,4 +330,9 @@ export default function YearOverYearComparison({ selectedYear }: YearOverYearCom
       </Card>
     </div>
   );
-}
+};
+
+// Export with React.memo for performance optimization
+export default React.memo(YearOverYearComparison, (prevProps, nextProps) => {
+  return shallowCompareProps(prevProps, nextProps);
+});

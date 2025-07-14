@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Cell, Pie, PieChart, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 
 import { Button } from '@components/ui/button';
@@ -8,11 +8,18 @@ import { Card, CardContent, CardHeader, CardTitle } from '@components/ui/card';
 import { Input } from '@components/ui/input';
 import { Label } from '@components/ui/label';
 import { ScrollArea } from '@components/ui/scroll-area';
-import { useToast } from '@components/ui/use-toast'; // Added
-import { useDBContext } from '@context/DatabaseContext'; // Added
+import { useToast } from '@components/ui/use-toast';
+import { useDBContext } from '@context/DatabaseContext';
 import { useAnalytics } from '@hooks/useAnalytics';
 import { formatCurrency } from '@utils/helpers';
 import { ChartSkeleton } from './skeletons/ChartSkeleton';
+import {
+  shallowCompareProps,
+  getOptimizedAnimationProps,
+  getOptimizedColor,
+  memoizeChartProps,
+  createPerformanceMarker,
+} from '@utils/chartOptimization';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#FF6B6B'];
 
@@ -20,7 +27,144 @@ interface SpendingByCategoryProps {
   selectedYear?: number;
 }
 
-export default function SpendingByCategory({ selectedYear }: SpendingByCategoryProps) {
+// Memoized components for performance
+const MemoizedTrendIndicator = React.memo<{ value: number }>(({ value }) => {
+  if (value === 0) return null;
+  const isPositive = value > 0;
+  return (
+    <span className={`text-sm ${isPositive ? 'text-red-500' : 'text-green-500'}`}>
+      {isPositive ? '↑' : '↓'} {Math.abs(value).toFixed(1)}%
+    </span>
+  );
+});
+
+const MemoizedCategoryDetail = React.memo<{
+  category: any;
+  totalSpending: number;
+  trend: any;
+  budgetInput: string;
+  selectedCategory: string | null;
+  onBudgetChange: (categoryName: string, value: string) => void;
+  onBudgetSave: (categoryName: string) => void;
+  onCategoryClick: (categoryName: string) => void;
+  getDetailedSpending: (categoryName: string) => any[];
+}>(({
+  category,
+  totalSpending,
+  trend,
+  budgetInput,
+  selectedCategory,
+  onBudgetChange,
+  onBudgetSave,
+  onCategoryClick,
+  getDetailedSpending,
+}) => {
+  const handleClick = useCallback(() => {
+    onCategoryClick(category.name);
+  }, [category.name, onCategoryClick]);
+
+  const handleBudgetChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    onBudgetChange(category.name, e.target.value);
+  }, [category.name, onBudgetChange]);
+
+  const handleBudgetBlur = useCallback(() => {
+    onBudgetSave(category.name);
+  }, [category.name, onBudgetSave]);
+
+  // Memoize budget calculation
+  const budgetInfo = useMemo(() => {
+    const spending = category.value;
+    const budget = category.target || 0;
+    let percentageConsumed = 0;
+    let percentageText = '0% of budget used';
+    let progressBarColor = 'bg-blue-600';
+
+    if (budget > 0) {
+      percentageConsumed = (spending / budget) * 100;
+      percentageText = `${Math.abs(percentageConsumed).toFixed(1)}% of budget used`;
+      if (percentageConsumed > 100) {
+        progressBarColor = 'bg-red-500';
+      } else if (percentageConsumed > 75) {
+        progressBarColor = 'bg-yellow-500';
+      }
+    } else if (spending > 0) {
+      percentageText = 'Over budget (no budget set)';
+      percentageConsumed = 101;
+      progressBarColor = 'bg-red-500';
+    } else if (budget === 0 && spending === 0) {
+      percentageText = 'No spending, no budget';
+      percentageConsumed = 0;
+    }
+
+    return { percentageConsumed, percentageText, progressBarColor };
+  }, [category.value, category.target]);
+
+  return (
+    <div
+      className={`p-3 rounded border border-gray-100 mb-2 hover:bg-gray-50 transition-colors cursor-pointer ${
+        selectedCategory === category.name ? 'bg-gray-100' : 'bg-white'
+      }`}
+      onClick={handleClick}
+    >
+      <div className='flex items-center justify-between'>
+        <div>
+          <p className='font-semibold text-gray-900'>{category.name}</p>
+          <p className='text-sm font-medium text-muted-foreground'>
+            {formatCurrency(category.value)} (
+            {totalSpending > 0 ? ((category.value / totalSpending) * 100).toFixed(1) : '0.0'}
+            %)
+          </p>
+          {trend && <MemoizedTrendIndicator value={trend.percentageChange} />}
+        </div>
+        <div className='space-y-1' onClick={(e) => e.stopPropagation()}>
+          <Label htmlFor={`budget-${category.name}`} className='font-medium'>
+            Budget
+          </Label>
+          <Input
+            id={`budget-${category.name}`}
+            type='number'
+            value={budgetInput}
+            onChange={handleBudgetChange}
+            onBlur={handleBudgetBlur}
+            className='w-[120px] font-medium'
+          />
+        </div>
+      </div>
+      <div className='mt-2'>
+        <p className='text-xs text-gray-600 mb-1'>{budgetInfo.percentageText}</p>
+        <div className='w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700'>
+          <div
+            className={`${budgetInfo.progressBarColor} h-2.5 rounded-full`}
+            style={{ width: `${Math.min(Math.abs(budgetInfo.percentageConsumed), 100)}%` }}
+          />
+        </div>
+      </div>
+      {selectedCategory === category.name && (
+        <div className='mt-3 pt-2 border-t border-gray-200 space-y-1'>
+          <h4 className='text-sm font-semibold'>Details:</h4>
+          {getDetailedSpending(category.name).map((item, index) => (
+            <div key={index} className='text-xs flex justify-between text-gray-700'>
+              <span>{item.name}</span>
+              <span>{formatCurrency(item.value)}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}, (prevProps, nextProps) => {
+  return (
+    prevProps.category.name === nextProps.category.name &&
+    prevProps.category.value === nextProps.category.value &&
+    prevProps.category.target === nextProps.category.target &&
+    prevProps.totalSpending === nextProps.totalSpending &&
+    prevProps.budgetInput === nextProps.budgetInput &&
+    prevProps.selectedCategory === nextProps.selectedCategory &&
+    JSON.stringify(prevProps.trend) === JSON.stringify(nextProps.trend)
+  );
+});
+
+const SpendingByCategory = ({ selectedYear }: SpendingByCategoryProps) => {
   const [currentTimeRange, setCurrentTimeRange] = useState<{ startDate: Date; endDate: Date }>(
     () => {
       const today = new Date();
@@ -45,14 +189,38 @@ export default function SpendingByCategory({ selectedYear }: SpendingByCategoryP
     },
   );
 
-  const { categorySpending, detailedCategorySpending, monthlyTrends } =
-    useAnalytics(currentTimeRange);
-  const { updateCategoryBudget, categories: allCategories, loading } = useDBContext(); // Added
-  const { toast } = useToast(); // Added
+  // Memoize analytics data to prevent unnecessary recalculations
+  const analyticsData = useMemo(() => {
+    const marker = createPerformanceMarker('analytics-data');
+    const result = useAnalytics(currentTimeRange);
+    marker.end();
+    return result;
+  }, [currentTimeRange.startDate.getTime(), currentTimeRange.endDate.getTime()]);
+
+  const { categorySpending, detailedCategorySpending, monthlyTrends } = analyticsData;
+  const { updateCategoryBudget, categories: allCategories, loading } = useDBContext();
+  const { toast } = useToast();
 
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [budgetInputs, setBudgetInputs] = useState<Record<string, string>>({}); // Changed to string
-  const trends = monthlyTrends;
+  const [budgetInputs, setBudgetInputs] = useState<Record<string, string>>({});
+
+  // Memoize filtered chart data
+  const chartData = useMemo(() => {
+    const marker = createPerformanceMarker('chart-data-filter');
+    const filtered = categorySpending.filter((cat) => cat.value > 0);
+    marker.end();
+    return filtered;
+  }, [categorySpending]);
+
+  // Memoize total spending calculation
+  const totalSpending = useMemo(() => {
+    return categorySpending.reduce((sum, item) => sum + item.value, 0);
+  }, [categorySpending]);
+
+  // Memoize animation props
+  const animationProps = useMemo(() => {
+    return getOptimizedAnimationProps(chartData.length);
+  }, [chartData.length]);
 
   useEffect(() => {
     const initialBudgets: Record<string, string> = {};
@@ -103,14 +271,15 @@ export default function SpendingByCategory({ selectedYear }: SpendingByCategoryP
     setCurrentTimeRange({ startDate, endDate });
   };
 
-  const handleBudgetInputChange = (categoryName: string, value: string) => {
+  // Memoized event handlers to prevent unnecessary re-renders
+  const handleBudgetInputChange = useCallback((categoryName: string, value: string) => {
     setBudgetInputs((prev) => ({
       ...prev,
       [categoryName]: value,
     }));
-  };
+  }, []);
 
-  const handleSaveBudget = async (categoryName: string) => {
+  const handleSaveBudget = useCallback(async (categoryName: string) => {
     const budgetValueStr = budgetInputs[categoryName];
     if (budgetValueStr === undefined) return; // Should not happen if input is used
 
@@ -174,23 +343,41 @@ export default function SpendingByCategory({ selectedYear }: SpendingByCategoryP
         variant: 'destructive',
       });
     }
-  };
+  }, [budgetInputs, allCategories, updateCategoryBudget, toast, categorySpending]);
 
-  const getDetailedSpending = (category: string) => {
+  const getDetailedSpending = useCallback((category: string) => {
     return detailedCategorySpending[category] || [];
-  };
+  }, [detailedCategorySpending]);
 
-  const totalSpending = categorySpending.reduce((sum, item) => sum + item.value, 0);
+  const handleCategoryClick = useCallback((categoryName: string) => {
+    setSelectedCategory(prev => prev === categoryName ? null : categoryName);
+  }, []);
 
-  const TrendIndicator = ({ value }: { value: number }) => {
-    if (value === 0) return null;
-    const isPositive = value > 0;
-    return (
-      <span className={`text-sm ${isPositive ? 'text-red-500' : 'text-green-500'}`}>
-        {isPositive ? '↑' : '↓'} {Math.abs(value).toFixed(1)}%
-      </span>
-    );
-  };
+  const handlePieClick = useCallback((data: any) => {
+    handleCategoryClick(data.name);
+  }, [handleCategoryClick]);
+
+  // Memoized tooltip and chart props
+  const tooltipProps = useMemo(() => memoizeChartProps({
+    formatter: (value: number) => formatCurrency(value),
+    labelStyle: { color: '#000' },
+    contentStyle: {
+      backgroundColor: '#fff',
+      border: '1px solid #ccc',
+      borderRadius: '4px',
+    },
+  }, []), []);
+
+  const pieChartProps = useMemo(() => memoizeChartProps({
+    cx: '50%',
+    cy: '50%',
+    innerRadius: 60,
+    outerRadius: 80,
+    paddingAngle: 5,
+    dataKey: 'value',
+    onClick: handlePieClick,
+    ...animationProps,
+  }, [handlePieClick, animationProps]), [handlePieClick, animationProps]);
 
   if (loading) {
     return <ChartSkeleton />;
@@ -217,34 +404,21 @@ export default function SpendingByCategory({ selectedYear }: SpendingByCategoryP
       <CardContent>
         <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
           <div className='h-[300px] p-4 bg-gray-50 rounded-lg border border-gray-100'>
-            {categorySpending.length > 0 && categorySpending.some((cat) => cat.value > 0) ? (
+            {chartData.length > 0 ? (
               <ResponsiveContainer width='100%' height='100%'>
                 <PieChart>
                   <Pie
-                    data={categorySpending.filter((cat) => cat.value > 0)}
-                    cx='50%'
-                    cy='50%'
-                    innerRadius={60}
-                    outerRadius={80}
-                    paddingAngle={5}
-                    dataKey='value'
-                    onClick={(data) => setSelectedCategory(data.name)}
+                    data={chartData}
+                    {...pieChartProps}
                   >
-                    {categorySpending
-                      .filter((cat) => cat.value > 0)
-                      .map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
+                    {chartData.map((entry, index) => (
+                      <Cell 
+                        key={`cell-${entry.name}-${index}`} 
+                        fill={getOptimizedColor(entry.name, COLORS)} 
+                      />
+                    ))}
                   </Pie>
-                  <Tooltip
-                    formatter={(value: number) => formatCurrency(value)}
-                    labelStyle={{ color: '#000' }}
-                    contentStyle={{
-                      backgroundColor: '#fff',
-                      border: '1px solid #ccc',
-                      borderRadius: '4px',
-                    }}
-                  />
+                  <Tooltip {...tooltipProps} />
                   <Legend />
                 </PieChart>
               </ResponsiveContainer>
@@ -262,93 +436,24 @@ export default function SpendingByCategory({ selectedYear }: SpendingByCategoryP
               <h3 className='text-lg font-semibold'>Category Details</h3>
               <ScrollArea className='h-[250px] pr-4'>
                 {categorySpending.map((category) => {
-                  const trend = trends.categorySpending[category.name];
+                  const trend = monthlyTrends.categorySpending[category.name];
+                  const budgetInput = budgetInputs[category.name] !== undefined
+                    ? budgetInputs[category.name]
+                    : (category.target || '').toString();
+                  
                   return (
-                    <div
+                    <MemoizedCategoryDetail
                       key={category.name}
-                      className={`p-3 rounded border border-gray-100 mb-2 hover:bg-gray-50 transition-colors ${
-                        selectedCategory === category.name ? 'bg-gray-100' : 'bg-white'
-                      }`}
-                    >
-                      <div className='flex items-center justify-between'>
-                        <div>
-                          <p className='font-semibold text-gray-900'>{category.name}</p>
-                          <p className='text-sm font-medium text-muted-foreground'>
-                            {formatCurrency(category.value)} (
-                            {totalSpending > 0
-                              ? ((category.value / totalSpending) * 100).toFixed(1)
-                              : '0.0'}
-                            %)
-                          </p>
-                          {trend && <TrendIndicator value={trend.percentageChange} />}
-                        </div>
-                        <div className='space-y-1'>
-                          <Label htmlFor={`budget-${category.name}`} className='font-medium'>
-                            Budget
-                          </Label>
-                          <Input
-                            id={`budget-${category.name}`}
-                            type='number'
-                            value={
-                              budgetInputs[category.name] !== undefined
-                                ? budgetInputs[category.name]
-                                : (category.target || '').toString()
-                            }
-                            onChange={(e) => handleBudgetInputChange(category.name, e.target.value)}
-                            onBlur={() => handleSaveBudget(category.name)}
-                            className='w-[120px] font-medium'
-                          />
-                        </div>
-                      </div>
-                      {(() => {
-                        // Calculate and render budget info
-                        const spending = category.value;
-                        const budget = category.target || 0;
-                        let percentageConsumed = 0;
-                        let percentageText = '0% of budget used';
-                        let progressBarColor = 'bg-blue-600'; // Default color
-
-                        if (budget > 0) {
-                          percentageConsumed = (spending / budget) * 100;
-                          percentageText = `${Math.abs(percentageConsumed).toFixed(1)}% of budget used`;
-                          if (percentageConsumed > 100) {
-                            progressBarColor = 'bg-red-500';
-                          } else if (percentageConsumed > 75) {
-                            progressBarColor = 'bg-yellow-500';
-                          }
-                        } else if (spending > 0) {
-                          percentageText = 'Over budget (no budget set)';
-                          percentageConsumed = 101; // To indicate over budget visually
-                          progressBarColor = 'bg-red-500';
-                        } else if (budget === 0 && spending === 0) {
-                          percentageText = 'No spending, no budget';
-                          percentageConsumed = 0;
-                        }
-
-                        return (
-                          <div className='mt-2'>
-                            <p className='text-xs text-gray-600 mb-1'>{percentageText}</p>
-                            <div className='w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700'>
-                              <div
-                                className={`${progressBarColor} h-2.5 rounded-full`}
-                                style={{ width: `${Math.min(Math.abs(percentageConsumed), 100)}%` }}
-                              ></div>
-                            </div>
-                          </div>
-                        );
-                      })()}
-                      {selectedCategory === category.name && (
-                        <div className='mt-3 pt-2 border-t border-gray-200 space-y-1'>
-                          <h4 className='text-sm font-semibold'>Details:</h4>
-                          {getDetailedSpending(category.name).map((item, index) => (
-                            <div key={index} className='text-xs flex justify-between text-gray-700'>
-                              <span>{item.name}</span>
-                              <span>{formatCurrency(item.value)}</span>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
+                      category={category}
+                      totalSpending={totalSpending}
+                      trend={trend}
+                      budgetInput={budgetInput}
+                      selectedCategory={selectedCategory}
+                      onBudgetChange={handleBudgetInputChange}
+                      onBudgetSave={handleSaveBudget}
+                      onCategoryClick={handleCategoryClick}
+                      getDetailedSpending={getDetailedSpending}
+                    />
                   );
                 })}
               </ScrollArea>
@@ -358,4 +463,9 @@ export default function SpendingByCategory({ selectedYear }: SpendingByCategoryP
       </CardContent>
     </Card>
   );
-}
+};
+
+// Export with React.memo for performance optimization
+export default React.memo(SpendingByCategory, (prevProps, nextProps) => {
+  return shallowCompareProps(prevProps, nextProps);
+});

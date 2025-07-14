@@ -1,8 +1,9 @@
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, useCallback } from 'react';
 
 import { useDBContext } from '../context/DatabaseContext';
 import { logger } from '../services/logger';
 import { Transaction } from '../types';
+import { createPerformanceMarker, getCachedData } from '../utils/chartOptimization';
 
 interface SpendingTrendData {
   name: string;
@@ -159,23 +160,17 @@ export const useAnalytics = (timeRange?: { startDate?: Date; endDate?: Date }) =
 
   const { startDate = defaultStartDate, endDate = defaultEndDate } = timeRange || {};
 
+  // Memoized months array to avoid recreation
+  const months = useMemo(() => [
+    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+  ], []);
+
   const spendingTrend = useMemo((): SpendingTrendData[] => {
+    const marker = createPerformanceMarker('spending-trend-calculation');
+    
     try {
       const monthlySpending = new Map<string, number>();
-      const months = [
-        'Jan',
-        'Feb',
-        'Mar',
-        'Apr',
-        'May',
-        'Jun',
-        'Jul',
-        'Aug',
-        'Sep',
-        'Oct',
-        'Nov',
-        'Dec',
-      ];
 
       // Get current date and calculate date range based on actual transaction data
       const today = new Date();
@@ -235,26 +230,16 @@ export const useAnalytics = (timeRange?: { startDate?: Date; endDate?: Date }) =
     } catch (error) {
       logger.error('Error calculating spending trend:', error);
       return DEFAULT_VALUES.spendingTrends;
+    } finally {
+      marker.end();
     }
-  }, [transactions]);
+  }, [transactions, months]);
 
   const spendingOverview = useMemo((): SpendingOverviewData[] => {
+    const marker = createPerformanceMarker('spending-overview-calculation');
+    
     try {
       const monthlyData = new Map<string, { totalSpending: number; totalIncome: number }>();
-      const months = [
-        'Jan',
-        'Feb',
-        'Mar',
-        'Apr',
-        'May',
-        'Jun',
-        'Jul',
-        'Aug',
-        'Sep',
-        'Oct',
-        'Nov',
-        'Dec',
-      ];
 
       // Determine the date range for the overview based on actual transaction data
       let rangeStartDate: Date;
@@ -321,26 +306,36 @@ export const useAnalytics = (timeRange?: { startDate?: Date; endDate?: Date }) =
     } catch (error) {
       logger.error('Error calculating spending overview:', error);
       return DEFAULT_VALUES.spendingOverview;
+    } finally {
+      marker.end();
     }
-  }, [transactions]);
+  }, [transactions, months]);
 
   // Memoize filtered transactions to avoid recalculating when same period is requested
   const filteredTransactions = useMemo(() => {
-    const periodKey = `${startDate.getTime()}-${endDate.getTime()}`;
-    logger.info(
-      `Calculating category spending for period: ${startDate.toISOString()} - ${endDate.toISOString()}`,
-    );
+    const periodKey = `filtered-${startDate.getTime()}-${endDate.getTime()}-${transactions.length}`;
+    
+    return getCachedData(periodKey, () => {
+      const marker = createPerformanceMarker('filter-transactions');
+      
+      logger.info(
+        `Calculating category spending for period: ${startDate.toISOString()} - ${endDate.toISOString()}`,
+      );
 
-    const filtered = transactions.filter((transaction) => {
-      const transactionDate = new Date(transaction.date);
-      return transactionDate >= startDate && transactionDate <= endDate;
+      const filtered = transactions.filter((transaction) => {
+        const transactionDate = new Date(transaction.date);
+        return transactionDate >= startDate && transactionDate <= endDate;
+      });
+
+      logger.info('Filtered transactions for category spending:', filtered);
+      marker.end();
+      return filtered;
     });
-
-    logger.info('Filtered transactions for category spending:', filtered);
-    return filtered;
   }, [transactions, startDate, endDate]);
 
   const categorySpending = useMemo((): CategoryData[] => {
+    const marker = createPerformanceMarker('category-spending-calculation');
+    
     try {
       const categoryTotals = new Map<string, number>();
 
@@ -373,6 +368,8 @@ export const useAnalytics = (timeRange?: { startDate?: Date; endDate?: Date }) =
     } catch (error) {
       logger.error('Error calculating category spending:', error);
       return DEFAULT_VALUES.categoryData;
+    } finally {
+      marker.end();
     }
   }, [filteredTransactions, categories]);
 
@@ -405,22 +402,10 @@ export const useAnalytics = (timeRange?: { startDate?: Date; endDate?: Date }) =
   }, [filteredTransactions, startDate, endDate]);
 
   const monthlyTrends = useMemo((): MonthlyTrends => {
+    const marker = createPerformanceMarker('monthly-trends-calculation');
+    
     try {
       const now = new Date();
-      const months = [
-        'Jan',
-        'Feb',
-        'Mar',
-        'Apr',
-        'May',
-        'Jun',
-        'Jul',
-        'Aug',
-        'Sep',
-        'Oct',
-        'Nov',
-        'Dec',
-      ];
       const currentMonth = now.getMonth();
       const previousMonth = currentMonth === 0 ? 11 : currentMonth - 1;
       const currentYear = now.getFullYear();
@@ -539,10 +524,14 @@ export const useAnalytics = (timeRange?: { startDate?: Date; endDate?: Date }) =
     } catch (error) {
       logger.error('Error calculating monthly trends:', error);
       return DEFAULT_VALUES.monthlyTrends;
+    } finally {
+      marker.end();
     }
-  }, [transactions, categories]);
+  }, [transactions, categories, months]);
 
   const merchantSpending = useMemo((): MerchantSpendingData[] => {
+    const marker = createPerformanceMarker('merchant-spending-calculation');
+    
     try {
       const merchantTotals = new Map<string, { value: number; transactionCount: number }>();
 
@@ -575,6 +564,8 @@ export const useAnalytics = (timeRange?: { startDate?: Date; endDate?: Date }) =
     } catch (error) {
       logger.error('Error calculating merchant spending:', error);
       return DEFAULT_VALUES.merchantSpending;
+    } finally {
+      marker.end();
     }
   }, [filteredTransactions, startDate, endDate]);
 

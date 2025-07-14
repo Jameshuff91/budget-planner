@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useCallback } from 'react';
 import { Gauge, TrendingUp, TrendingDown, AlertTriangle, Activity } from 'lucide-react';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@components/ui/card';
@@ -18,15 +18,38 @@ import {
 import { formatCurrency } from '@utils/helpers';
 import { ChartSkeleton } from './skeletons/ChartSkeleton';
 import { StatCardGridSkeleton } from './skeletons/StatCardSkeleton';
+import {
+  shallowCompareProps,
+  getOptimizedAnimationProps,
+  memoizeChartProps,
+  createPerformanceMarker,
+  optimizeChartData,
+} from '@utils/chartOptimization';
 
 interface SpendingVelocityProps {
   selectedYear: number;
 }
 
-export default function SpendingVelocity({ selectedYear }: SpendingVelocityProps) {
+// Memoized velocity icon component
+const MemoizedVelocityIcon = React.memo<{ trend: string }>(({ trend }) => {
+  switch (trend) {
+    case 'increasing':
+      return <TrendingUp className='h-5 w-5 text-red-500' />;
+    case 'decreasing':
+      return <TrendingDown className='h-5 w-5 text-green-500' />;
+    case 'insufficient':
+      return <AlertTriangle className='h-5 w-5 text-yellow-500' />;
+    default:
+      return <Activity className='h-5 w-5 text-blue-500' />;
+  }
+});
+
+const SpendingVelocity = ({ selectedYear }: SpendingVelocityProps) => {
   const { transactions, loading } = useDBContext();
 
   const velocityData = useMemo(() => {
+    const marker = createPerformanceMarker('velocity-data-calculation');
+    
     const currentDate = new Date();
     const currentMonth = currentDate.getMonth();
     const currentDay = currentDate.getDate();
@@ -92,6 +115,7 @@ export default function SpendingVelocity({ selectedYear }: SpendingVelocityProps
       });
     }
 
+    marker.end();
     return monthlyData;
   }, [transactions, selectedYear]);
 
@@ -117,37 +141,43 @@ export default function SpendingVelocity({ selectedYear }: SpendingVelocityProps
   const dailyChartData = useMemo(() => {
     if (!currentMonthData) return [];
 
-    return currentMonthData.cumulativeSpending.map((spending, index) => ({
+    const data = currentMonthData.cumulativeSpending.map((spending, index) => ({
       day: index + 1,
       actual: spending,
       projected: currentMonthData.velocity * (index + 1),
     }));
+
+    return optimizeChartData(data, 100); // Optimize for performance
   }, [currentMonthData]);
 
-  const CustomTooltip = ({
-    active,
-    payload,
-    label,
-  }: {
-    active?: boolean;
-    payload?: any;
-    label?: any;
-  }) => {
-    if (!active || !payload) return null;
+  // Memoized CustomTooltip component
+  const CustomTooltip = useMemo(() => {
+    return React.memo(({
+      active,
+      payload,
+      label,
+    }: {
+      active?: boolean;
+      payload?: any;
+      label?: any;
+    }) => {
+      if (!active || !payload) return null;
 
-    return (
-      <div className='bg-white p-3 border rounded-lg shadow-lg'>
-        <p className='font-semibold'>Day {label}</p>
-        {payload.map((entry: any, index: number) => (
-          <p key={index} style={{ color: entry.color }}>
-            {entry.name}: {formatCurrency(entry.value)}
-          </p>
-        ))}
-      </div>
-    );
-  };
+      return (
+        <div className='bg-white p-3 border rounded-lg shadow-lg'>
+          <p className='font-semibold'>Day {label}</p>
+          {payload.map((entry: any, index: number) => (
+            <p key={index} style={{ color: entry.color }}>
+              {entry.name}: {formatCurrency(entry.value)}
+            </p>
+          ))}
+        </div>
+      );
+    });
+  }, []);
 
-  const getVelocityColor = (trend: string) => {
+  // Memoized utility functions
+  const getVelocityColor = useCallback((trend: string) => {
     switch (trend) {
       case 'increasing':
         return 'text-red-600';
@@ -156,20 +186,15 @@ export default function SpendingVelocity({ selectedYear }: SpendingVelocityProps
       default:
         return 'text-blue-600';
     }
-  };
+  }, []);
 
-  const getVelocityIcon = (trend: string) => {
-    switch (trend) {
-      case 'increasing':
-        return <TrendingUp className='h-5 w-5 text-red-500' />;
-      case 'decreasing':
-        return <TrendingDown className='h-5 w-5 text-green-500' />;
-      case 'insufficient':
-        return <AlertTriangle className='h-5 w-5 text-yellow-500' />;
-      default:
-        return <Activity className='h-5 w-5 text-blue-500' />;
-    }
-  };
+  // Memoize chart animation props
+  const animationProps = useMemo(() => {
+    return getOptimizedAnimationProps(dailyChartData.length);
+  }, [dailyChartData.length]);
+
+  // Memoized chart formatters
+  const yAxisTickFormatter = useCallback((value: number) => `$${(value / 1000).toFixed(0)}k`, []);
 
   if (loading) {
     return (
@@ -198,7 +223,7 @@ export default function SpendingVelocity({ selectedYear }: SpendingVelocityProps
                 {formatCurrency(currentMonthData?.velocity || 0)}/day
               </p>
               <div className='flex items-center gap-2'>
-                {getVelocityIcon(velocityTrend)}
+                <MemoizedVelocityIcon trend={velocityTrend} />
                 <span className='text-sm text-muted-foreground'>
                   {velocityTrend === 'increasing'
                     ? 'Spending faster'
@@ -276,7 +301,7 @@ export default function SpendingVelocity({ selectedYear }: SpendingVelocityProps
               <YAxis
                 tick={{ fontSize: 12 }}
                 tickLine={{ stroke: '#e0e0e0' }}
-                tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
+                tickFormatter={yAxisTickFormatter}
               />
               <Tooltip content={<CustomTooltip />} />
               <Area
@@ -286,6 +311,7 @@ export default function SpendingVelocity({ selectedYear }: SpendingVelocityProps
                 fill='#e2e8f0'
                 strokeWidth={2}
                 name='Projected'
+                {...animationProps}
               />
               <Area
                 type='monotone'
@@ -294,6 +320,7 @@ export default function SpendingVelocity({ selectedYear }: SpendingVelocityProps
                 fill='#93c5fd'
                 strokeWidth={2}
                 name='Actual'
+                {...animationProps}
               />
             </AreaChart>
           </ResponsiveContainer>
@@ -351,4 +378,9 @@ export default function SpendingVelocity({ selectedYear }: SpendingVelocityProps
       </Card>
     </div>
   );
-}
+};
+
+// Export with React.memo for performance optimization
+export default React.memo(SpendingVelocity, (prevProps, nextProps) => {
+  return shallowCompareProps(prevProps, nextProps);
+});
