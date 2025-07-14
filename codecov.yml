@@ -1,0 +1,122 @@
+codecov:
+  require_ci_to_pass: yes
+  notify:
+    wait_for_ci: true
+
+coverage:
+  precision: 2
+  round: down
+  range: "70...100"
+  
+  status:
+    project:
+      default:
+        # Fail the build if coverage drops below threshold
+        target: 70%
+        threshold: 2%
+        base: auto
+        branches:
+          - master
+          - main
+        if_not_found: success
+        if_ci_failed: error
+        only_pulls: false
+        
+    patch:
+      default:
+        # Require at least 70% coverage on new code
+        target: 70%
+        threshold: 2%
+        base: auto
+        if_not_found: success
+        if_ci_failed: error
+
+comment:
+  layout: "reach,diff,flags,files,footer"
+  behavior: default
+  require_changes: false
+  require_base: false
+  require_head: true
+  
+  # Show coverage for different test types
+  show_carryforward_flags: true
+  show_critical_paths: true
+
+parsers:
+  javascript:
+    enable_partials: yes
+
+ignore:
+  # Ignore test files
+  - "**/__tests__/**/*"
+  - "**/__mocks__/**/*"
+  - "**/test/**/*"
+  - "**/*.test.ts"
+  - "**/*.test.tsx"
+  - "**/*.spec.ts"
+  - "**/*.spec.tsx"
+  
+  # Ignore configuration files
+  - "**/*.config.js"
+  - "**/*.config.ts"
+  - "**/next.config.mjs"
+  - "**/vitest.config.ts"
+  - "**/playwright.config.ts"
+  
+  # Ignore build artifacts
+  - ".next/**/*"
+  - "out/**/*"
+  - "coverage/**/*"
+  - "playwright-report/**/*"
+  
+  # Ignore documentation and scripts
+  - "docs/**/*"
+  - "scripts/**/*"
+  - "*.md"
+  
+  # Ignore generated files
+  - "**/generated/**/*"
+  - "public/sw.js"
+  - "public/workbox-*.js"
+
+flags:
+  unittests:
+    paths:
+      - src/
+      - components/
+      - hooks/
+    carryforward: true
+    
+  e2e:
+    paths:
+      - app/
+      - components/
+    carryforward: false
+
+# Coverage thresholds for specific directories
+component_management:
+  individual_components:
+    - component_id: module_services
+      name: Services
+      paths:
+        - src/services/**
+      target: 80%
+      
+    - component_id: module_components
+      name: Components
+      paths:
+        - components/**
+      target: 75%
+      
+    - component_id: module_utils
+      name: Utilities
+      paths:
+        - src/utils/**
+      target: 85%
+      
+    - component_id: module_hooks
+      name: Hooks
+      paths:
+        - hooks/**
+        - src/hooks/**
+      target: 70%

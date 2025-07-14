@@ -1,0 +1,81 @@
+version: 2
+updates:
+  # Enable version updates for npm
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "America/New_York"
+    open-pull-requests-limit: 10
+    pull-request-branch-name:
+      separator: "-"
+    commit-message:
+      prefix: "deps"
+      prefix-development: "deps-dev"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "automated"
+    reviewers:
+      - "jimhuff" # Replace with actual GitHub username
+    assignees:
+      - "jimhuff" # Replace with actual GitHub username
+    milestone: 1 # Optional: assign to a milestone
+    allow:
+      # Only allow updates for direct dependencies
+      - dependency-type: "direct"
+    ignore:
+      # Ignore specific dependencies that might break
+      - dependency-name: "next"
+        versions: ["15.x", "16.x"] # Stay on Next.js 14 for now
+      - dependency-name: "@types/node"
+        versions: ["21.x", "22.x"] # Match Node version requirements
+    groups:
+      # Group related updates together
+      production-dependencies:
+        patterns:
+          - "*"
+        dependency-type: "production"
+        update-types:
+          - "minor"
+          - "patch"
+      development-dependencies:
+        patterns:
+          - "*"
+        dependency-type: "development"
+        update-types:
+          - "minor"
+          - "patch"
+      radix-ui:
+        patterns:
+          - "@radix-ui/*"
+      testing:
+        patterns:
+          - "vitest*"
+          - "@testing-library/*"
+          - "playwright*"
+      types:
+        patterns:
+          - "@types/*"
+
+  # Enable version updates for GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "America/New_York"
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "ci"
+      include: "scope"
+    labels:
+      - "github-actions"
+      - "automated"
+    reviewers:
+      - "jimhuff" # Replace with actual GitHub username
+    assignees:
+      - "jimhuff" # Replace with actual GitHub username

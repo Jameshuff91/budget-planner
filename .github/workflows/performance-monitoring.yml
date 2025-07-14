@@ -1,0 +1,215 @@
+name: Performance Monitoring
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+    branches: [master, main]
+
+jobs:
+  lighthouse:
+    name: Lighthouse CI
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build application
+        run: npm run build
+
+      - name: Run Lighthouse CI
+        uses: treosh/lighthouse-ci-action@v10
+        with:
+          urls: |
+            http://localhost:3000
+            http://localhost:3000/dashboard
+          uploadArtifacts: true
+          temporaryPublicStorage: true
+          configPath: './.github/lighthouse/lighthouserc.json'
+
+      - name: Save Lighthouse results
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-results
+          path: .lighthouseci
+          retention-days: 30
+
+  bundle-analysis:
+    name: Bundle Size Analysis
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build and analyze bundle
+        run: |
+          npm run build
+          
+          # Create bundle report
+          echo "## Bundle Size Report" >> bundle-report.md
+          echo "" >> bundle-report.md
+          echo "### JavaScript Bundles" >> bundle-report.md
+          echo '```' >> bundle-report.md
+          find .next/static/chunks -name "*.js" -exec du -h {} + | sort -h >> bundle-report.md
+          echo '```' >> bundle-report.md
+          echo "" >> bundle-report.md
+          echo "### CSS Bundles" >> bundle-report.md
+          echo '```' >> bundle-report.md
+          find .next/static/css -name "*.css" -exec du -h {} + 2>/dev/null | sort -h >> bundle-report.md || echo "No CSS files found" >> bundle-report.md
+          echo '```' >> bundle-report.md
+          
+          # Calculate total sizes
+          echo "" >> bundle-report.md
+          echo "### Total Sizes" >> bundle-report.md
+          JS_TOTAL=$(find .next/static/chunks -name "*.js" -exec du -k {} + | awk '{sum+=$1} END {print sum}')
+          CSS_TOTAL=$(find .next/static/css -name "*.css" -exec du -k {} + 2>/dev/null | awk '{sum+=$1} END {print sum}' || echo 0)
+          echo "- Total JavaScript: ${JS_TOTAL}KB" >> bundle-report.md
+          echo "- Total CSS: ${CSS_TOTAL}KB" >> bundle-report.md
+          echo "- Grand Total: $((JS_TOTAL + CSS_TOTAL))KB" >> bundle-report.md
+
+      - name: Upload bundle report
+        uses: actions/upload-artifact@v4
+        with:
+          name: bundle-report
+          path: bundle-report.md
+          retention-days: 30
+
+      - name: Comment on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const report = fs.readFileSync('bundle-report.md', 'utf8');
+            
+            // Find existing comment
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            
+            const botComment = comments.find(comment => 
+              comment.user.type === 'Bot' && comment.body.includes('Bundle Size Report')
+            );
+            
+            const body = `## 📊 Bundle Size Report\n\n${report}`;
+            
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body
+              });
+            }
+
+  memory-profiling:
+    name: Memory Usage Analysis
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: |
+          npm ci
+          npx playwright install chromium
+
+      - name: Build application
+        run: npm run build
+
+      - name: Start application
+        run: |
+          npm start &
+          sleep 10
+
+      - name: Run memory profiling
+        run: |
+          cat > memory-test.js << 'EOF'
+          const { chromium } = require('playwright');
+          
+          (async () => {
+            const browser = await chromium.launch();
+            const context = await browser.newContext();
+            const page = await context.newPage();
+            
+            // Collect memory metrics
+            await page.goto('http://localhost:3000');
+            
+            const metrics = await page.evaluate(() => {
+              if (performance.memory) {
+                return {
+                  usedJSHeapSize: Math.round(performance.memory.usedJSHeapSize / 1048576),
+                  totalJSHeapSize: Math.round(performance.memory.totalJSHeapSize / 1048576),
+                  jsHeapSizeLimit: Math.round(performance.memory.jsHeapSizeLimit / 1048576)
+                };
+              }
+              return null;
+            });
+            
+            console.log('Memory Metrics (MB):');
+            console.log(JSON.stringify(metrics, null, 2));
+            
+            // Performance metrics
+            const perfMetrics = await page.evaluate(() => {
+              const paint = performance.getEntriesByType('paint');
+              const navigation = performance.getEntriesByType('navigation')[0];
+              
+              return {
+                firstPaint: paint.find(p => p.name === 'first-paint')?.startTime,
+                firstContentfulPaint: paint.find(p => p.name === 'first-contentful-paint')?.startTime,
+                domContentLoaded: navigation?.domContentLoadedEventEnd - navigation?.domContentLoadedEventStart,
+                loadComplete: navigation?.loadEventEnd - navigation?.loadEventStart
+              };
+            });
+            
+            console.log('\nPerformance Metrics (ms):');
+            console.log(JSON.stringify(perfMetrics, null, 2));
+            
+            await browser.close();
+          })();
+          EOF
+          
+          node memory-test.js > memory-report.txt
+
+      - name: Save memory report
+        uses: actions/upload-artifact@v4
+        with:
+          name: memory-report
+          path: memory-report.txt
+          retention-days: 30

@@ -1,0 +1,49 @@
+# CODEOWNERS file for Budget Planner
+# This file defines who is responsible for code in this repository
+# These owners will be requested for review when someone opens a pull request
+
+# Default owners for everything in the repo
+# Replace 'jimhuff' with actual GitHub username(s)
+* @jimhuff
+
+# Frontend components
+/components/ @jimhuff
+/app/ @jimhuff
+/hooks/ @jimhuff
+/src/hooks/ @jimhuff
+
+# Services and business logic
+/src/services/ @jimhuff
+/src/utils/ @jimhuff
+/src/context/ @jimhuff
+
+# Configuration files
+/*.config.* @jimhuff
+/.github/ @jimhuff
+/package.json @jimhuff
+/package-lock.json @jimhuff
+
+# Testing
+/__tests__/ @jimhuff
+/__mocks__/ @jimhuff
+/e2e/ @jimhuff
+/playwright.config.ts @jimhuff
+/vitest.config.ts @jimhuff
+
+# Documentation
+/*.md @jimhuff
+/docs/ @jimhuff
+
+# CI/CD
+/.github/workflows/ @jimhuff
+/.github/actions/ @jimhuff
+
+# Security-sensitive files
+/.env* @jimhuff
+/src/services/llmService.ts @jimhuff
+/src/services/plaidService.ts @jimhuff
+
+# Build and deployment
+/next.config.mjs @jimhuff
+/public/ @jimhuff
+/scripts/ @jimhuff
