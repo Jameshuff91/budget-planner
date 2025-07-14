@@ -288,6 +288,7 @@ This document provides a comprehensive summary of all features implemented in th
 ### New E2E Tests (NEW)
 
 - `/e2e/csv-export.spec.ts` - Comprehensive tests for CSV export functionality
+- `/e2e/spending-alerts.spec.ts` - Comprehensive tests for spending alerts configuration
 
 ## Dependencies Added
 
@@ -455,10 +456,13 @@ PLAID_REDIRECT_URI=optional_redirect_uri
 
 ### 1. Enhanced Test Coverage
 
-- Additional E2E tests for:
+- Additional E2E tests completed:
+  - ✅ Spending alerts configuration (accessing settings, creating rules, managing thresholds)
+  - ✅ Alert notifications and permissions handling
+  - ✅ Alert persistence and dismissal functionality
+- Additional E2E tests planned:
   - Transaction editing flows
   - Category rule management
-  - Alert configuration
   - Bank connection flows
   - Analytics features
 

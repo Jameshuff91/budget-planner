@@ -27,14 +27,14 @@ test.describe('Transaction Management', () => {
       page
         .locator('[data-radix-collection-item], [role="status"]')
         .filter({ hasText: /Success|processed/i })
-        .first()
+        .first(),
     ).toBeVisible({ timeout: 10000 });
   }
 
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
     await uploadSampleData(page);
-    
+
     // Click on the Transactions tab to show the transaction list
     await page.waitForLoadState('networkidle');
     await page.locator('button[role="tab"]:has-text("Transactions")').click();
@@ -44,7 +44,9 @@ test.describe('Transaction Management', () => {
   test.describe('Viewing Transactions', () => {
     test('should display transaction list after upload', async ({ page }) => {
       // Check for Transaction History card - using CardTitle component
-      await expect(page.locator('text=Transaction History').first()).toBeVisible({ timeout: 10000 });
+      await expect(page.locator('text=Transaction History').first()).toBeVisible({
+        timeout: 10000,
+      });
 
       // Check for transaction table
       await expect(page.locator('table').first()).toBeVisible();
@@ -59,8 +61,10 @@ test.describe('Transaction Management', () => {
 
     test('should display all uploaded transactions', async ({ page }) => {
       // Wait for the Transaction History section to be visible
-      await expect(page.locator('text=Transaction History').first()).toBeVisible({ timeout: 10000 });
-      
+      await expect(page.locator('text=Transaction History').first()).toBeVisible({
+        timeout: 10000,
+      });
+
       // Wait for transactions to load
       await page.waitForSelector('table tbody tr', { timeout: 10000 });
 
@@ -108,8 +112,10 @@ test.describe('Transaction Management', () => {
   test.describe('Searching Transactions', () => {
     test('should filter transactions by search term', async ({ page }) => {
       // Wait for the Transaction History section
-      await expect(page.locator('text=Transaction History').first()).toBeVisible({ timeout: 10000 });
-      
+      await expect(page.locator('text=Transaction History').first()).toBeVisible({
+        timeout: 10000,
+      });
+
       // Find search input
       const searchInput = page.locator('input[placeholder="Search transactions..."]').first();
       await expect(searchInput).toBeVisible();
@@ -134,7 +140,7 @@ test.describe('Transaction Management', () => {
 
     test('should show no results message for empty search', async ({ page }) => {
       const searchInput = page.locator('input[placeholder="Search transactions..."]');
-      
+
       // Search for something that doesn't exist
       await searchInput.fill('xyz123nonsense');
       await page.waitForTimeout(500);
@@ -145,7 +151,7 @@ test.describe('Transaction Management', () => {
 
     test('should clear search and show all transactions', async ({ page }) => {
       const searchInput = page.locator('input[placeholder="Search transactions..."]');
-      
+
       // Search and then clear
       await searchInput.fill('bill');
       await page.waitForTimeout(500);
@@ -161,7 +167,7 @@ test.describe('Transaction Management', () => {
 
     test('should be case-insensitive search', async ({ page }) => {
       const searchInput = page.locator('input[placeholder="Search transactions..."]');
-      
+
       // Search with different cases
       await searchInput.fill('GROCERY');
       await page.waitForTimeout(500);
@@ -176,8 +182,10 @@ test.describe('Transaction Management', () => {
   test.describe('Filtering by Category', () => {
     test('should display category filter dropdown', async ({ page }) => {
       // Wait for the Transaction History section
-      await expect(page.locator('text=Transaction History').first()).toBeVisible({ timeout: 10000 });
-      
+      await expect(page.locator('text=Transaction History').first()).toBeVisible({
+        timeout: 10000,
+      });
+
       // Find category filter - it's the second select element (first is year selector)
       const selects = page.locator('select');
       const categoryFilter = selects.nth(1);
@@ -195,8 +203,10 @@ test.describe('Transaction Management', () => {
 
     test('should filter transactions by category', async ({ page }) => {
       // Wait for the Transaction History section
-      await expect(page.locator('text=Transaction History').first()).toBeVisible({ timeout: 10000 });
-      
+      await expect(page.locator('text=Transaction History').first()).toBeVisible({
+        timeout: 10000,
+      });
+
       // Find category filter - it's the second select element
       const selects = page.locator('select');
       const categoryFilter = selects.nth(1);
@@ -216,8 +226,10 @@ test.describe('Transaction Management', () => {
 
     test('should combine search and category filters', async ({ page }) => {
       // Wait for the Transaction History section
-      await expect(page.locator('text=Transaction History').first()).toBeVisible({ timeout: 10000 });
-      
+      await expect(page.locator('text=Transaction History').first()).toBeVisible({
+        timeout: 10000,
+      });
+
       const searchInput = page.locator('input[placeholder="Search transactions..."]').first();
       const selects = page.locator('select');
       const categoryFilter = selects.nth(1);
@@ -237,8 +249,10 @@ test.describe('Transaction Management', () => {
 
     test('should reset to all categories', async ({ page }) => {
       // Wait for the Transaction History section
-      await expect(page.locator('text=Transaction History').first()).toBeVisible({ timeout: 10000 });
-      
+      await expect(page.locator('text=Transaction History').first()).toBeVisible({
+        timeout: 10000,
+      });
+
       const selects = page.locator('select');
       const categoryFilter = selects.nth(1);
 
@@ -258,18 +272,28 @@ test.describe('Transaction Management', () => {
   test.describe('Editing Transactions', () => {
     test('should open edit modal when edit button is clicked', async ({ page }) => {
       // Wait for the Transaction History section
-      await expect(page.locator('text=Transaction History').first()).toBeVisible({ timeout: 10000 });
-      
+      await expect(page.locator('text=Transaction History').first()).toBeVisible({
+        timeout: 10000,
+      });
+
       // Wait for transactions to load
       await page.waitForSelector('table tbody tr', { timeout: 10000 });
-      
+
       // Click edit button on first transaction - find by the Edit2 icon
-      const firstEditButton = page.locator('table').first().locator('tbody tr').first().locator('button').first();
+      const firstEditButton = page
+        .locator('table')
+        .first()
+        .locator('tbody tr')
+        .first()
+        .locator('button')
+        .first();
       await firstEditButton.click();
 
       // Verify modal is open
       await expect(page.locator('h2:has-text("Edit Transaction")')).toBeVisible();
-      await expect(page.locator('text=Make changes to the transaction details below.')).toBeVisible();
+      await expect(
+        page.locator('text=Make changes to the transaction details below.'),
+      ).toBeVisible();
     });
 
     test('should populate edit form with transaction data', async ({ page }) => {
@@ -281,7 +305,7 @@ test.describe('Transaction Management', () => {
       await expect(page.locator('input#date')).toHaveValue('2024-01-15');
       await expect(page.locator('input#description')).toHaveValue('Grocery Store');
       await expect(page.locator('input#amount')).toHaveValue('50.25');
-      
+
       // Verify type is set to expense
       await expect(page.locator('[role="combobox"]').first()).toContainText('Expense');
     });
@@ -408,20 +432,28 @@ test.describe('Transaction Management', () => {
   test.describe('Deleting Transactions', () => {
     test('should show confirmation dialog when delete is clicked', async ({ page }) => {
       // Wait for the Transaction History section
-      await expect(page.locator('text=Transaction History').first()).toBeVisible({ timeout: 10000 });
-      
+      await expect(page.locator('text=Transaction History').first()).toBeVisible({
+        timeout: 10000,
+      });
+
       // Wait for transactions to load
       await page.waitForSelector('table tbody tr', { timeout: 10000 });
-      
+
       // Set up dialog handler
-      page.on('dialog', dialog => {
+      page.on('dialog', (dialog) => {
         expect(dialog.type()).toBe('confirm');
         expect(dialog.message()).toContain('Are you sure you want to delete this transaction?');
         dialog.accept();
       });
 
       // Click delete button - it's the second button in the first row
-      const firstDeleteButton = page.locator('table').first().locator('tbody tr').first().locator('button.text-red-600').first();
+      const firstDeleteButton = page
+        .locator('table')
+        .first()
+        .locator('tbody tr')
+        .first()
+        .locator('button.text-red-600')
+        .first();
       await firstDeleteButton.click();
 
       // Wait for deletion
@@ -433,10 +465,15 @@ test.describe('Transaction Management', () => {
       const initialCount = await page.locator('table tbody tr').count();
 
       // Set up dialog handler to accept
-      page.on('dialog', dialog => dialog.accept());
+      page.on('dialog', (dialog) => dialog.accept());
 
       // Delete first transaction
-      const firstDescription = await page.locator('table tbody tr').first().locator('td').nth(1).textContent();
+      const firstDescription = await page
+        .locator('table tbody tr')
+        .first()
+        .locator('td')
+        .nth(1)
+        .textContent();
       await page.locator('button[aria-label*="Delete"], button.text-red-600').first().click();
 
       // Wait for deletion
@@ -452,7 +489,7 @@ test.describe('Transaction Management', () => {
       const initialCount = await page.locator('table tbody tr').count();
 
       // Set up dialog handler to cancel
-      page.on('dialog', dialog => dialog.dismiss());
+      page.on('dialog', (dialog) => dialog.dismiss());
 
       // Try to delete
       await page.locator('button[aria-label*="Delete"], button.text-red-600').first().click();
@@ -471,7 +508,7 @@ test.describe('Transaction Management', () => {
       const initialTotal = totalText!.match(/\$([\d,.-]+)/)![1];
 
       // Set up dialog handler
-      page.on('dialog', dialog => dialog.accept());
+      page.on('dialog', (dialog) => dialog.accept());
 
       // Delete a transaction (Salary - $2500)
       const salaryRow = page.locator('tr', { has: page.locator('text=Salary') });
@@ -482,7 +519,7 @@ test.describe('Transaction Management', () => {
 
       // Verify summary is updated
       await expect(page.locator('text=Total Transactions: 9')).toBeVisible();
-      
+
       // Total should be different
       const newTotalText = await page.locator('text=/Total: \\$[\\d,.-]+/').textContent();
       const newTotal = newTotalText!.match(/\$([\d,.-]+)/)![1];
@@ -533,12 +570,12 @@ test.describe('Transaction Management', () => {
 
     test('should disable export buttons when no transactions', async ({ page }) => {
       // Set up dialog handler to accept all
-      page.on('dialog', dialog => dialog.accept());
+      page.on('dialog', (dialog) => dialog.accept());
 
       // Delete all transactions
       for (let i = 0; i < 10; i++) {
         const deleteButtons = page.locator('button[aria-label*="Delete"], button.text-red-600');
-        if (await deleteButtons.count() > 0) {
+        if ((await deleteButtons.count()) > 0) {
           await deleteButtons.first().click();
           await page.waitForTimeout(200);
         }
@@ -587,7 +624,7 @@ test.describe('Transaction Management', () => {
 
     test('should handle special characters in search', async ({ page }) => {
       const searchInput = page.locator('input[placeholder="Search transactions..."]');
-      
+
       // Search with special characters
       await searchInput.fill('$%^&*()');
       await page.waitForTimeout(500);

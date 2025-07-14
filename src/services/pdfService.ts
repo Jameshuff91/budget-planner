@@ -18,7 +18,7 @@ declare global {
 if (typeof window !== 'undefined') {
   // Use local worker file to avoid CORS issues
   pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
-  
+
   logger.info('PDF.js version:', pdfjs.version);
   logger.info('Worker URL:', pdfjs.GlobalWorkerOptions.workerSrc);
 }
@@ -1473,14 +1473,14 @@ class PDFService {
       logger.info('Document stored successfully');
 
       // Load PDF document
-      const loadingTask = pdfjs.getDocument({ 
+      const loadingTask = pdfjs.getDocument({
         data: arrayBuffer,
         // Disable worker to use fake worker if needed
         useWorkerFetch: false,
         isEvalSupported: false,
         useSystemFonts: true,
       });
-      
+
       const pdfDoc = await loadingTask.promise;
       const extractedData: ExtractedData[] = [];
 
