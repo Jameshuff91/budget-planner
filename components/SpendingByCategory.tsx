@@ -194,7 +194,7 @@ const SpendingByCategory = ({ selectedYear }: SpendingByCategoryProps) => {
     },
   );
 
-  // Call useAnalytics directly, not inside useMemo
+  // Call useAnalytics with stable timeRange
   const analyticsData = useAnalytics(currentTimeRange);
 
   const { categorySpending, detailedCategorySpending, monthlyTrends } = analyticsData;
@@ -220,6 +220,37 @@ const SpendingByCategory = ({ selectedYear }: SpendingByCategoryProps) => {
     return getOptimizedAnimationProps(chartData.length);
   }, [chartData.length]);
 
+  // Define functions before using them in effects
+  const handleSetCurrentMonth = useCallback(() => {
+    const today = new Date();
+    const year = selectedYear || today.getFullYear();
+    const startDate = new Date(year, today.getMonth(), 1);
+    startDate.setHours(0, 0, 0, 0);
+    const endDate = new Date(year, today.getMonth() + 1, 0);
+    endDate.setHours(23, 59, 59, 999);
+    setCurrentTimeRange({ startDate, endDate });
+  }, [selectedYear]);
+
+  const handleSetLast3Months = useCallback(() => {
+    const today = new Date();
+    const year = selectedYear || today.getFullYear();
+    const endDate = new Date(year, today.getMonth() + 1, 0); // End of current month
+    endDate.setHours(23, 59, 59, 999);
+    const startDate = new Date(year, today.getMonth() - 2, 1); // Start of month 2 months ago
+    startDate.setHours(0, 0, 0, 0);
+    setCurrentTimeRange({ startDate, endDate });
+  }, [selectedYear]);
+
+  const handleSetYearToDate = useCallback(() => {
+    const year = selectedYear || new Date().getFullYear();
+    const startDate = new Date(year, 0, 1); // First day of selected year
+    startDate.setHours(0, 0, 0, 0);
+    const endDate = new Date(year, 11, 31); // End of selected year
+    endDate.setHours(23, 59, 59, 999);
+    setCurrentTimeRange({ startDate, endDate });
+  }, [selectedYear]);
+
+  // Now add the useEffects after all function definitions
   useEffect(() => {
     const initialBudgets: Record<string, string> = {};
     categorySpending.forEach((cat) => {
@@ -238,36 +269,7 @@ const SpendingByCategory = ({ selectedYear }: SpendingByCategoryProps) => {
         handleSetYearToDate(); // For historical years, show full year
       }
     }
-  }, [selectedYear]);
-
-  const handleSetCurrentMonth = () => {
-    const today = new Date();
-    const year = selectedYear || today.getFullYear();
-    const startDate = new Date(year, today.getMonth(), 1);
-    startDate.setHours(0, 0, 0, 0);
-    const endDate = new Date(year, today.getMonth() + 1, 0);
-    endDate.setHours(23, 59, 59, 999);
-    setCurrentTimeRange({ startDate, endDate });
-  };
-
-  const handleSetLast3Months = () => {
-    const today = new Date();
-    const year = selectedYear || today.getFullYear();
-    const endDate = new Date(year, today.getMonth() + 1, 0); // End of current month
-    endDate.setHours(23, 59, 59, 999);
-    const startDate = new Date(year, today.getMonth() - 2, 1); // Start of month 2 months ago
-    startDate.setHours(0, 0, 0, 0);
-    setCurrentTimeRange({ startDate, endDate });
-  };
-
-  const handleSetYearToDate = () => {
-    const year = selectedYear || new Date().getFullYear();
-    const startDate = new Date(year, 0, 1); // First day of selected year
-    startDate.setHours(0, 0, 0, 0);
-    const endDate = new Date(year, 11, 31); // End of selected year
-    endDate.setHours(23, 59, 59, 999);
-    setCurrentTimeRange({ startDate, endDate });
-  };
+  }, [selectedYear, handleSetCurrentMonth, handleSetYearToDate]);
 
   // Memoized event handlers to prevent unnecessary re-renders
   const handleBudgetInputChange = useCallback((categoryName: string, value: string) => {

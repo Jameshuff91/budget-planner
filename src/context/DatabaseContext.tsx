@@ -132,6 +132,8 @@ export function DatabaseProvider({ children }: { children: ReactNode }) {
 
   // Set up offline queue sync handler
   useEffect(() => {
+    if (!offlineQueue) return;
+    
     const unsubscribe = offlineQueue.onSync(async (operation) => {
       try {
         switch (operation.type) {
@@ -186,8 +188,10 @@ export function DatabaseProvider({ children }: { children: ReactNode }) {
       try {
         if (isOffline) {
           // Queue for offline sync
-          const queueId = await offlineQueue.queueAddTransaction(transaction);
-          logger.info('Transaction queued for offline sync:', queueId);
+          if (offlineQueue) {
+            const queueId = await offlineQueue.queueAddTransaction(transaction);
+            logger.info('Transaction queued for offline sync:', queueId);
+          }
 
           // Add to local state optimistically
           const newTransaction: Transaction = {
@@ -370,8 +374,10 @@ export function DatabaseProvider({ children }: { children: ReactNode }) {
       try {
         if (isOffline) {
           // Queue for offline sync
-          const queueId = await offlineQueue.queueUpdateTransaction(transaction);
-          logger.info('Transaction update queued for offline sync:', queueId);
+          if (offlineQueue) {
+            const queueId = await offlineQueue.queueUpdateTransaction(transaction);
+            logger.info('Transaction update queued for offline sync:', queueId);
+          }
 
           // Update local state optimistically
           setTransactions((prev) => prev.map((t) => (t.id === transaction.id ? transaction : t)));
@@ -396,8 +402,10 @@ export function DatabaseProvider({ children }: { children: ReactNode }) {
       try {
         if (isOffline) {
           // Queue for offline sync
-          const queueId = await offlineQueue.queueDeleteTransaction(id);
-          logger.info('Transaction deletion queued for offline sync:', queueId);
+          if (offlineQueue) {
+            const queueId = await offlineQueue.queueDeleteTransaction(id);
+            logger.info('Transaction deletion queued for offline sync:', queueId);
+          }
 
           // Remove from local state optimistically
           setTransactions((prev) => prev.filter((t) => t.id !== id));

@@ -379,28 +379,40 @@ class OfflineQueue {
   async clearSyncedOperations(): Promise<void> {
     if (!this.db) return;
 
-    const transaction = this.db.transaction([this.storeName], 'readwrite');
-    const store = transaction.objectStore(this.storeName);
-    const index = store.index('synced');
+    try {
+      const transaction = this.db.transaction([this.storeName], 'readwrite');
+      const store = transaction.objectStore(this.storeName);
+      
+      // Check if the 'synced' index exists before using it
+      if (!store.indexNames.contains('synced')) {
+        logger.warn('Synced index not found, skipping clearSyncedOperations');
+        return;
+      }
+      
+      const index = store.index('synced');
 
-    return new Promise<void>((resolve, reject) => {
-      const request = index.openCursor(IDBKeyRange.only(true)); // true = synced operations
+      return new Promise<void>((resolve, reject) => {
+        const request = index.openCursor(IDBKeyRange.only(true)); // true = synced operations
 
-      request.onsuccess = (event) => {
-        const cursor = (event.target as IDBRequest).result;
-        if (cursor) {
-          cursor.delete();
-          cursor.continue();
-        } else {
-          resolve();
-        }
-      };
+        request.onsuccess = (event) => {
+          const cursor = (event.target as IDBRequest).result;
+          if (cursor) {
+            cursor.delete();
+            cursor.continue();
+          } else {
+            resolve();
+          }
+        };
 
-      request.onerror = () => reject(request.error);
-    });
+        request.onerror = () => reject(request.error);
+      });
+    } catch (error) {
+      logger.error('Error in clearSyncedOperations:', error);
+      throw error;
+    }
   }
 }
 
-// Export singleton instance (only create in browser)
-export const offlineQueue = typeof window !== 'undefined' ? new OfflineQueue() : null;
+// Export singleton instance
+export const offlineQueue = new OfflineQueue();
 export default offlineQueue;

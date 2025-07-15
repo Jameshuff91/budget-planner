@@ -246,8 +246,12 @@ export default function Dashboard() {
           </ChartErrorBoundary>
         </TabsContent>
         <TabsContent value='analytics' className='space-y-6'>
-          <YearOverYearComparison selectedYear={selectedYear} />
-          <SpendingVelocity selectedYear={selectedYear} />
+          <ChartErrorBoundary chartName='Year Over Year Comparison'>
+            <YearOverYearComparison selectedYear={selectedYear} />
+          </ChartErrorBoundary>
+          <ChartErrorBoundary chartName='Spending Velocity'>
+            <SpendingVelocity selectedYear={selectedYear} />
+          </ChartErrorBoundary>
         </TabsContent>
         <TabsContent value='transactions'>
           <TransactionList />

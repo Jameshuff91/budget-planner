@@ -26,7 +26,10 @@ export class SyncService {
   private activeSyncs: Set<string> = new Set();
 
   private constructor() {
-    this.loadSyncData();
+    // Only load sync data in browser environment
+    if (typeof window !== 'undefined') {
+      this.loadSyncData();
+    }
   }
 
   static getInstance(): SyncService {
@@ -38,6 +41,9 @@ export class SyncService {
 
   // Load sync data from localStorage
   private loadSyncData(): void {
+    if (typeof window === 'undefined' || !window.localStorage) {
+      return;
+    }
     try {
       const cursorsData = localStorage.getItem('sync.cursors');
       if (cursorsData) {
@@ -57,6 +63,9 @@ export class SyncService {
 
   // Save sync data to localStorage
   private saveSyncData(): void {
+    if (typeof window === 'undefined' || !window.localStorage) {
+      return;
+    }
     try {
       const cursorsObj = Object.fromEntries(this.syncCursors);
       localStorage.setItem('sync.cursors', JSON.stringify(cursorsObj));
@@ -348,5 +357,14 @@ export class SyncService {
   }
 }
 
-// Export singleton instance
-export const syncService = SyncService.getInstance();
+// Export function to get singleton instance (lazy initialization)
+export const getSyncService = () => {
+  if (typeof window === 'undefined') {
+    // Return a dummy object for SSR
+    return null;
+  }
+  return SyncService.getInstance();
+};
+
+// For backward compatibility, export a getter that returns the service
+export const syncService = typeof window !== 'undefined' ? SyncService.getInstance() : null;

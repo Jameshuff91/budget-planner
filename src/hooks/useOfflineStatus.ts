@@ -29,6 +29,10 @@ export function useOfflineStatus(): OfflineStatusHook {
 
   // Force sync function
   const forceSync = useCallback(async () => {
+    if (!offlineQueue) {
+      logger.warn('Offline queue not available');
+      return;
+    }
     try {
       setRetryCount((prev) => prev + 1);
       await offlineQueue.forceSync();
@@ -41,6 +45,10 @@ export function useOfflineStatus(): OfflineStatusHook {
 
   // Clear synced operations
   const clearSyncedOperations = useCallback(async () => {
+    if (!offlineQueue) {
+      logger.warn('Offline queue not available');
+      return;
+    }
     try {
       await offlineQueue.clearSyncedOperations();
       logger.info('Synced operations cleared');
@@ -52,7 +60,7 @@ export function useOfflineStatus(): OfflineStatusHook {
 
   // Enhanced network status detection
   const checkNetworkStatus = useCallback(async (): Promise<boolean> => {
-    if (!navigator.onLine) {
+    if (typeof navigator === 'undefined' || !navigator.onLine) {
       return false;
     }
 
@@ -74,11 +82,11 @@ export function useOfflineStatus(): OfflineStatusHook {
     let mounted = true;
 
     // Listen to offline queue status changes
-    const unsubscribeStatus = offlineQueue.onStatusChange((newStatus) => {
+    const unsubscribeStatus = offlineQueue?.onStatusChange((newStatus) => {
       if (mounted) {
         setStatus(newStatus);
       }
-    });
+    }) || (() => {});
 
     // Enhanced network event listeners
     const handleOnline = async () => {
@@ -88,7 +96,7 @@ export function useOfflineStatus(): OfflineStatusHook {
         if (isActuallyOnline) {
           logger.info('Network connection restored');
           // Trigger sync when coming back online
-          offlineQueue.processPendingOperations();
+          offlineQueue?.processPendingOperations();
         }
       }
     };
@@ -102,14 +110,14 @@ export function useOfflineStatus(): OfflineStatusHook {
 
     // Periodic connectivity check when online
     const connectivityInterval = setInterval(async () => {
-      if (navigator.onLine && mounted) {
+      if (typeof navigator !== 'undefined' && navigator.onLine && mounted) {
         const isActuallyOnline = await checkNetworkStatus();
         setStatus((prev) => {
           if (prev.isOnline !== isActuallyOnline) {
             logger.info(`Network status changed: ${isActuallyOnline ? 'online' : 'offline'}`);
             if (isActuallyOnline) {
               // Trigger sync when connectivity is restored
-              offlineQueue.processPendingOperations();
+              offlineQueue?.processPendingOperations();
             }
           }
           return { ...prev, isOnline: isActuallyOnline };
@@ -126,7 +134,7 @@ export function useOfflineStatus(): OfflineStatusHook {
       if (!document.hidden && navigator.onLine && mounted) {
         const isActuallyOnline = await checkNetworkStatus();
         if (isActuallyOnline) {
-          offlineQueue.processPendingOperations();
+          offlineQueue?.processPendingOperations();
         }
       }
     };
