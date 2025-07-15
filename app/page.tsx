@@ -6,6 +6,8 @@ import PDFUpload from '@components/PDFUpload';
 import { Button } from '@components/ui/button';
 import { toast } from '@components/ui/use-toast';
 import { useDBContext } from '@context/DatabaseContext';
+import { useAuth } from '@context/AuthContext';
+import { Auth } from '@components/Auth';
 import { pdfService } from '@services/pdfService';
 import {
   categorizeTransactionsBatchWithAI,
@@ -14,6 +16,7 @@ import {
 
 export default function Home() {
   const { clearTransactions, addTransaction } = useDBContext();
+  const { isAuthenticated, isLoading, user, logout } = useAuth();
 
   const handleReset = async () => {
     try {
@@ -84,15 +87,41 @@ export default function Home() {
     }
   };
 
+  // Show loading state
+  if (isLoading) {
+    return (
+      <main className='flex min-h-screen flex-col items-center justify-center'>
+        <div className='animate-pulse text-muted-foreground'>Loading...</div>
+      </main>
+    );
+  }
+
+  // Show auth screen if not authenticated
+  if (!isAuthenticated) {
+    return (
+      <main className='flex min-h-screen flex-col items-center justify-center p-4'>
+        <Auth onSuccess={() => window.location.reload()} />
+      </main>
+    );
+  }
+
   return (
     <main className='flex min-h-screen flex-col items-center justify-between p-24'>
       <div className='z-10 max-w-5xl w-full items-center justify-between font-mono text-sm lg:flex'>
         <p className='fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30'>
           Budget Planner Dashboard
         </p>
-        <Button variant='outline' className='fixed right-4 top-4' onClick={handleReset}>
-          Reset Dashboard
-        </Button>
+        <div className='fixed right-4 top-4 flex items-center gap-4'>
+          <span className='text-sm text-muted-foreground'>
+            {user?.email}
+          </span>
+          <Button variant='outline' onClick={handleReset}>
+            Reset Dashboard
+          </Button>
+          <Button variant='outline' onClick={logout}>
+            Logout
+          </Button>
+        </div>
       </div>
       <div className='container mx-auto py-8 px-4'>
         <PDFUpload />

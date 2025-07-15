@@ -4,6 +4,7 @@ import { Suspense } from 'react';
 import ErrorBoundary from '@components/ErrorBoundary';
 import { Toaster } from '@components/ui/toaster';
 import { DatabaseProvider } from '@context/DatabaseContext';
+import { AuthProvider } from '@context/AuthContext';
 import { getPerformanceMonitor } from '@utils/performance';
 
 // Lazy load heavy providers
@@ -24,10 +25,12 @@ export function Providers({ children }: { children: React.ReactNode }) {
           </div>
         }
       >
-        <LazyDatabaseProvider>
-          {children}
-          <Toaster />
-        </LazyDatabaseProvider>
+        <AuthProvider>
+          <LazyDatabaseProvider>
+            {children}
+            <Toaster />
+          </LazyDatabaseProvider>
+        </AuthProvider>
       </Suspense>
     </ErrorBoundary>
   );

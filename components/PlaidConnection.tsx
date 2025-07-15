@@ -5,8 +5,9 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { usePlaidLink } from 'react-plaid-link';
 
 import { useDBContext } from '@context/DatabaseContext';
+import { useAuth } from '@context/AuthContext';
 import { logger } from '@services/logger';
-import { createPlaidService } from '@services/plaidService';
+import { apiService } from '@services/api';
 import { showUserError, ErrorMessages } from '@utils/userErrors';
 import { syncService } from '@services/syncService';
 
@@ -31,43 +32,29 @@ export default function PlaidConnection() {
   const [isLoading, setIsLoading] = useState(false);
   const [isSyncing, setIsSyncing] = useState<string | null>(null);
   const { addTransactionsBatch } = useDBContext();
+  const { isAuthenticated } = useAuth();
   const { toast } = useToast();
 
   useEffect(() => {
-    // Load linked accounts from localStorage
-    const saved = localStorage.getItem('plaid.linkedAccounts');
-    if (saved) {
-      setLinkedAccounts(JSON.parse(saved));
+    // Initialize link token and load accounts if authenticated
+    if (isAuthenticated) {
+      createLinkToken();
+      loadAccounts();
     }
-
-    // Initialize link token on component mount
-    createLinkToken();
-  }, []);
+  }, [isAuthenticated]);
 
   const createLinkToken = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch('/api/plaid/create-link-token', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          user_id: 'user-' + Date.now(),
-        }),
-      });
+      const response = await apiService.createLinkToken();
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      if (response.error) {
+        throw new Error(response.error);
       }
 
-      const data = await response.json();
-
-      if (data.error) {
-        throw new Error(data.error);
+      if (response.data) {
+        setLinkToken(response.data.link_token);
       }
-
-      setLinkToken(data.link_token);
     } catch (error) {
       logger.error('Failed to create link token:', error);
       toast({
@@ -83,47 +70,36 @@ export default function PlaidConnection() {
   const onSuccess = useCallback(
     async (publicToken: string, metadata: any) => {
       try {
-        const plaidService = createPlaidService();
-        if (!plaidService) return;
+        // Exchange public token using backend API
+        const exchangeResponse = await apiService.exchangePublicToken(publicToken);
+        
+        if (exchangeResponse.error) {
+          throw new Error(exchangeResponse.error);
+        }
 
-        // Exchange public token for access token
-        const accessToken = await plaidService.exchangePublicToken(publicToken);
-
-        // Get account details
-        const accounts = await plaidService.getAccounts(accessToken);
-
-        // Save linked accounts
-        const newAccounts: LinkedAccount[] = accounts.map((account) => ({
-          id: account.accountId,
-          institutionName: metadata.institution.name,
-          accountName: account.name,
-          accountType: account.subtype,
-          mask: account.mask,
-          accessToken,
-          lastSync: new Date().toISOString(),
-        }));
-
-        const updatedAccounts = [...linkedAccounts, ...newAccounts];
-        setLinkedAccounts(updatedAccounts);
-        localStorage.setItem('plaid.linkedAccounts', JSON.stringify(updatedAccounts));
-
-        // Register account with sync service
-        const accountIds = accounts.map((account) => account.accountId);
-        syncService?.registerAccount(metadata.item_id, accessToken, accountIds);
+        // Get accounts from backend
+        const accountsResponse = await apiService.getAccounts();
+        
+        if (accountsResponse.error) {
+          throw new Error(accountsResponse.error);
+        }
 
         toast({
           title: 'Account Connected',
-          description: `Successfully connected ${metadata.institution.name}`,
+          description: `Successfully connected ${exchangeResponse.data?.institution_name || 'bank'}`,
         });
 
         // Sync initial transactions
-        await syncTransactions(accessToken);
+        await syncTransactions();
+        
+        // Reload accounts to show the new connection
+        await loadAccounts();
       } catch (error) {
         logger.error('Failed to process Plaid connection:', error);
         showUserError(error, toast, 'plaid');
       }
     },
-    [linkedAccounts],
+    [],
   );
 
   const config = {
@@ -138,39 +114,25 @@ export default function PlaidConnection() {
 
   const { open, ready } = usePlaidLink(config);
 
-  const syncTransactions = async (accessToken: string) => {
-    setIsSyncing(accessToken);
+  const syncTransactions = async () => {
+    setIsSyncing('syncing');
     try {
-      const plaidService = createPlaidService();
-      if (!plaidService) return;
-
       // Get transactions for the last 90 days
       const endDate = new Date().toISOString().split('T')[0];
       const startDate = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
-      const plaidTransactions = await plaidService.getTransactions(accessToken, startDate, endDate);
+      const response = await apiService.syncTransactions(startDate, endDate);
+      
+      if (response.error) {
+        throw new Error(response.error);
+      }
 
-      // Convert and add transactions
-      const transactions = plaidTransactions.map((tx) => plaidService.convertToTransaction(tx));
-
-      if (transactions.length > 0) {
-        await addTransactionsBatch(transactions);
-
-        // Update last sync time
-        const updated = linkedAccounts.map((acc) =>
-          acc.accessToken === accessToken ? { ...acc, lastSync: new Date().toISOString() } : acc,
-        );
-        setLinkedAccounts(updated);
-        localStorage.setItem('plaid.linkedAccounts', JSON.stringify(updated));
-
+      if (response.data) {
+        const totalTransactions = response.data.synced.reduce((sum, item) => sum + item.transaction_count, 0);
+        
         toast({
           title: 'Sync Complete',
-          description: `Imported ${transactions.length} transactions`,
-        });
-      } else {
-        toast({
-          title: 'No New Transactions',
-          description: 'No new transactions found in the selected period.',
+          description: `Imported ${totalTransactions} transactions from ${response.data.synced.length} accounts`,
         });
       }
     } catch (error) {
@@ -185,25 +147,25 @@ export default function PlaidConnection() {
     }
   };
 
-  const removeAccount = async (account: LinkedAccount) => {
-    if (!confirm(`Remove ${account.institutionName} (${account.mask})?`)) {
+  const removeAccount = async (itemId: string, institutionName: string) => {
+    if (!confirm(`Remove ${institutionName}?`)) {
       return;
     }
 
     try {
-      const plaidService = createPlaidService();
-      if (plaidService) {
-        await plaidService.removeItem(account.accessToken);
+      const response = await apiService.removeBank(itemId);
+      
+      if (response.error) {
+        throw new Error(response.error);
       }
-
-      const updated = linkedAccounts.filter((acc) => acc.id !== account.id);
-      setLinkedAccounts(updated);
-      localStorage.setItem('plaid.linkedAccounts', JSON.stringify(updated));
 
       toast({
         title: 'Account Removed',
-        description: `${account.institutionName} has been disconnected`,
+        description: `${institutionName} has been disconnected`,
       });
+      
+      // Refresh accounts list
+      await loadAccounts();
     } catch (error) {
       logger.error('Failed to remove account:', error);
       toast({
@@ -211,6 +173,25 @@ export default function PlaidConnection() {
         description: 'Failed to remove account connection',
         variant: 'destructive',
       });
+    }
+  };
+
+  const loadAccounts = async () => {
+    try {
+      const response = await apiService.getAccounts();
+      if (response.data) {
+        setLinkedAccounts(response.data.accounts.map((item: any) => ({
+          id: item.item_id,
+          institutionName: item.institution_name,
+          accountName: item.accounts[0]?.name || 'Account',
+          accountType: item.accounts[0]?.subtype || 'bank',
+          mask: item.accounts[0]?.mask || '****',
+          accessToken: item.item_id, // Using item_id as identifier
+          lastSync: new Date().toISOString(),
+        })));
+      }
+    } catch (error) {
+      logger.error('Failed to load accounts:', error);
     }
   };
 
@@ -226,12 +207,11 @@ export default function PlaidConnection() {
         </CardDescription>
       </CardHeader>
       <CardContent className='space-y-4'>
-        {!process.env.NEXT_PUBLIC_PLAID_CLIENT_ID && (
+        {!isAuthenticated && (
           <Alert>
             <AlertCircle className='h-4 w-4' />
             <AlertDescription>
-              Plaid integration requires API credentials. Add NEXT_PUBLIC_PLAID_CLIENT_ID and
-              PLAID_SECRET to your environment variables.
+              Please sign in to connect your bank accounts.
             </AlertDescription>
           </Alert>
         )}
@@ -259,16 +239,16 @@ export default function PlaidConnection() {
                   <Button
                     variant='outline'
                     size='sm'
-                    onClick={() => syncTransactions(account.accessToken)}
-                    disabled={isSyncing === account.accessToken}
+                    onClick={() => syncTransactions()}
+                    disabled={isSyncing === 'syncing'}
                   >
-                    {isSyncing === account.accessToken ? (
+                    {isSyncing === 'syncing' ? (
                       <RefreshCw className='h-4 w-4 animate-spin' />
                     ) : (
                       <RefreshCw className='h-4 w-4' />
                     )}
                   </Button>
-                  <Button variant='outline' size='sm' onClick={() => removeAccount(account)}>
+                  <Button variant='outline' size='sm' onClick={() => removeAccount(account.id, account.institutionName)}>
                     <Trash2 className='h-4 w-4' />
                   </Button>
                 </div>
