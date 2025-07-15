@@ -5,11 +5,14 @@ node_modules/
 .env
 .env.local
 .env.production
+.env.development
 
 # Database
 *.sqlite
 *.sqlite3
 *.db
+*.sqlite-shm
+*.sqlite-wal
 
 # SSL Certificates
 certs/

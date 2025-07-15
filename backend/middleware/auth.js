@@ -29,15 +29,6 @@ const authenticate = async (req, res, next) => {
 
 const auditLog = (action, resource) => {
   return async (req, res, next) => {
-    // Store original send function
-    const originalSend = res.send;
-    
-    // Override send to capture response
-    res.send = function(data) {
-      res.locals.responseBody = data;
-      originalSend.call(this, data);
-    };
-
     // Capture request start time
     const startTime = Date.now();
 
@@ -47,6 +38,12 @@ const auditLog = (action, resource) => {
         const success = res.statusCode < 400;
         const duration = Date.now() - startTime;
         
+        // Get error message if failed
+        let errorMessage = null;
+        if (!success && res.locals.errorMessage) {
+          errorMessage = res.locals.errorMessage;
+        }
+        
         await createAuditLog({
           userId: req.user?.id,
           action,
@@ -55,7 +52,7 @@ const auditLog = (action, resource) => {
           ipAddress: req.ip || req.connection.remoteAddress,
           userAgent: req.headers['user-agent'],
           success,
-          errorMessage: !success ? res.locals.responseBody : null
+          errorMessage
         });
       } catch (error) {
         console.error('Audit log error:', error);
