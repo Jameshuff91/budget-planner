@@ -38,7 +38,7 @@ const MemoizedTrendIndicator = React.memo<{ value: number }>(({ value }) => {
 });
 MemoizedTrendIndicator.displayName = 'MemoizedTrendIndicator';
 
-const MemoizedCategoryDetail = React.memo<{
+const CategoryDetail = React.memo<{
   category: any;
   totalSpending: number;
   trend: any;
@@ -60,48 +60,42 @@ const MemoizedCategoryDetail = React.memo<{
     onCategoryClick,
     getDetailedSpending,
   }) => {
-    const handleClick = useCallback(() => {
+    // Simple event handlers without hooks
+    const handleClick = () => {
       onCategoryClick(category.name);
-    }, [category.name, onCategoryClick]);
+    };
 
-    const handleBudgetChange = useCallback(
-      (e: React.ChangeEvent<HTMLInputElement>) => {
-        onBudgetChange(category.name, e.target.value);
-      },
-      [category.name, onBudgetChange],
-    );
+    const handleBudgetChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      onBudgetChange(category.name, e.target.value);
+    };
 
-    const handleBudgetBlur = useCallback(() => {
+    const handleBudgetBlur = () => {
       onBudgetSave(category.name);
-    }, [category.name, onBudgetSave]);
+    };
 
-    // Memoize budget calculation
-    const budgetInfo = useMemo(() => {
-      const spending = category.value;
-      const budget = category.target || 0;
-      let percentageConsumed = 0;
-      let percentageText = '0% of budget used';
-      let progressBarColor = 'bg-blue-600';
+    // Simple calculations without hooks
+    const spending = category.value;
+    const budget = category.target || 0;
+    let percentageConsumed = 0;
+    let percentageText = '0% of budget used';
+    let progressBarColor = 'bg-blue-600';
 
-      if (budget > 0) {
-        percentageConsumed = (spending / budget) * 100;
-        percentageText = `${Math.abs(percentageConsumed).toFixed(1)}% of budget used`;
-        if (percentageConsumed > 100) {
-          progressBarColor = 'bg-red-500';
-        } else if (percentageConsumed > 75) {
-          progressBarColor = 'bg-yellow-500';
-        }
-      } else if (spending > 0) {
-        percentageText = 'Over budget (no budget set)';
-        percentageConsumed = 101;
+    if (budget > 0) {
+      percentageConsumed = (spending / budget) * 100;
+      percentageText = `${Math.abs(percentageConsumed).toFixed(1)}% of budget used`;
+      if (percentageConsumed > 100) {
         progressBarColor = 'bg-red-500';
-      } else if (budget === 0 && spending === 0) {
-        percentageText = 'No spending, no budget';
-        percentageConsumed = 0;
+      } else if (percentageConsumed > 75) {
+        progressBarColor = 'bg-yellow-500';
       }
-
-      return { percentageConsumed, percentageText, progressBarColor };
-    }, [category.value, category.target]);
+    } else if (spending > 0) {
+      percentageText = 'Over budget (no budget set)';
+      percentageConsumed = 101;
+      progressBarColor = 'bg-red-500';
+    } else if (budget === 0 && spending === 0) {
+      percentageText = 'No spending, no budget';
+      percentageConsumed = 0;
+    }
 
     return (
       <div
@@ -135,11 +129,11 @@ const MemoizedCategoryDetail = React.memo<{
           </div>
         </div>
         <div className='mt-2'>
-          <p className='text-xs text-gray-600 mb-1'>{budgetInfo.percentageText}</p>
+          <p className='text-xs text-gray-600 mb-1'>{percentageText}</p>
           <div className='w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700'>
             <div
-              className={`${budgetInfo.progressBarColor} h-2.5 rounded-full`}
-              style={{ width: `${Math.min(Math.abs(budgetInfo.percentageConsumed), 100)}%` }}
+              className={`${progressBarColor} h-2.5 rounded-full`}
+              style={{ width: `${Math.min(Math.abs(percentageConsumed), 100)}%` }}
             />
           </div>
         </div>
@@ -169,7 +163,7 @@ const MemoizedCategoryDetail = React.memo<{
     );
   },
 );
-MemoizedCategoryDetail.displayName = 'MemoizedCategoryDetail';
+CategoryDetail.displayName = 'CategoryDetail';
 
 const SpendingByCategory = ({ selectedYear }: SpendingByCategoryProps) => {
   const [currentTimeRange, setCurrentTimeRange] = useState<{ startDate: Date; endDate: Date }>(
@@ -465,7 +459,7 @@ const SpendingByCategory = ({ selectedYear }: SpendingByCategoryProps) => {
                       : (category.target || '').toString();
 
                   return (
-                    <MemoizedCategoryDetail
+                    <CategoryDetail
                       key={category.name}
                       category={category}
                       totalSpending={totalSpending}
