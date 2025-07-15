@@ -20,7 +20,7 @@ export interface OfflineStatusHook {
 
 export function useOfflineStatus(): OfflineStatusHook {
   const [status, setStatus] = useState<OfflineQueueStatus>({
-    isOnline: navigator.onLine,
+    isOnline: typeof navigator !== 'undefined' ? navigator.onLine : true,
     pendingOperations: 0,
     lastSyncTimestamp: null,
     syncInProgress: false,

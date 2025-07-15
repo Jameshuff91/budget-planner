@@ -49,9 +49,12 @@ class OfflineQueue {
   };
 
   constructor() {
-    this.init();
-    this.setupNetworkListeners();
-    this.setupServiceWorkerCommunication();
+    // Only initialize in browser environment
+    if (typeof window !== 'undefined') {
+      this.init();
+      this.setupNetworkListeners();
+      this.setupServiceWorkerCommunication();
+    }
   }
 
   private async init(): Promise<void> {
@@ -66,6 +69,10 @@ class OfflineQueue {
 
   private openDB(): Promise<IDBDatabase> {
     return new Promise((resolve, reject) => {
+      if (typeof indexedDB === 'undefined') {
+        reject(new Error('IndexedDB is not available'));
+        return;
+      }
       const request = indexedDB.open(this.dbName, this.dbVersion);
 
       request.onerror = () => reject(request.error);
@@ -394,6 +401,6 @@ class OfflineQueue {
   }
 }
 
-// Export singleton instance
-export const offlineQueue = new OfflineQueue();
+// Export singleton instance (only create in browser)
+export const offlineQueue = typeof window !== 'undefined' ? new OfflineQueue() : null;
 export default offlineQueue;
