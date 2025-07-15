@@ -33,7 +33,7 @@ router.post('/link/token',
         required_if_supported_products: ['accounts'],
         country_codes: ['US'],
         language: 'en',
-        redirect_uri: process.env.PLAID_REDIRECT_URI || null,
+        redirect_uri: process.env.PLAID_REDIRECT_URI || 'http://localhost:3000/plaid-redirect',
         webhook: process.env.PLAID_WEBHOOK_URL || null,
       };
 

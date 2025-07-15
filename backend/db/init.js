@@ -178,7 +178,7 @@ const dbHelpers = {
       data.resourceId || null,
       data.ipAddress || null,
       data.userAgent || null,
-      data.success !== false,
+      data.success !== false ? 1 : 0,
       data.errorMessage || null
     );
   },
