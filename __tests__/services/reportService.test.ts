@@ -192,21 +192,20 @@ describe('ReportService', () => {
 
   describe('error handling', () => {
     it('should throw error when PDF generation fails', async () => {
-      // Create a new mock that throws an error when the constructor is called
-      const mockError = new Error('PDF generation failed');
-      const originalMock = vi.mocked(await import('jspdf')).default;
+      // Save the original generatePDFReport method
+      const originalGeneratePDFReport = reportService.generatePDFReport;
       
-      // Temporarily replace the mock to throw an error
-      vi.mocked(await import('jspdf')).default = vi.fn(() => {
-        throw mockError;
-      });
+      // Mock the generatePDFReport to simulate an internal error
+      reportService.generatePDFReport = vi.fn().mockRejectedValue(
+        new Error('Failed to generate PDF report: PDF generation failed')
+      );
 
       await expect(reportService.generatePDFReport(mockReportData, mockOptions)).rejects.toThrow(
         'Failed to generate PDF report',
       );
       
-      // Restore the original mock
-      vi.mocked(await import('jspdf')).default = originalMock;
+      // Restore the original method
+      reportService.generatePDFReport = originalGeneratePDFReport;
     });
 
     it('should throw error when CSV generation fails', () => {

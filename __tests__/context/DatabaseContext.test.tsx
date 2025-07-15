@@ -2,7 +2,7 @@ import React from 'react';
 import { render, renderHook, waitFor, act } from '@testing-library/react';
 import { vi, describe, test, expect, beforeEach } from 'vitest';
 import { DatabaseProvider, useDBContext } from '@context/DatabaseContext';
-import { Asset, Liability } from '@services/db';
+import { Asset, Liability, dbService } from '@services/db';
 
 // Mock dependencies
 vi.mock('@services/logger', () => ({
@@ -37,32 +37,29 @@ vi.mock('@hooks/useOfflineStatus', () => ({
   useOfflineStatus: vi.fn(() => ({ isOffline: false })),
 }));
 
-// Mock database service
-const mockDbService = {
-  initialize: vi.fn().mockResolvedValue(undefined),
-  getTransactions: vi.fn().mockResolvedValue([]),
-  getCategories: vi.fn().mockResolvedValue([]),
-  getAllRecurringPreferences: vi.fn().mockResolvedValue({}),
-  getAllAssets: vi.fn().mockResolvedValue([]),
-  getAllLiabilities: vi.fn().mockResolvedValue([]),
-  addTransaction: vi.fn().mockResolvedValue('new-tx-id'),
-  updateTransaction: vi.fn().mockResolvedValue(undefined),
-  deleteTransaction: vi.fn().mockResolvedValue(undefined),
-  clearTransactions: vi.fn().mockResolvedValue(undefined),
-  addCategory: vi.fn().mockResolvedValue('new-cat-id'),
-  updateCategoryBudget: vi.fn().mockResolvedValue(undefined),
-  setRecurringPreference: vi.fn().mockResolvedValue(undefined),
-  deleteRecurringPreference: vi.fn().mockResolvedValue(undefined),
-  addAsset: vi.fn().mockResolvedValue('new-asset-id'),
-  updateAsset: vi.fn().mockResolvedValue(undefined),
-  deleteAsset: vi.fn().mockResolvedValue(undefined),
-  addLiability: vi.fn().mockResolvedValue('new-liability-id'),
-  updateLiability: vi.fn().mockResolvedValue(undefined),
-  deleteLiability: vi.fn().mockResolvedValue(undefined),
-};
-
 vi.mock('@services/db', () => ({
-  dbService: mockDbService,
+  dbService: {
+    initialize: vi.fn().mockResolvedValue(undefined),
+    getTransactions: vi.fn().mockResolvedValue([]),
+    getCategories: vi.fn().mockResolvedValue([]),
+    getAllRecurringPreferences: vi.fn().mockResolvedValue({}),
+    getAllAssets: vi.fn().mockResolvedValue([]),
+    getAllLiabilities: vi.fn().mockResolvedValue([]),
+    addTransaction: vi.fn().mockResolvedValue('new-tx-id'),
+    updateTransaction: vi.fn().mockResolvedValue(undefined),
+    deleteTransaction: vi.fn().mockResolvedValue(undefined),
+    clearTransactions: vi.fn().mockResolvedValue(undefined),
+    addCategory: vi.fn().mockResolvedValue('new-cat-id'),
+    updateCategoryBudget: vi.fn().mockResolvedValue(undefined),
+    setRecurringPreference: vi.fn().mockResolvedValue(undefined),
+    deleteRecurringPreference: vi.fn().mockResolvedValue(undefined),
+    addAsset: vi.fn().mockResolvedValue('new-asset-id'),
+    updateAsset: vi.fn().mockResolvedValue(undefined),
+    deleteAsset: vi.fn().mockResolvedValue(undefined),
+    addLiability: vi.fn().mockResolvedValue('new-liability-id'),
+    updateLiability: vi.fn().mockResolvedValue(undefined),
+    deleteLiability: vi.fn().mockResolvedValue(undefined),
+  },
 }));
 
 // Test wrapper component
@@ -75,11 +72,11 @@ describe('DatabaseContext', () => {
     vi.clearAllMocks();
 
     // Reset mock implementations
-    mockDbService.getTransactions.mockResolvedValue([]);
-    mockDbService.getCategories.mockResolvedValue([]);
-    mockDbService.getAllRecurringPreferences.mockResolvedValue({});
-    mockDbService.getAllAssets.mockResolvedValue([]);
-    mockDbService.getAllLiabilities.mockResolvedValue([]);
+    (dbService.getTransactions as any).mockResolvedValue([]);
+    (dbService.getCategories as any).mockResolvedValue([]);
+    (dbService.getAllRecurringPreferences as any).mockResolvedValue({});
+    (dbService.getAllAssets as any).mockResolvedValue([]);
+    (dbService.getAllLiabilities as any).mockResolvedValue([]);
   });
 
   describe('Provider Initialization', () => {
@@ -111,8 +108,8 @@ describe('DatabaseContext', () => {
         },
       ];
 
-      mockDbService.getTransactions.mockResolvedValue(mockTransactions);
-      mockDbService.getCategories.mockResolvedValue(mockCategories);
+      (dbService.getTransactions as any).mockResolvedValue(mockTransactions);
+      (dbService.getCategories as any).mockResolvedValue(mockCategories);
 
       const { result } = renderHook(() => useDBContext(), {
         wrapper: TestWrapper,
@@ -128,9 +125,15 @@ describe('DatabaseContext', () => {
     });
 
     test('should throw error when used outside provider', () => {
+      // Suppress console.error for this test since we expect an error
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      
       expect(() => {
         renderHook(() => useDBContext());
       }).toThrow('useDBContext must be used within a DatabaseProvider');
+      
+      // Restore console.error
+      consoleSpy.mockRestore();
     });
   });
 
@@ -157,7 +160,7 @@ describe('DatabaseContext', () => {
         expect(id).toBeDefined();
       });
 
-      expect(mockDbService.addTransaction).toHaveBeenCalled();
+      expect(dbService.addTransaction).toHaveBeenCalled();
     });
 
     test('should update transaction successfully', async () => {
@@ -182,7 +185,7 @@ describe('DatabaseContext', () => {
         await result.current.updateTransaction(transaction);
       });
 
-      expect(mockDbService.updateTransaction).toHaveBeenCalled();
+      expect(dbService.updateTransaction).toHaveBeenCalled();
     });
 
     test('should delete transaction successfully', async () => {
@@ -198,7 +201,7 @@ describe('DatabaseContext', () => {
         await result.current.deleteTransaction('tx-1');
       });
 
-      expect(mockDbService.deleteTransaction).toHaveBeenCalledWith('tx-1');
+      expect(dbService.deleteTransaction).toHaveBeenCalledWith('tx-1');
     });
 
     test('should clear all transactions', async () => {
@@ -214,7 +217,7 @@ describe('DatabaseContext', () => {
         await result.current.clearTransactions();
       });
 
-      expect(mockDbService.clearTransactions).toHaveBeenCalled();
+      expect(dbService.clearTransactions).toHaveBeenCalled();
     });
   });
 
@@ -239,7 +242,7 @@ describe('DatabaseContext', () => {
         expect(id).toBe('new-cat-id');
       });
 
-      expect(mockDbService.addCategory).toHaveBeenCalled();
+      expect(dbService.addCategory).toHaveBeenCalled();
     });
 
     test('should update category budget successfully', async () => {
@@ -255,7 +258,7 @@ describe('DatabaseContext', () => {
         await result.current.updateCategoryBudget('cat-1', 750);
       });
 
-      expect(mockDbService.updateCategoryBudget).toHaveBeenCalledWith('cat-1', 750);
+      expect(dbService.updateCategoryBudget).toHaveBeenCalledWith('cat-1', 750);
     });
   });
 
@@ -281,7 +284,7 @@ describe('DatabaseContext', () => {
         expect(id).toBe('new-asset-id');
       });
 
-      expect(mockDbService.addAsset).toHaveBeenCalledWith(assetData);
+      expect(dbService.addAsset).toHaveBeenCalledWith(assetData);
     });
 
     test('should update asset successfully', async () => {
@@ -305,7 +308,7 @@ describe('DatabaseContext', () => {
         await result.current.updateAsset(asset);
       });
 
-      expect(mockDbService.updateAsset).toHaveBeenCalledWith(asset);
+      expect(dbService.updateAsset).toHaveBeenCalledWith(asset);
     });
 
     test('should delete asset successfully', async () => {
@@ -321,7 +324,7 @@ describe('DatabaseContext', () => {
         await result.current.deleteAsset('asset-1');
       });
 
-      expect(mockDbService.deleteAsset).toHaveBeenCalledWith('asset-1');
+      expect(dbService.deleteAsset).toHaveBeenCalledWith('asset-1');
     });
   });
 
@@ -347,7 +350,7 @@ describe('DatabaseContext', () => {
         expect(id).toBe('new-liability-id');
       });
 
-      expect(mockDbService.addLiability).toHaveBeenCalledWith(liabilityData);
+      expect(dbService.addLiability).toHaveBeenCalledWith(liabilityData);
     });
 
     test('should update liability successfully', async () => {
@@ -371,7 +374,7 @@ describe('DatabaseContext', () => {
         await result.current.updateLiability(liability);
       });
 
-      expect(mockDbService.updateLiability).toHaveBeenCalledWith(liability);
+      expect(dbService.updateLiability).toHaveBeenCalledWith(liability);
     });
 
     test('should delete liability successfully', async () => {
@@ -387,14 +390,14 @@ describe('DatabaseContext', () => {
         await result.current.deleteLiability('liability-1');
       });
 
-      expect(mockDbService.deleteLiability).toHaveBeenCalledWith('liability-1');
+      expect(dbService.deleteLiability).toHaveBeenCalledWith('liability-1');
     });
   });
 
   describe('Error Handling', () => {
     test('should handle initialization errors', async () => {
       const error = new Error('Database initialization failed');
-      mockDbService.getTransactions.mockRejectedValue(error);
+      (dbService.getTransactions as any).mockRejectedValue(error);
 
       const { result } = renderHook(() => useDBContext(), {
         wrapper: TestWrapper,
@@ -408,7 +411,7 @@ describe('DatabaseContext', () => {
     });
 
     test('should handle transaction add errors', async () => {
-      mockDbService.addTransaction.mockRejectedValue(new Error('Add failed'));
+      (dbService.addTransaction as any).mockRejectedValue(new Error('Add failed'));
 
       const { result } = renderHook(() => useDBContext(), {
         wrapper: TestWrapper,

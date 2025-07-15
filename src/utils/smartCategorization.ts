@@ -33,6 +33,11 @@ export async function categorizeTransactionWithAI(
 
     const result = await llmService.categorizeTransaction(transaction, customCategories);
 
+    // Check if result is valid and has required fields
+    if (!result || typeof result.confidence !== 'number') {
+      return transaction.existingCategory || 'Uncategorized';
+    }
+
     // Only use AI suggestion if confidence is high enough
     if (result.confidence >= 0.6) {
       logger.info(
@@ -80,7 +85,7 @@ export async function categorizeTransactionsBatchWithAI(
         // Map results back to transactions
         for (let j = 0; j < batch.length; j++) {
           const result = batchResults[j];
-          if (result && result.confidence >= 0.6) {
+          if (result && result.category && result.confidence >= 0.6) {
             results.push(result.category);
           } else {
             results.push(batch[j].existingCategory || 'Uncategorized');

@@ -36,32 +36,29 @@ vi.mock('@hooks/useOfflineStatus', () => ({
   useOfflineStatus: vi.fn(() => ({ isOffline: false })),
 }));
 
-// Simple mock database service
-const mockDbService = {
-  initialize: vi.fn().mockResolvedValue(undefined),
-  getTransactions: vi.fn().mockResolvedValue([]),
-  getCategories: vi.fn().mockResolvedValue([]),
-  getAllRecurringPreferences: vi.fn().mockResolvedValue({}),
-  getAllAssets: vi.fn().mockResolvedValue([]),
-  getAllLiabilities: vi.fn().mockResolvedValue([]),
-  addTransaction: vi.fn().mockResolvedValue('new-tx-id'),
-  updateTransaction: vi.fn().mockResolvedValue(undefined),
-  deleteTransaction: vi.fn().mockResolvedValue(undefined),
-  clearTransactions: vi.fn().mockResolvedValue(undefined),
-  addCategory: vi.fn().mockResolvedValue('new-cat-id'),
-  updateCategoryBudget: vi.fn().mockResolvedValue(undefined),
-  setRecurringPreference: vi.fn().mockResolvedValue(undefined),
-  deleteRecurringPreference: vi.fn().mockResolvedValue(undefined),
-  addAsset: vi.fn().mockResolvedValue('new-asset-id'),
-  updateAsset: vi.fn().mockResolvedValue(undefined),
-  deleteAsset: vi.fn().mockResolvedValue(undefined),
-  addLiability: vi.fn().mockResolvedValue('new-liability-id'),
-  updateLiability: vi.fn().mockResolvedValue(undefined),
-  deleteLiability: vi.fn().mockResolvedValue(undefined),
-};
-
 vi.mock('@services/db', () => ({
-  dbService: mockDbService,
+  dbService: {
+    initialize: vi.fn().mockResolvedValue(undefined),
+    getTransactions: vi.fn().mockResolvedValue([]),
+    getCategories: vi.fn().mockResolvedValue([]),
+    getAllRecurringPreferences: vi.fn().mockResolvedValue({}),
+    getAllAssets: vi.fn().mockResolvedValue([]),
+    getAllLiabilities: vi.fn().mockResolvedValue([]),
+    addTransaction: vi.fn().mockResolvedValue('new-tx-id'),
+    updateTransaction: vi.fn().mockResolvedValue(undefined),
+    deleteTransaction: vi.fn().mockResolvedValue(undefined),
+    clearTransactions: vi.fn().mockResolvedValue(undefined),
+    addCategory: vi.fn().mockResolvedValue('new-cat-id'),
+    updateCategoryBudget: vi.fn().mockResolvedValue(undefined),
+    setRecurringPreference: vi.fn().mockResolvedValue(undefined),
+    deleteRecurringPreference: vi.fn().mockResolvedValue(undefined),
+    addAsset: vi.fn().mockResolvedValue('new-asset-id'),
+    updateAsset: vi.fn().mockResolvedValue(undefined),
+    deleteAsset: vi.fn().mockResolvedValue(undefined),
+    addLiability: vi.fn().mockResolvedValue('new-liability-id'),
+    updateLiability: vi.fn().mockResolvedValue(undefined),
+    deleteLiability: vi.fn().mockResolvedValue(undefined),
+  },
 }));
 
 describe('DatabaseContext Basic Tests', () => {
