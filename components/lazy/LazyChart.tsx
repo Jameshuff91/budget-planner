@@ -55,6 +55,7 @@ export type ChartType = keyof typeof chartComponents;
 
 interface LazyChartProps {
   type: ChartType;
+  selectedYear?: number;
   [key: string]: any; // Allow passing through any props to the chart component
 }
 
@@ -69,6 +70,12 @@ export function LazyChart({ type, ...props }: LazyChartProps) {
 
   if (!ChartComponent) {
     console.error(`Unknown chart type: ${type}`);
+    return null;
+  }
+
+  // Handle specific component prop requirements
+  if ((type === 'YearOverYearComparison' || type === 'SpendingVelocity') && !props.selectedYear) {
+    console.error(`${type} requires selectedYear prop`);
     return null;
   }
 

@@ -3,7 +3,7 @@ import { Configuration, PlaidApi, PlaidEnvironments } from 'plaid';
 import crypto from 'crypto';
 
 import { logger } from '@services/logger';
-import { syncService } from '@services/syncService';
+import { getSyncService } from '@services/syncService';
 
 // Initialize Plaid client
 const configuration = new Configuration({
@@ -139,6 +139,11 @@ async function handleErrorEvent(event: any) {
 async function syncTransactionsForItem(itemId: string) {
   try {
     logger.info(`Starting sync for item ${itemId}`);
+    const syncService = getSyncService();
+    if (!syncService) {
+      logger.error('Sync service not available in server environment');
+      throw new Error('Sync service not available');
+    }
     await syncService.syncTransactions(itemId);
     logger.info(`Completed sync for item ${itemId}`);
   } catch (error) {

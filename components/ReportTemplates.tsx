@@ -196,6 +196,18 @@ export default function ReportTemplates({ onTemplateSelect, className }: ReportT
   const [isGenerating, setIsGenerating] = useState(false);
   const [customOptions, setCustomOptions] = useState<Partial<ReportOptions>>({});
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [currentDateRange, setCurrentDateRange] = useState<{ startDate: Date; endDate: Date }>(
+    () => {
+      const now = new Date();
+      return {
+        startDate: startOfMonth(now),
+        endDate: endOfMonth(now),
+      };
+    },
+  );
+
+  // Get analytics for the current date range
+  const analytics = useAnalytics(currentDateRange);
 
   // Calculate date ranges based on template type
   const getDateRange = (template: ReportTemplate) => {
@@ -226,15 +238,14 @@ export default function ReportTemplates({ onTemplateSelect, className }: ReportT
   };
 
   // Prepare report data for selected date range
-  const prepareReportData = (startDate: Date, endDate: Date): ReportData => {
+  const prepareReportData = (startDate: Date, endDate: Date, analyticsData: any): ReportData => {
     const filteredTransactions = transactions.filter((t) => {
       const transactionDate = new Date(t.date);
       return transactionDate >= startDate && transactionDate <= endDate;
     });
 
-    // Get analytics for the date range
-    const analytics = useAnalytics({ startDate, endDate });
-
+    // Use the analytics data passed as parameter instead of calling useAnalytics hook
+    // This fixes the React hooks violation
     const totalIncome = filteredTransactions
       .filter((t) => t.type === 'income')
       .reduce((sum, t) => sum + t.amount, 0);
@@ -247,11 +258,11 @@ export default function ReportTemplates({ onTemplateSelect, className }: ReportT
 
     return {
       transactions: filteredTransactions,
-      categorySpending: analytics.categorySpending,
-      spendingTrend: analytics.spendingTrend,
-      monthlyTrends: analytics.monthlyTrends,
-      merchantSpending: analytics.merchantSpending,
-      potentialRecurringTransactions: analytics.potentialRecurringTransactions,
+      categorySpending: analyticsData.categorySpending,
+      spendingTrend: analyticsData.spendingTrend,
+      monthlyTrends: analyticsData.monthlyTrends,
+      merchantSpending: analyticsData.merchantSpending,
+      potentialRecurringTransactions: analyticsData.potentialRecurringTransactions,
       totalIncome,
       totalExpenses,
       netSavings,
@@ -265,7 +276,7 @@ export default function ReportTemplates({ onTemplateSelect, className }: ReportT
       setIsGenerating(true);
 
       const dateRange = getDateRange(template);
-      const reportData = prepareReportData(dateRange.startDate, dateRange.endDate);
+      const reportData = prepareReportData(dateRange.startDate, dateRange.endDate, analytics);
 
       const options: ReportOptions = {
         ...template.defaultOptions,
@@ -445,7 +456,7 @@ export default function ReportTemplates({ onTemplateSelect, className }: ReportT
               {/* Show preview data */}
               {(() => {
                 const range = getDateRange(selectedTemplate);
-                const previewData = prepareReportData(range.startDate, range.endDate);
+                const previewData = prepareReportData(range.startDate, range.endDate, analytics);
                 return (
                   <div className='bg-gray-50 p-3 rounded'>
                     <div className='text-sm space-y-1'>
