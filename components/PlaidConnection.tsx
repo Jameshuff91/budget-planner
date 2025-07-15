@@ -39,6 +39,9 @@ export default function PlaidConnection() {
     if (saved) {
       setLinkedAccounts(JSON.parse(saved));
     }
+
+    // Initialize link token on component mount
+    createLinkToken();
   }, []);
 
   const createLinkToken = async () => {
@@ -100,7 +103,7 @@ export default function PlaidConnection() {
 
         // Register account with sync service
         const accountIds = accounts.map((account) => account.accountId);
-        syncService.registerAccount(metadata.item_id, accessToken, accountIds);
+        syncService?.registerAccount(metadata.item_id, accessToken, accountIds);
 
         toast({
           title: 'Account Connected',
