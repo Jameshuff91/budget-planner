@@ -36,6 +36,7 @@ const MemoizedTrendIndicator = React.memo<{ value: number }>(({ value }) => {
     </span>
   );
 });
+MemoizedTrendIndicator.displayName = 'MemoizedTrendIndicator';
 
 const MemoizedCategoryDetail = React.memo<{
   category: any;
@@ -168,6 +169,7 @@ const MemoizedCategoryDetail = React.memo<{
     );
   },
 );
+MemoizedCategoryDetail.displayName = 'MemoizedCategoryDetail';
 
 const SpendingByCategory = ({ selectedYear }: SpendingByCategoryProps) => {
   const [currentTimeRange, setCurrentTimeRange] = useState<{ startDate: Date; endDate: Date }>(
