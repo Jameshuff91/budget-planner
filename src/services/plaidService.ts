@@ -1,4 +1,5 @@
 import { logger } from './logger';
+import { apiService } from './api';
 
 export interface PlaidConfig {
   clientId: string;
@@ -66,23 +67,13 @@ export class PlaidService {
    */
   async createLinkToken(userId: string, products: string[] = ['transactions']): Promise<string> {
     try {
-      const response = await fetch('/api/plaid/create-link-token', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          user_id: userId,
-          products,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to create link token');
+      const response = await apiService.createLinkToken();
+      
+      if (response.error) {
+        throw new Error(response.error);
       }
 
-      const data = await response.json();
-      return data.link_token;
+      return response.data!.link_token;
     } catch (error) {
       logger.error('Error creating Plaid link token:', error);
       throw error;
@@ -94,22 +85,13 @@ export class PlaidService {
    */
   async exchangePublicToken(publicToken: string): Promise<string> {
     try {
-      const response = await fetch('/api/plaid/exchange-public-token', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          public_token: publicToken,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to exchange public token');
+      const response = await apiService.exchangePublicToken(publicToken);
+      
+      if (response.error) {
+        throw new Error(response.error);
       }
 
-      const data = await response.json();
-      return data.access_token;
+      return response.data!.item_id;
     } catch (error) {
       logger.error('Error exchanging public token:', error);
       throw error;

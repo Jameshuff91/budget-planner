@@ -97,11 +97,35 @@ async function startServer() {
     await initializeDatabase();
     console.log('Database initialized successfully');
     
-    app.listen(PORT, () => {
-      console.log(`Backend server running on port ${PORT}`);
-      console.log(`Environment: ${process.env.NODE_ENV}`);
-      console.log(`CORS enabled for: ${process.env.FRONTEND_URL || 'http://localhost:3000'}`);
-    });
+    // Check if HTTPS certificates exist
+    const fs = require('fs');
+    const path = require('path');
+    const https = require('https');
+    
+    const certPath = path.join(__dirname, 'certs', 'cert.pem');
+    const keyPath = path.join(__dirname, 'certs', 'key.pem');
+    
+    if (fs.existsSync(certPath) && fs.existsSync(keyPath)) {
+      // HTTPS server
+      const httpsOptions = {
+        cert: fs.readFileSync(certPath),
+        key: fs.readFileSync(keyPath)
+      };
+      
+      https.createServer(httpsOptions, app).listen(PORT, () => {
+        console.log(`HTTPS Backend server running on https://localhost:${PORT}`);
+        console.log(`Environment: ${process.env.NODE_ENV}`);
+        console.log(`CORS enabled for: ${process.env.FRONTEND_URL || 'http://localhost:3000'}`);
+      });
+    } else {
+      // HTTP server (fallback)
+      app.listen(PORT, () => {
+        console.log(`HTTP Backend server running on http://localhost:${PORT}`);
+        console.log(`Environment: ${process.env.NODE_ENV}`);
+        console.log(`CORS enabled for: ${process.env.FRONTEND_URL || 'http://localhost:3000'}`);
+        console.log('\nWARNING: Running without HTTPS. Run ./generate-cert.sh to enable HTTPS.');
+      });
+    }
   } catch (error) {
     console.error('Failed to start server:', error);
     process.exit(1);
