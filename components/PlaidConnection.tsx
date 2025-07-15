@@ -47,28 +47,34 @@ export default function PlaidConnection() {
   const createLinkToken = async () => {
     setIsLoading(true);
     try {
-      const plaidService = createPlaidService();
-      if (!plaidService) {
-        toast({
-          title: 'Configuration Required',
-          description: (
-            <div>
-              <p>Bank connections require API credentials.</p>
-              <p className='text-sm text-muted-foreground mt-1'>
-                Add NEXT_PUBLIC_PLAID_CLIENT_ID and PLAID_SECRET to your environment.
-              </p>
-            </div>
-          ),
-          variant: 'destructive',
-        });
-        return;
+      const response = await fetch('/api/plaid/create-link-token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          user_id: 'user-' + Date.now(),
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const token = await plaidService.createLinkToken('user-' + Date.now());
-      setLinkToken(token);
+      const data = await response.json();
+
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      setLinkToken(data.link_token);
     } catch (error) {
       logger.error('Failed to create link token:', error);
-      showUserError(error, toast, 'plaid');
+      toast({
+        title: 'Connection Error',
+        description: 'Unable to initialize bank connection. Please check your configuration.',
+        variant: 'destructive',
+      });
     } finally {
       setIsLoading(false);
     }
