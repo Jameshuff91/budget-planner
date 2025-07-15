@@ -15,8 +15,12 @@ NEXT_PUBLIC_PLAID_CLIENT_ID=your_plaid_client_id_here
 PLAID_SECRET=your_plaid_secret_here
 NEXT_PUBLIC_PLAID_ENV=sandbox
 
+# Data Ingestion Pipeline Configuration
+PLAID_WEBHOOK_URL=https://yourdomain.com/api/plaid/webhook
+PLAID_WEBHOOK_SECRET=your_webhook_secret_here
+SYNC_SCHEDULE_INTERVAL=3600000
+
 # Optional Plaid Configuration
-# PLAID_WEBHOOK_URL=your_webhook_url_here
 # PLAID_REDIRECT_URI=your_redirect_uri_here
 ```
 

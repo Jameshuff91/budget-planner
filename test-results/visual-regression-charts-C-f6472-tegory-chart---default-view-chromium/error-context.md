@@ -1,7 +1,6 @@
 # Page snapshot
 
 ```yaml
-- alert
 - main:
   - paragraph: Budget Planner Dashboard
   - button "Reset Dashboard"
@@ -39,11 +38,26 @@
   - text: $21,967.48
   - paragraph: 99.18% of income
   - text: "Monthly Overview Current Month: July"
-  - img
-  - alert:
-    - img
-    - paragraph: Unable to render Monthly Overview
-    - paragraph: This might be due to invalid data or a rendering issue. Try refreshing the page.
+  - 'heading "Current Month: July" [level=3]'
+  - paragraph: Spending
+  - paragraph: $3,471.49
+  - text: ↑ 7448.4%
+  - paragraph: Savings
+  - paragraph: $18,678.51
+  - text: ↓ 40714.3%
+  - 'heading "Previous Month: June" [level=3]'
+  - paragraph: Spending
+  - paragraph: $45.99
+  - paragraph: Savings
+  - paragraph: "-$45.99"
+  - img: $0.00 $6,000.00 $12,000.00 $18,000.00 $24,000.00
+  - list:
+    - listitem:
+      - img
+      - text: Spending
+    - listitem:
+      - img
+      - text: Income
   - tablist:
     - tab "Overview" [selected]
     - tab "Categories"
@@ -71,8 +85,5 @@
     - paragraph: At $500 monthly savings with 8% annual compound growth, you'll reach your goal of $10,000 in 2.0 years
 - region "Notifications (F8)":
   - list
-- img
-- text: 2 errors
-- button "Hide Errors":
-  - img
+- alert
 ```

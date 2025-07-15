@@ -2,11 +2,7 @@
 
 ```yaml
 - region "Notifications (F8)":
-  - list:
-    - status:
-      - text: Success Successfully processed 1 file(s)
-      - button:
-        - img
+  - list
 - dialog "Export Transactions":
   - heading "Export Transactions" [level=2]
   - paragraph: Choose your export options and download your financial data as CSV.

@@ -42,6 +42,7 @@
   - text: "Year:"
   - combobox "Year:":
     - option "2025" [selected]
+    - option "2024"
   - text: Total Annual Income
   - img
   - text: $17,900
@@ -55,111 +56,50 @@
   - text: $16,050
   - paragraph: 89.66% of income
   - text: "Monthly Overview Current Month: July"
-  - img
-  - alert:
-    - img
-    - paragraph: Unable to render Monthly Overview
-    - paragraph: This might be due to invalid data or a rendering issue. Try refreshing the page.
+  - 'heading "Current Month: July" [level=3]'
+  - paragraph: Spending
+  - paragraph: $1,850.00
+  - paragraph: Savings
+  - paragraph: $16,050.00
+  - 'heading "Previous Month: June" [level=3]'
+  - paragraph: Spending
+  - paragraph: $0.00
+  - paragraph: Savings
+  - paragraph: $0.00
+  - img: $0.00 $4,500.00 $9,000.00 $13,500.00 $18,000.00
+  - list:
+    - listitem:
+      - img
+      - text: Spending
+    - listitem:
+      - img
+      - text: Income
   - tablist:
-    - tab "Overview"
+    - tab "Overview" [selected]
     - tab "Categories"
     - tab "Trends"
     - tab "Analytics"
-    - tab "Transactions" [selected]
+    - tab "Transactions"
     - tab "Settings"
     - tab "Diagnostics"
-  - tabpanel "Transactions":
-    - text: Transaction History
-    - button "Export Transactions":
-      - img
-      - text: Export Transactions
-    - button "Export Summary":
-      - img
-      - text: Export Summary
+  - tabpanel "Overview":
+    - text: Budget Goals Budget Goal Monthly Savings
     - img
-    - textbox "Search transactions..."
-    - combobox:
-      - option "All Categories" [selected]
-      - option "Food"
-      - option "Other Income"
-      - option "Salary"
-      - option "Transportation"
-      - option "Utilities"
-    - table:
-      - rowgroup:
-        - row "Date Description Category Amount Actions":
-          - cell "Date"
-          - cell "Description"
-          - cell "Category"
-          - cell "Amount"
-          - cell "Actions"
-      - rowgroup:
-        - row "Jul 14, 2025 Electricity Bill Utilities $150.00":
-          - cell "Jul 14, 2025"
-          - cell "Electricity Bill"
-          - cell "Utilities"
-          - cell "$150.00"
-          - cell:
-            - button:
-              - img
-            - button:
-              - img
-        - row "Jul 14, 2025 Monthly Transport Transportation $200.00":
-          - cell "Jul 14, 2025"
-          - cell "Monthly Transport"
-          - cell "Transportation"
-          - cell "$200.00"
-          - cell:
-            - button:
-              - img
-            - button:
-              - img
-        - row "Jul 14, 2025 Freelance Work Other Income +$100.00":
-          - cell "Jul 14, 2025"
-          - cell "Freelance Work"
-          - cell "Other Income"
-          - cell "+$100.00"
-          - cell:
-            - button:
-              - img
-            - button:
-              - img
-        - row "Jul 14, 2025 Monthly Income Salary +$17,800.00":
-          - cell "Jul 14, 2025"
-          - cell "Monthly Income"
-          - cell "Salary"
-          - cell "+$17,800.00"
-          - cell:
-            - button:
-              - img
-            - button:
-              - img
-        - row "Jan 14, 2024 Grocery Store Food $50.25":
-          - cell "Jan 14, 2024"
-          - cell "Grocery Store"
-          - cell "Food"
-          - cell "$50.25"
-          - cell:
-            - button:
-              - img
-            - button:
-              - img
-        - row "Jan 18, 2024 Electric Bill Utilities $120.00":
-          - cell "Jan 18, 2024"
-          - cell "Electric Bill"
-          - cell "Utilities"
-          - cell "$120.00"
-          - cell:
-            - button:
-              - img
-            - button:
-              - img
-    - text: "Total Transactions: 6 Total: $18,079.75"
+    - spinbutton "Monthly Savings": "500"
+    - text: "Goal Amount: $10,000"
+    - img
+    - slider
+    - spinbutton: "10000"
+    - button "Set to Monthly Savings"
+    - paragraph: "Based on your current savings rate, you will reach your goal in:"
+    - img
+    - paragraph: 24 months (2.0 years)
+    - paragraph: "With 8% annual compound interest, projected final amount: $12,480"
+    - paragraph: "Understand This Metric:"
+    - paragraph: 5.00% of your goal saved each month
+    - paragraph: This percentage represents how much of your goal you're saving each month. A higher percentage means you're saving more relative to your goal.
+    - paragraph: At $500 monthly savings with 8% annual compound growth, you'll reach your goal of $10,000 in 2.0 years
 - region "Notifications (F8)":
   - list
 - alert
-- img
-- text: 2 errors
-- button "Hide Errors":
-  - img
 ```

@@ -8,6 +8,7 @@ import { useDBContext } from '@context/DatabaseContext';
 import { logger } from '@services/logger';
 import { createPlaidService } from '@services/plaidService';
 import { showUserError, ErrorMessages } from '@utils/userErrors';
+import { syncService } from '@services/syncService';
 
 import { Alert, AlertDescription } from './ui/alert';
 import { Button } from './ui/button';
@@ -96,6 +97,10 @@ export default function PlaidConnection() {
         const updatedAccounts = [...linkedAccounts, ...newAccounts];
         setLinkedAccounts(updatedAccounts);
         localStorage.setItem('plaid.linkedAccounts', JSON.stringify(updatedAccounts));
+
+        // Register account with sync service
+        const accountIds = accounts.map((account) => account.accountId);
+        syncService.registerAccount(metadata.item_id, accessToken, accountIds);
 
         toast({
           title: 'Account Connected',

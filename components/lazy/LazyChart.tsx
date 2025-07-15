@@ -7,30 +7,48 @@ import { useRenderPerformance } from '@utils/performance';
 
 // Chart component mapping
 const chartComponents = {
-  SpendingByCategory: dynamic(() => import('@components/SpendingByCategory'), {
-    loading: () => <ChartSkeleton />,
-    ssr: false,
-  }),
-  SpendingTrend: dynamic(() => import('@components/SpendingTrend'), {
-    loading: () => <ChartSkeleton />,
-    ssr: false,
-  }),
-  SpendingOverview: dynamic(() => import('@components/SpendingOverview'), {
-    loading: () => <ChartSkeleton />,
-    ssr: false,
-  }),
-  SpendingVelocity: dynamic(() => import('@components/SpendingVelocity'), {
-    loading: () => <ChartSkeleton />,
-    ssr: false,
-  }),
-  SpendingByMerchant: dynamic(() => import('@components/SpendingByMerchant'), {
-    loading: () => <ChartSkeleton />,
-    ssr: false,
-  }),
-  YearOverYearComparison: dynamic(() => import('@components/YearOverYearComparison'), {
-    loading: () => <ChartSkeleton />,
-    ssr: false,
-  }),
+  SpendingByCategory: dynamic(
+    () => import('@components/SpendingByCategory').then((mod) => mod.default || mod),
+    {
+      loading: () => <ChartSkeleton />,
+      ssr: false,
+    }
+  ),
+  SpendingTrend: dynamic(
+    () => import('@components/SpendingTrend').then((mod) => mod.default || mod),
+    {
+      loading: () => <ChartSkeleton />,
+      ssr: false,
+    }
+  ),
+  SpendingOverview: dynamic(
+    () => import('@components/SpendingOverview').then((mod) => mod.default || mod),
+    {
+      loading: () => <ChartSkeleton />,
+      ssr: false,
+    }
+  ),
+  SpendingVelocity: dynamic(
+    () => import('@components/SpendingVelocity').then((mod) => mod.default || mod),
+    {
+      loading: () => <ChartSkeleton />,
+      ssr: false,
+    }
+  ),
+  SpendingByMerchant: dynamic(
+    () => import('@components/SpendingByMerchant').then((mod) => mod.default || mod),
+    {
+      loading: () => <ChartSkeleton />,
+      ssr: false,
+    }
+  ),
+  YearOverYearComparison: dynamic(
+    () => import('@components/YearOverYearComparison').then((mod) => mod.default || mod),
+    {
+      loading: () => <ChartSkeleton />,
+      ssr: false,
+    }
+  ),
 };
 
 export type ChartType = keyof typeof chartComponents;

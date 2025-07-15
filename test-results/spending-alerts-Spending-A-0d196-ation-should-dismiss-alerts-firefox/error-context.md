@@ -1,0 +1,173 @@
+# Page snapshot
+
+```yaml
+- main:
+  - paragraph: Budget Planner Dashboard
+  - button "Reset Dashboard"
+  - heading "Upload Financial Information" [level=2]
+  - img
+  - heading "Upload PDF or CSV Files" [level=3]
+  - paragraph: Drag and drop your PDF or CSV files here or click to browse
+  - text: Choose Files
+  - button "Show Financial Statements (0)":
+    - text: Show Financial Statements (0)
+    - img
+  - button "Jul 2025"
+  - button "Jun 2025"
+  - button "May 2025"
+  - button "Apr 2025"
+  - button "Mar 2025"
+  - button "Feb 2025"
+  - button "Jan 2025"
+  - button "Dec 2024"
+  - button "Nov 2024"
+  - button "Oct 2024"
+  - button "Sep 2024"
+  - button "Aug 2024"
+  - button "Jul 2024"
+  - button "Jun 2024"
+  - button "May 2024"
+  - button "Apr 2024"
+  - button "Mar 2024"
+  - button "Feb 2024"
+  - button "Jan 2024"
+  - button "Dec 2023"
+  - button "Individual Transactions":
+    - heading "Individual Transactions" [level=3]
+    - img
+  - text: Financial Dashboard
+  - heading "Financial Dashboard" [level=2]
+  - button "Export Data":
+    - img
+    - text: Export Data
+  - text: "Year:"
+  - combobox "Year:":
+    - option "2025" [selected]
+  - text: Total Annual Income
+  - img
+  - text: $17,900
+  - paragraph: Combined disposable income
+  - text: Annual Spending
+  - img
+  - text: $1,850
+  - paragraph: 10.34% of income
+  - text: Annual Savings
+  - img
+  - text: $16,050
+  - paragraph: 89.66% of income
+  - text: "Monthly Overview Current Month: July"
+  - 'heading "Current Month: July" [level=3]'
+  - paragraph: Spending
+  - paragraph: $1,850.00
+  - paragraph: Savings
+  - paragraph: $16,050.00
+  - 'heading "Previous Month: June" [level=3]'
+  - paragraph: Spending
+  - paragraph: $0.00
+  - paragraph: Savings
+  - paragraph: $0.00
+  - img: $0.00$4,500.00$9,000.00$13,500.00$18,000.00
+  - list:
+    - listitem:
+      - img
+      - text: Spending
+    - listitem:
+      - img
+      - text: Income
+  - tablist:
+    - tab "Overview"
+    - tab "Categories"
+    - tab "Trends"
+    - tab "Analytics"
+    - tab "Transactions"
+    - tab "Settings" [selected]
+    - tab "Diagnostics"
+  - tabpanel "Settings":
+    - img
+    - text: Active Alerts (4)
+    - alert:
+      - img
+      - text: "Unusual transaction: Monthly Rent - $1,200.00"
+      - button:
+        - img
+    - alert:
+      - img
+      - text: "Unusual transaction: Weekly Groceries - $300.00"
+      - button:
+        - img
+    - alert:
+      - img
+      - text: "Unusual transaction: Monthly Transport - $200.00"
+      - button:
+        - img
+    - alert:
+      - img
+      - text: "Unusual transaction: Electricity Bill - $150.00"
+      - button:
+        - img
+    - img
+    - text: Alert Rules
+    - paragraph: Configure when you want to receive spending alerts
+    - text: Push Notifications
+    - paragraph: Receive alerts as browser notifications
+    - button "Enable"
+    - text: Alert when spending exceeds 90% of budget
+    - switch [checked]
+    - text: "Threshold:"
+    - spinbutton "Threshold:": "90"
+    - text: "% Alert on transactions 150% above average"
+    - switch [checked]
+    - text: "Threshold:"
+    - spinbutton "Threshold:": "150"
+    - text: "% Alert when monthly savings fall below $500"
+    - switch
+    - button "Add Custom Rule (Coming Soon)" [disabled]
+    - img
+    - text: Custom Category Rules
+    - paragraph: Create rules to automatically categorize transactions based on their description
+    - paragraph: No custom rules yet. Create one to start automating categorization.
+    - button "Add New Rule":
+      - img
+      - text: Add New Rule
+    - heading "How rules work:" [level=4]
+    - list:
+      - listitem: • Rules are applied in priority order (highest first)
+      - listitem: • First matching rule determines the category
+      - listitem: • Use regex for complex patterns (e.g., ^UBER.*EATS$)
+      - listitem: • Rules apply to new transactions and manual categorization
+    - img
+    - text: Bank Connections
+    - paragraph: Connect your bank accounts to automatically import transactions
+    - alert:
+      - img
+      - text: Plaid integration requires API credentials. Add NEXT_PUBLIC_PLAID_CLIENT_ID and PLAID_SECRET to your environment variables.
+    - button "Connect Bank Account" [disabled]:
+      - img
+      - text: Connect Bank Account
+    - heading "How it works:" [level=4]
+    - list:
+      - listitem: • Securely connect your bank using Plaid
+      - listitem: • Automatically import transactions daily
+      - listitem: • Categorize transactions with AI
+      - listitem: • No manual CSV/PDF uploads needed
+      - listitem: • Bank-level encryption and security
+    - img
+    - text: Smart Categorization (AI-Powered)
+    - paragraph: Use OpenAI to automatically categorize your transactions with high accuracy
+    - alert:
+      - img
+      - text: Smart categorization uses OpenAI's API to analyze transaction descriptions. You'll need an OpenAI API key to enable this feature.
+    - text: Enable Smart Categorization
+    - paragraph: Automatically categorize new transactions using AI
+    - switch "Enable Smart Categorization"
+    - heading "How it works:" [level=4]
+    - list:
+      - listitem: • AI analyzes transaction descriptions to determine the best category
+      - listitem: • Works with your existing categories or suggests new ones
+      - listitem: • Learns from patterns in your transaction history
+      - listitem: • Provides confidence scores for each categorization
+- text: FCP is 5180.00 (poor) Check performance optimization guides TTFB is 4162.00 (poor) Optimize server response time and use CDN LCP is 5190.00 (poor) Optimize images and critical resources loading
+- region "Notifications (F8)":
+  - list
+- alert
+```

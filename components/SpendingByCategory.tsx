@@ -18,7 +18,6 @@ import {
   getOptimizedAnimationProps,
   getOptimizedColor,
   memoizeChartProps,
-  createPerformanceMarker,
 } from '@utils/chartOptimization';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#FF6B6B'];
@@ -195,13 +194,8 @@ const SpendingByCategory = ({ selectedYear }: SpendingByCategoryProps) => {
     },
   );
 
-  // Memoize analytics data to prevent unnecessary recalculations
-  const analyticsData = useMemo(() => {
-    const marker = createPerformanceMarker('analytics-data');
-    const result = useAnalytics(currentTimeRange);
-    marker.end();
-    return result;
-  }, [currentTimeRange.startDate.getTime(), currentTimeRange.endDate.getTime()]);
+  // Call useAnalytics directly, not inside useMemo
+  const analyticsData = useAnalytics(currentTimeRange);
 
   const { categorySpending, detailedCategorySpending, monthlyTrends } = analyticsData;
   const { updateCategoryBudget, categories: allCategories, loading } = useDBContext();
@@ -212,9 +206,7 @@ const SpendingByCategory = ({ selectedYear }: SpendingByCategoryProps) => {
 
   // Memoize filtered chart data
   const chartData = useMemo(() => {
-    const marker = createPerformanceMarker('chart-data-filter');
     const filtered = categorySpending.filter((cat) => cat.value > 0);
-    marker.end();
     return filtered;
   }, [categorySpending]);
 

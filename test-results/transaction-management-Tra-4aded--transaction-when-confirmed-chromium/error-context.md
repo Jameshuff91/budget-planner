@@ -108,51 +108,11 @@
               - img
             - button:
               - img
-        - row "Jan 21, 2024 Internet Bill Utilities $80.00":
-          - cell "Jan 21, 2024"
-          - cell "Internet Bill"
-          - cell "Utilities"
-          - cell "$80.00"
-          - cell:
-            - button:
-              - img
-            - button:
-              - img
-        - row "Jan 22, 2024 Car Insurance Transportation $150.00":
-          - cell "Jan 22, 2024"
-          - cell "Car Insurance"
-          - cell "Transportation"
-          - cell "$150.00"
-          - cell:
-            - button:
-              - img
-            - button:
-              - img
-        - row "Jan 20, 2024 Restaurant Food $75.50":
-          - cell "Jan 20, 2024"
-          - cell "Restaurant"
-          - cell "Food"
-          - cell "$75.50"
-          - cell:
-            - button:
-              - img
-            - button:
-              - img
-        - row "Jan 19, 2024 Freelance Work Income +$500.00":
-          - cell "Jan 19, 2024"
-          - cell "Freelance Work"
+        - row "Jan 16, 2024 Salary Income +$2,500.00":
+          - cell "Jan 16, 2024"
+          - cell "Salary"
           - cell "Income"
-          - cell "+$500.00"
-          - cell:
-            - button:
-              - img
-            - button:
-              - img
-        - row "Jan 15, 2024 Gas Station Transportation $35.00":
-          - cell "Jan 15, 2024"
-          - cell "Gas Station"
-          - cell "Transportation"
-          - cell "$35.00"
+          - cell "+$2,500.00"
           - cell:
             - button:
               - img
@@ -168,11 +128,51 @@
               - img
             - button:
               - img
-        - row "Jan 16, 2024 Salary Income +$2,500.00":
-          - cell "Jan 16, 2024"
-          - cell "Salary"
+        - row "Jan 15, 2024 Gas Station Transportation $35.00":
+          - cell "Jan 15, 2024"
+          - cell "Gas Station"
+          - cell "Transportation"
+          - cell "$35.00"
+          - cell:
+            - button:
+              - img
+            - button:
+              - img
+        - row "Jan 19, 2024 Freelance Work Income +$500.00":
+          - cell "Jan 19, 2024"
+          - cell "Freelance Work"
           - cell "Income"
-          - cell "+$2,500.00"
+          - cell "+$500.00"
+          - cell:
+            - button:
+              - img
+            - button:
+              - img
+        - row "Jan 14, 2024 Grocery Store Food $50.25":
+          - cell "Jan 14, 2024"
+          - cell "Grocery Store"
+          - cell "Food"
+          - cell "$50.25"
+          - cell:
+            - button:
+              - img
+            - button:
+              - img
+        - row "Jan 18, 2024 Electric Bill Utilities $120.00":
+          - cell "Jan 18, 2024"
+          - cell "Electric Bill"
+          - cell "Utilities"
+          - cell "$120.00"
+          - cell:
+            - button:
+              - img
+            - button:
+              - img
+        - row "Jan 21, 2024 Internet Bill Utilities $80.00":
+          - cell "Jan 21, 2024"
+          - cell "Internet Bill"
+          - cell "Utilities"
+          - cell "$80.00"
           - cell:
             - button:
               - img
@@ -238,17 +238,17 @@
               - img
             - button:
               - img
-        - row "Jan 14, 2024 Grocery Store Food $50.25":
-          - cell "Jan 14, 2024"
-          - cell "Grocery Store"
-          - cell "Food"
-          - cell "$50.25"
+        - row "Jan 22, 2024 Car Insurance Transportation $150.00":
+          - cell "Jan 22, 2024"
+          - cell "Car Insurance"
+          - cell "Transportation"
+          - cell "$150.00"
           - cell:
             - button:
               - img
             - button:
               - img
-    - text: "Total Transactions: 15 Total: $22,324.75"
+    - text: "Total Transactions: 15 Total: $22,280.25"
 - region "Notifications (F8)":
   - list:
     - status:

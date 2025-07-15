@@ -117,16 +117,6 @@
               - img
             - button:
               - img
-        - row "Jan 15, 2024 Gas Station Transportation $35.00":
-          - cell "Jan 15, 2024"
-          - cell "Gas Station"
-          - cell "Transportation"
-          - cell "$35.00"
-          - cell:
-            - button:
-              - img
-            - button:
-              - img
         - row "Jul 14, 2025 Monthly Rent Rent $1,200.00":
           - cell "Jul 14, 2025"
           - cell "Monthly Rent"
@@ -182,6 +172,16 @@
           - cell "Monthly Income"
           - cell "Salary"
           - cell "+$17,800.00"
+          - cell:
+            - button:
+              - img
+            - button:
+              - img
+        - row "Jan 15, 2024 Gas Station Transportation $35.00":
+          - cell "Jan 15, 2024"
+          - cell "Gas Station"
+          - cell "Transportation"
+          - cell "$35.00"
           - cell:
             - button:
               - img

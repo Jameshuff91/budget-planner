@@ -1,7 +1,6 @@
 # Page snapshot
 
 ```yaml
-- alert
 - main:
   - paragraph: Budget Planner Dashboard
   - button "Reset Dashboard"
@@ -44,8 +43,6 @@
   - text: "Year:"
   - combobox "Year:":
     - option "2025" [selected]
-    - option "2024"
-    - option "2023"
   - text: Total Annual Income
   - img
   - text: $17,900
@@ -65,32 +62,100 @@
     - paragraph: Unable to render Monthly Overview
     - paragraph: This might be due to invalid data or a rendering issue. Try refreshing the page.
   - tablist:
-    - tab "Overview" [selected]
+    - tab "Overview"
     - tab "Categories"
     - tab "Trends"
     - tab "Analytics"
     - tab "Transactions"
-    - tab "Settings"
+    - tab "Settings" [selected]
     - tab "Diagnostics"
-  - tabpanel "Overview":
-    - text: Budget Goals Budget Goal Monthly Savings
+  - tabpanel "Settings":
     - img
-    - spinbutton "Monthly Savings": "500"
-    - text: "Goal Amount: $10,000"
+    - text: Active Alerts (4)
+    - alert:
+      - img
+      - text: "Unusual transaction: Monthly Rent - $1,200.00"
+      - button:
+        - img
+    - alert:
+      - img
+      - text: "Unusual transaction: Weekly Groceries - $300.00"
+      - button:
+        - img
+    - alert:
+      - img
+      - text: "Unusual transaction: Monthly Transport - $200.00"
+      - button:
+        - img
+    - alert:
+      - img
+      - text: "Unusual transaction: Electricity Bill - $150.00"
+      - button:
+        - img
     - img
-    - slider
-    - spinbutton: "10000"
-    - button "Set to Monthly Savings"
-    - paragraph: "Based on your current savings rate, you will reach your goal in:"
+    - text: Alert Rules
+    - paragraph: Configure when you want to receive spending alerts
+    - text: Push Notifications
+    - paragraph: Receive alerts as browser notifications
+    - button "Enable"
+    - text: Alert when spending exceeds 90% of budget
+    - switch [checked]
+    - text: "Threshold:"
+    - spinbutton "Threshold:": "90"
+    - text: "% Alert on transactions 150% above average"
+    - switch [checked]
+    - text: "Threshold:"
+    - spinbutton "Threshold:": "150"
+    - text: "% Alert when monthly savings fall below $500"
+    - switch
+    - button "Add Custom Rule (Coming Soon)" [disabled]
     - img
-    - paragraph: 24 months (2.0 years)
-    - paragraph: "With 8% annual compound interest, projected final amount: $12,480"
-    - paragraph: "Understand This Metric:"
-    - paragraph: 5.00% of your goal saved each month
-    - paragraph: This percentage represents how much of your goal you're saving each month. A higher percentage means you're saving more relative to your goal.
-    - paragraph: At $500 monthly savings with 8% annual compound growth, you'll reach your goal of $10,000 in 2.0 years
+    - text: Custom Category Rules
+    - paragraph: Create rules to automatically categorize transactions based on their description
+    - paragraph: No custom rules yet. Create one to start automating categorization.
+    - button "Add New Rule":
+      - img
+      - text: Add New Rule
+    - heading "How rules work:" [level=4]
+    - list:
+      - listitem: • Rules are applied in priority order (highest first)
+      - listitem: • First matching rule determines the category
+      - listitem: • Use regex for complex patterns (e.g., ^UBER.*EATS$)
+      - listitem: • Rules apply to new transactions and manual categorization
+    - img
+    - text: Bank Connections
+    - paragraph: Connect your bank accounts to automatically import transactions
+    - alert:
+      - img
+      - text: Plaid integration requires API credentials. Add NEXT_PUBLIC_PLAID_CLIENT_ID and PLAID_SECRET to your environment variables.
+    - button "Connect Bank Account" [disabled]:
+      - img
+      - text: Connect Bank Account
+    - heading "How it works:" [level=4]
+    - list:
+      - listitem: • Securely connect your bank using Plaid
+      - listitem: • Automatically import transactions daily
+      - listitem: • Categorize transactions with AI
+      - listitem: • No manual CSV/PDF uploads needed
+      - listitem: • Bank-level encryption and security
+    - img
+    - text: Smart Categorization (AI-Powered)
+    - paragraph: Use OpenAI to automatically categorize your transactions with high accuracy
+    - alert:
+      - img
+      - text: Smart categorization uses OpenAI's API to analyze transaction descriptions. You'll need an OpenAI API key to enable this feature.
+    - text: Enable Smart Categorization
+    - paragraph: Automatically categorize new transactions using AI
+    - switch "Enable Smart Categorization"
+    - heading "How it works:" [level=4]
+    - list:
+      - listitem: • AI analyzes transaction descriptions to determine the best category
+      - listitem: • Works with your existing categories or suggests new ones
+      - listitem: • Learns from patterns in your transaction history
+      - listitem: • Provides confidence scores for each categorization
 - region "Notifications (F8)":
   - list
+- alert
 - img
 - text: 2 errors
 - button "Hide Errors":

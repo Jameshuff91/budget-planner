@@ -1,0 +1,148 @@
+# Page snapshot
+
+```yaml
+- main:
+  - paragraph: Budget Planner Dashboard
+  - button "Reset Dashboard"
+  - heading "Upload Financial Information" [level=2]
+  - img
+  - heading "Upload PDF or CSV Files" [level=3]
+  - paragraph: Drag and drop your PDF or CSV files here or click to browse
+  - text: Choose Files
+  - button "Show Financial Statements (0)":
+    - text: Show Financial Statements (0)
+    - img
+  - button "Jul 2025"
+  - button "Jun 2025"
+  - button "May 2025"
+  - button "Apr 2025"
+  - button "Mar 2025"
+  - button "Feb 2025"
+  - button "Jan 2025"
+  - button "Dec 2024"
+  - button "Nov 2024"
+  - button "Oct 2024"
+  - button "Sep 2024"
+  - button "Aug 2024"
+  - button "Jul 2024"
+  - button "Jun 2024"
+  - button "May 2024"
+  - button "Apr 2024"
+  - button "Mar 2024"
+  - button "Feb 2024"
+  - button "Jan 2024"
+  - button "Individual Transactions":
+    - heading "Individual Transactions" [level=3]
+    - img
+  - text: Financial Dashboard
+  - heading "Financial Dashboard" [level=2]
+  - button "Export Data":
+    - img
+    - text: Export Data
+  - text: "Year:"
+  - combobox "Year:":
+    - option "2025" [selected]
+  - text: Total Annual Income
+  - img
+  - text: $17,900
+  - paragraph: Combined disposable income
+  - text: Annual Spending
+  - img
+  - text: $1,850
+  - paragraph: 10.34% of income
+  - text: Annual Savings
+  - img
+  - text: $16,050
+  - paragraph: 89.66% of income
+  - text: "Monthly Overview Current Month: July"
+  - 'heading "Current Month: July" [level=3]'
+  - paragraph: Spending
+  - paragraph: $1,850.00
+  - paragraph: Savings
+  - paragraph: $16,050.00
+  - 'heading "Previous Month: June" [level=3]'
+  - paragraph: Spending
+  - paragraph: $0.00
+  - paragraph: Savings
+  - paragraph: $0.00
+  - img: $0.00$4,500.00$9,000.00$13,500.00$18,000.00
+  - list:
+    - listitem:
+      - img
+      - text: Spending
+    - listitem:
+      - img
+      - text: Income
+  - tablist:
+    - tab "Overview"
+    - tab "Categories"
+    - tab "Trends"
+    - tab "Analytics"
+    - tab "Transactions" [selected]
+    - tab "Settings"
+    - tab "Diagnostics"
+  - tabpanel "Transactions":
+    - text: Transaction History
+    - button "Export Transactions":
+      - img
+      - text: Export Transactions
+    - button "Export Summary":
+      - img
+      - text: Export Summary
+    - img
+    - textbox "Search transactions...": bill
+    - combobox:
+      - option "All Categories" [selected]
+      - option "Food"
+      - option "Groceries"
+      - option "Health"
+      - option "Income"
+      - option "Other Income"
+      - option "Rent"
+      - option "Salary"
+      - option "Transportation"
+      - option "Utilities"
+    - table:
+      - rowgroup:
+        - row "Date Description Category Amount Actions":
+          - cell "Date"
+          - cell "Description"
+          - cell "Category"
+          - cell "Amount"
+          - cell "Actions"
+      - rowgroup:
+        - row "Jan 18, 2024 Electric Bill Utilities $120.00":
+          - cell "Jan 18, 2024"
+          - cell "Electric Bill"
+          - cell "Utilities"
+          - cell "$120.00"
+          - cell:
+            - button:
+              - img
+            - button:
+              - img
+        - row "Jan 21, 2024 Internet Bill Utilities $80.00":
+          - cell "Jan 21, 2024"
+          - cell "Internet Bill"
+          - cell "Utilities"
+          - cell "$80.00"
+          - cell:
+            - button:
+              - img
+            - button:
+              - img
+        - row "Jul 14, 2025 Electricity Bill Utilities $150.00":
+          - cell "Jul 14, 2025"
+          - cell "Electricity Bill"
+          - cell "Utilities"
+          - cell "$150.00"
+          - cell:
+            - button:
+              - img
+            - button:
+              - img
+    - text: "Total Transactions: 3 Total: -$50.00"
+- region "Notifications (F8)":
+  - list
+- alert
+```

@@ -24,7 +24,6 @@ import {
   shallowCompareProps,
   getOptimizedAnimationProps,
   memoizeChartProps,
-  createPerformanceMarker,
   optimizeChartData,
 } from '../src/utils/chartOptimization';
 
@@ -60,13 +59,8 @@ const monthNames = [
 ];
 
 const SpendingOverview = ({ selectedYear: propSelectedYear }: SpendingOverviewProps) => {
-  // Memoize analytics data to prevent unnecessary recalculations
-  const analyticsData = useMemo(() => {
-    const marker = createPerformanceMarker('overview-analytics-data');
-    const result = useAnalytics();
-    marker.end();
-    return result;
-  }, []);
+  // Call useAnalytics directly, not inside useMemo
+  const analyticsData = useAnalytics();
 
   const { spendingOverview, monthlyTrends } = analyticsData;
   const { loading } = useDBContext();
@@ -85,10 +79,8 @@ const SpendingOverview = ({ selectedYear: propSelectedYear }: SpendingOverviewPr
 
   // Filter data for selected year with performance optimization
   const yearData = useMemo(() => {
-    const marker = createPerformanceMarker('year-data-filter');
     const filtered = spendingOverview.filter((item) => item.year === selectedYear);
     const optimized = optimizeChartData(filtered, 50); // Limit for performance
-    marker.end();
     return optimized;
   }, [spendingOverview, selectedYear]);
 

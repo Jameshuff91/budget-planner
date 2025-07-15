@@ -24,7 +24,6 @@ import {
   shallowCompareProps,
   getOptimizedAnimationProps,
   memoizeChartProps,
-  createPerformanceMarker,
   optimizeChartData,
 } from '@utils/chartOptimization';
 
@@ -62,19 +61,13 @@ const MemoizedTrendIcon = React.memo<{ value: number }>(({ value }) => {
 });
 
 const YearOverYearComparison = ({ selectedYear }: YearOverYearComparisonProps) => {
-  // Memoize analytics data to prevent unnecessary recalculations
-  const analyticsData = useMemo(() => {
-    const marker = createPerformanceMarker('yoy-analytics-data');
-    const result = useAnalytics();
-    marker.end();
-    return result;
-  }, []);
+  // Call useAnalytics directly, not inside useMemo
+  const analyticsData = useAnalytics();
 
   const { spendingOverview } = analyticsData;
   const { loading } = useDBContext();
 
   const comparisonData = useMemo(() => {
-    const marker = createPerformanceMarker('yoy-comparison-data');
 
     const currentYearData = spendingOverview.filter((d) => d.year === selectedYear);
     const previousYearData = spendingOverview.filter((d) => d.year === selectedYear - 1);
@@ -92,7 +85,6 @@ const YearOverYearComparison = ({ selectedYear }: YearOverYearComparisonProps) =
       };
     });
 
-    marker.end();
     return optimizeChartData(result, 50); // Optimize for performance
   }, [spendingOverview, selectedYear]);
 
@@ -123,32 +115,30 @@ const YearOverYearComparison = ({ selectedYear }: YearOverYearComparisonProps) =
   }, [comparisonData, selectedYear]);
 
   // Memoized CustomTooltip component
-  const CustomTooltip = useMemo(() => {
-    return React.memo(
-      ({
-        active,
-        payload,
-        label,
-      }: {
-        active?: boolean;
-        payload?: TooltipPayload[];
-        label?: string;
-      }) => {
-        if (!active || !payload) return null;
+  const CustomTooltip = React.memo(
+    ({
+      active,
+      payload,
+      label,
+    }: {
+      active?: boolean;
+      payload?: TooltipPayload[];
+      label?: string;
+    }) => {
+      if (!active || !payload) return null;
 
-        return (
-          <div className='bg-white p-3 border rounded-lg shadow-lg'>
-            <p className='font-semibold'>{label}</p>
-            {payload.map((entry, index) => (
-              <p key={index} style={{ color: entry.color }}>
-                {entry.name}: {formatCurrency(entry.value)}
-              </p>
-            ))}
-          </div>
-        );
-      },
-    );
-  }, []);
+      return (
+        <div className='bg-white p-3 border rounded-lg shadow-lg'>
+          <p className='font-semibold'>{label}</p>
+          {payload.map((entry, index) => (
+            <p key={index} style={{ color: entry.color }}>
+              {entry.name}: {formatCurrency(entry.value)}
+            </p>
+          ))}
+        </div>
+      );
+    },
+  );
 
   // Memoize chart animation props
   const animationProps = useMemo(() => {

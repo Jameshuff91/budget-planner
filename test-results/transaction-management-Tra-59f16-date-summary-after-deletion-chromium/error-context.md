@@ -98,31 +98,21 @@
           - cell "Amount"
           - cell "Actions"
       - rowgroup:
-        - row "Jan 21, 2024 Internet Bill Utilities $80.00":
-          - cell "Jan 21, 2024"
-          - cell "Internet Bill"
-          - cell "Utilities"
-          - cell "$80.00"
-          - cell:
-            - button:
-              - img
-            - button:
-              - img
-        - row "Jan 23, 2024 Gym Membership Health $30.00":
-          - cell "Jan 23, 2024"
-          - cell "Gym Membership"
-          - cell "Health"
-          - cell "$30.00"
-          - cell:
-            - button:
-              - img
-            - button:
-              - img
         - row "Jan 16, 2024 Salary Income +$2,500.00":
           - cell "Jan 16, 2024"
           - cell "Salary"
           - cell "Income"
           - cell "+$2,500.00"
+          - cell:
+            - button:
+              - img
+            - button:
+              - img
+        - row "Jan 15, 2024 Gas Station Transportation $35.00":
+          - cell "Jan 15, 2024"
+          - cell "Gas Station"
+          - cell "Transportation"
+          - cell "$35.00"
           - cell:
             - button:
               - img
@@ -138,21 +128,11 @@
               - img
             - button:
               - img
-        - row "Jan 17, 2024 Coffee Shop Food $4.50":
-          - cell "Jan 17, 2024"
-          - cell "Coffee Shop"
-          - cell "Food"
-          - cell "$4.50"
-          - cell:
-            - button:
-              - img
-            - button:
-              - img
-        - row "Jan 14, 2024 Grocery Store Food $50.25":
-          - cell "Jan 14, 2024"
-          - cell "Grocery Store"
-          - cell "Food"
-          - cell "$50.25"
+        - row "Jan 22, 2024 Car Insurance Transportation $150.00":
+          - cell "Jan 22, 2024"
+          - cell "Car Insurance"
+          - cell "Transportation"
+          - cell "$150.00"
           - cell:
             - button:
               - img
@@ -168,11 +148,41 @@
               - img
             - button:
               - img
-        - row "Jan 22, 2024 Car Insurance Transportation $150.00":
-          - cell "Jan 22, 2024"
-          - cell "Car Insurance"
-          - cell "Transportation"
-          - cell "$150.00"
+        - row "Jan 17, 2024 Coffee Shop Food $4.50":
+          - cell "Jan 17, 2024"
+          - cell "Coffee Shop"
+          - cell "Food"
+          - cell "$4.50"
+          - cell:
+            - button:
+              - img
+            - button:
+              - img
+        - row "Jan 18, 2024 Electric Bill Utilities $120.00":
+          - cell "Jan 18, 2024"
+          - cell "Electric Bill"
+          - cell "Utilities"
+          - cell "$120.00"
+          - cell:
+            - button:
+              - img
+            - button:
+              - img
+        - row "Jan 23, 2024 Gym Membership Health $30.00":
+          - cell "Jan 23, 2024"
+          - cell "Gym Membership"
+          - cell "Health"
+          - cell "$30.00"
+          - cell:
+            - button:
+              - img
+            - button:
+              - img
+        - row "Jan 21, 2024 Internet Bill Utilities $80.00":
+          - cell "Jan 21, 2024"
+          - cell "Internet Bill"
+          - cell "Utilities"
+          - cell "$80.00"
           - cell:
             - button:
               - img
@@ -238,21 +248,11 @@
               - img
             - button:
               - img
-        - row "Jan 18, 2024 Electric Bill Utilities $120.00":
-          - cell "Jan 18, 2024"
-          - cell "Electric Bill"
-          - cell "Utilities"
-          - cell "$120.00"
-          - cell:
-            - button:
-              - img
-            - button:
-              - img
-        - row "Jan 15, 2024 Gas Station Transportation $35.00":
-          - cell "Jan 15, 2024"
-          - cell "Gas Station"
-          - cell "Transportation"
-          - cell "$35.00"
+        - row "Jan 14, 2024 Grocery Store Food $50.25":
+          - cell "Jan 14, 2024"
+          - cell "Grocery Store"
+          - cell "Food"
+          - cell "$50.25"
           - cell:
             - button:
               - img

@@ -269,11 +269,14 @@ class OfflineQueue {
 
     const transaction = this.db.transaction([this.storeName], 'readonly');
     const store = transaction.objectStore(this.storeName);
-    const index = store.index('synced');
-
+    
     return new Promise<QueuedOperation[]>((resolve, reject) => {
-      const request = index.getAll(IDBKeyRange.only(false));
-      request.onsuccess = () => resolve(request.result);
+      const request = store.getAll();
+      request.onsuccess = () => {
+        // Filter for unsynced operations after getting all
+        const pendingOps = request.result.filter(op => !op.synced);
+        resolve(pendingOps);
+      };
       request.onerror = () => reject(request.error);
     });
   }
