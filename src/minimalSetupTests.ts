@@ -143,11 +143,26 @@ global.IntersectionObserver = vi.fn().mockImplementation(() => ({
 }));
 
 // Mock ImageData for canvas operations
-global.ImageData = vi.fn().mockImplementation((width, height) => ({
-  width,
-  height,
-  data: new Uint8ClampedArray(width * height * 4),
-}));
+global.ImageData = vi.fn().mockImplementation((dataOrWidth, heightOrWidth?, height?) => {
+  // Handle both constructors: new ImageData(data, width, height) and new ImageData(width, height)
+  if (dataOrWidth instanceof Uint8ClampedArray) {
+    // Constructor: new ImageData(data, width, height)
+    return {
+      data: dataOrWidth,
+      width: heightOrWidth,
+      height: height,
+    };
+  } else {
+    // Constructor: new ImageData(width, height)
+    const width = dataOrWidth;
+    const actualHeight = heightOrWidth;
+    return {
+      width,
+      height: actualHeight,
+      data: new Uint8ClampedArray(width * actualHeight * 4),
+    };
+  }
+});
 
 // Mock window.CSS if needed
 if (typeof window !== 'undefined' && !window.CSS) {

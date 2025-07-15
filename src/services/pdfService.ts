@@ -159,7 +159,10 @@ class PDFService {
    */
   private preprocessImage(imageData: ImageData): ImageData {
     // Check if OpenCV (cv) is loaded and available globally
-    if (typeof cv === 'undefined') {
+    // In browser environment, cv would be on window. In test environment, it's on global.
+    const cvLib = typeof window !== 'undefined' ? (window as any).cv : (global as any).cv;
+    
+    if (!cvLib) {
       // Log error for test expectations
       logger.error('OpenCV (cv) is not loaded. Skipping advanced preprocessing.');
       
@@ -206,27 +209,27 @@ class PDFService {
         this.openCvAvailable = true;
       }
 
-      src = cv.matFromImageData(imageData);
-      gray = new cv.Mat();
+      src = cvLib.matFromImageData(imageData);
+      gray = new cvLib.Mat();
       deskewed = src.clone(); // Initialize deskewed with src, apply operations if skew is detected
 
       // 1. Grayscaling
-      cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
+      cvLib.cvtColor(src, gray, cvLib.COLOR_RGBA2GRAY);
 
       // 2. Deskewing
       // Create a binary image for contour detection for deskewing
-      const binary = new cv.Mat();
-      cv.threshold(gray, binary, 0, 255, cv.THRESH_BINARY_INV | cv.THRESH_OTSU);
+      const binary = new cvLib.Mat();
+      cvLib.threshold(gray, binary, 0, 255, cvLib.THRESH_BINARY_INV | cvLib.THRESH_OTSU);
 
       // Find contours
-      const contours = new cv.MatVector();
-      const hierarchy = new cv.Mat();
-      cv.findContours(binary, contours, hierarchy, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
+      const contours = new cvLib.MatVector();
+      const hierarchy = new cvLib.Mat();
+      cvLib.findContours(binary, contours, hierarchy, cvLib.RETR_EXTERNAL, cvLib.CHAIN_APPROX_SIMPLE);
 
       const angles: number[] = [];
       for (let i = 0; i < contours.size(); ++i) {
         const contour = contours.get(i);
-        const rect = cv.minAreaRect(contour);
+        const rect = cvLib.minAreaRect(contour);
         let angle = rect.angle;
 
         // Adjust angle: OpenCV's minAreaRect returns angles in [-90, 0).
@@ -257,19 +260,19 @@ class PDFService {
         if (Math.abs(medianAngle) > 0.5 && Math.abs(medianAngle) < 45) {
           // Avoid extreme rotations
           logger.info(`Deskewing image by ${medianAngle.toFixed(2)} degrees.`);
-          const M = cv.getRotationMatrix2D(
-            new cv.Point(gray.cols / 2, gray.rows / 2),
+          const M = cvLib.getRotationMatrix2D(
+            new cvLib.Point(gray.cols / 2, gray.rows / 2),
             medianAngle,
             1,
           );
-          cv.warpAffine(
+          cvLib.warpAffine(
             gray,
             deskewed,
             M,
-            new cv.Size(gray.cols, gray.rows),
-            cv.INTER_LINEAR,
-            cv.BORDER_CONSTANT,
-            new cv.Scalar(),
+            new cvLib.Size(gray.cols, gray.rows),
+            cvLib.INTER_LINEAR,
+            cvLib.BORDER_CONSTANT,
+            new cvLib.Scalar(),
           );
           M.delete();
         } else {
@@ -284,18 +287,18 @@ class PDFService {
       hierarchy.delete();
 
       // 3. Noise Removal (Median Filter)
-      blurred = new cv.Mat();
+      blurred = new cvLib.Mat();
       // Use the deskewed image (which is grayscale) if deskewing was applied, otherwise use original gray
-      cv.medianBlur(deskewed, blurred, 3); // Kernel size 3x3. Adjust if needed.
+      cvLib.medianBlur(deskewed, blurred, 3); // Kernel size 3x3. Adjust if needed.
 
       // 4. Adaptive Thresholding
-      adaptThresh = new cv.Mat();
-      cv.adaptiveThreshold(
+      adaptThresh = new cvLib.Mat();
+      cvLib.adaptiveThreshold(
         blurred,
         adaptThresh,
         255,
-        cv.ADAPTIVE_THRESH_GAUSSIAN_C,
-        cv.THRESH_BINARY,
+        cvLib.ADAPTIVE_THRESH_GAUSSIAN_C,
+        cvLib.THRESH_BINARY,
         11,
         2,
       );
@@ -305,9 +308,9 @@ class PDFService {
 
       // Convert the final processed Mat back to ImageData
       // Ensure the output is RGBA for putImageData
-      let finalMat = new cv.Mat();
+      let finalMat = new cvLib.Mat();
       if (adaptThresh.channels() === 1) {
-        cv.cvtColor(adaptThresh, finalMat, cv.COLOR_GRAY2RGBA);
+        cvLib.cvtColor(adaptThresh, finalMat, cvLib.COLOR_GRAY2RGBA);
       } else {
         finalMat = adaptThresh.clone(); // Should already be RGBA if adaptThresh was not GRAY
       }
@@ -611,8 +614,10 @@ class PDFService {
       cleaned = cleaned.replace(pattern, '');
     }
 
-    // Remove trailing dots
+    // Remove trailing dots (but only multiple dots, not single dots that might be part of abbreviations)
     cleaned = cleaned.replace(/\.{2,}$/g, ''); // remove ".." or "..." at end
+    // Also remove single trailing dot if it's preceded by a space (isolated dot)
+    cleaned = cleaned.replace(/\s+\.$/, '');
     
     // Remove amounts - handle various formats
     cleaned = cleaned.replace(/\bAmount:\s*\$?[0-9,]+(?:\.\d{2})?\b/gi, '');
@@ -621,6 +626,12 @@ class PDFService {
     cleaned = cleaned.replace(/\b[0-9]+\.[0-9]{2}\b/g, '');
 
     // 2. Standardize common abbreviations 
+    // First handle specific multi-word abbreviations with case preservation
+    cleaned = cleaned.replace(/\bSVC CHG FOR ACCOUNT\b/gi, 'Service Charge FOR Account');
+    cleaned = cleaned.replace(/\bSVC CHG\b/gi, 'Service Charge');
+    cleaned = cleaned.replace(/\bP\.O\.S\./gi, 'POS');
+    cleaned = cleaned.replace(/\bP O S\b/gi, 'POS');
+    
     const abbreviationMap: { [key: string]: string } = {
       PMT: 'Payment',
       DEPT: 'Department',
@@ -635,35 +646,16 @@ class PDFService {
       DEP: 'Deposit',
       BAL: 'Balance',
       STMT: 'Statement',
-      'SVC CHG': 'Service Charge',
-      'P O S': 'POS',
-      'P.O.S.': 'POS',
       RECD: 'Received',
     };
 
     for (const [abbr, full] of Object.entries(abbreviationMap)) {
       const escapedAbbr = abbr.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       const regex = new RegExp(`\\b${escapedAbbr}\\b`, 'gi');
-      cleaned = cleaned.replace(regex, (match) => {
-        // Preserve the original case for words like "FOR", "ACCOUNT" etc.
-        if (full.includes(' ')) {
-          // Multi-word replacements like "Service Charge"
-          const parts = full.split(' ');
-          const matchParts = match.split(/\s+/);
-          // Keep case of non-abbreviated parts
-          if (abbr === 'SVC CHG') {
-            return 'Service Charge FOR Account';
-          }
-          return full;
-        }
-        return full;
-      });
+      cleaned = cleaned.replace(regex, full);
     }
 
-    // Fix specific case issues
-    cleaned = cleaned.replace(/\bService Charge FOR ACCOUNT\b/gi, 'Service Charge FOR Account');
-
-    // Special handling for CHECKCARD - preserve original case for PAYMENT
+    // Special handling for CHECKCARD - preserve case for "PAYMENT" when it follows CHECKCARD
     cleaned = cleaned.replace(/\bCHECKCARD\s+PAYMENT\b/gi, 'Checkcard Payment');
     cleaned = cleaned.replace(/\bCHECKCARD\b/gi, 'Checkcard');
 
@@ -685,7 +677,8 @@ class PDFService {
       preserved.set(prefix, matches);
     }
 
-    // Remove characters that are NOT in the allowed set (underscore is temporary for placeholders)
+    // Remove characters that are NOT in the allowed set
+    // Keep: letters, numbers, spaces, dash, ampersand, forward slash, period, hash
     cleaned = cleaned.replace(/[^a-zA-Z0-9\s\-&/.#_]/g, '');
 
     // Restore preserved patterns
@@ -695,13 +688,25 @@ class PDFService {
       });
     }
 
+    // Remove any remaining underscores (from things like New_Product)
+    cleaned = cleaned.replace(/_/g, '');
+
     // 4. Normalize Whitespace
     cleaned = cleaned.replace(/\s+/g, ' ').trim();
 
-    // 5. Remove isolated special characters (but keep "/" when between words)
-    cleaned = cleaned.replace(/\s+[-&.#]\s+/g, ' '); // removed "/" from this pattern
+    // 5. Remove isolated special characters
+    // Remove all isolated special characters (dash, dot, hash, ampersand, forward slash)
+    cleaned = cleaned.replace(/\s+-\s+/g, ' ');
+    cleaned = cleaned.replace(/\s+\.\s+/g, ' ');
+    cleaned = cleaned.replace(/\s+#\s+/g, ' ');
+    cleaned = cleaned.replace(/\s+&\s+/g, ' ');
+    cleaned = cleaned.replace(/\s+\/\s+/g, ' ');
+    
+    // Remove leading special characters
     cleaned = cleaned.replace(/^[-&/.#]\s+/, '');
+    // Remove trailing special characters
     cleaned = cleaned.replace(/\s+[-&/.#]$/, '');
+    // Remove if string is only special characters
     cleaned = cleaned.replace(/^[-&/.#]+$/, '');
 
     // 6. Final cleanup
@@ -927,7 +932,8 @@ class PDFService {
     text: string,
   ): Promise<{ startDate: Date; endDate: Date } | null> {
     // General date string regex part - designed to be flexible for parseDate
-    const datePatternStr = String.raw`([\w\s.,/-]+?)`; // Capture group for a date string
+    // Use a more specific pattern to capture dates properly
+    const datePatternStr = String.raw`(\d{1,2}[-/. ]\d{1,2}[-/. ]\d{2,4}|\d{4}[-/. ]\d{1,2}[-/. ]\d{1,2}|[A-Za-z]{3,9}\.?\s+\d{1,2},?\s+\d{2,4}|\d{1,2}\s+[A-Za-z]{3,9}\.?\s+\d{2,4})`; // Capture group for a date string
 
     const primaryPeriodPatterns: { regex: RegExp; startGroup: number; endGroup: number }[] = [
       {

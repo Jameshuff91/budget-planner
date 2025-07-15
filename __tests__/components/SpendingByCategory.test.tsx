@@ -46,6 +46,7 @@ vi.mock('@context/DatabaseContext', () => {
 vi.mock('@hooks/useAnalytics', () => {
   const mockUseAnalytics = vi.fn();
   return {
+    default: mockUseAnalytics,
     useAnalytics: mockUseAnalytics,
     __mockUseAnalytics: mockUseAnalytics,
   };

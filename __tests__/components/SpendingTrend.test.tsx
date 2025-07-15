@@ -1,16 +1,20 @@
 import { render, screen } from '@testing-library/react';
-import { vi, describe, test, expect, beforeEach } from 'vitest';
+import { vi, describe, test, expect, beforeEach, type Mock } from 'vitest';
 
 // Mock ChartSkeleton
 vi.mock('@components/skeletons/ChartSkeleton', () => ({
   ChartSkeleton: () => <div data-testid='chart-skeleton'>Loading...</div>,
 }));
 
-// Mock useAnalytics hook
-vi.mock('@hooks/useAnalytics');
+// Mock useAnalytics hook with factory function
+vi.mock('@hooks/useAnalytics', () => ({
+  useAnalytics: vi.fn(),
+}));
 
-// Mock useDBContext
-vi.mock('@context/DatabaseContext');
+// Mock useDBContext with factory function
+vi.mock('@context/DatabaseContext', () => ({
+  useDBContext: vi.fn(),
+}));
 
 // Mock Recharts components
 vi.mock('recharts', () => ({
@@ -54,9 +58,19 @@ import SpendingTrend from '@components/SpendingTrend';
 import { useAnalytics } from '@hooks/useAnalytics';
 import { useDBContext } from '@context/DatabaseContext';
 
-// Get references to the mocked functions
-const mockUseAnalytics = useAnalytics as any;
-const mockUseDBContext = useDBContext as any;
+// Mock data
+const mockSpendingOverview = [
+  { month: 'Jan', year: 2024, totalSpending: 1500, totalIncome: 2500 },
+  { month: 'Feb', year: 2024, totalSpending: 1600, totalIncome: 2500 },
+  { month: 'Mar', year: 2024, totalSpending: 1700, totalIncome: 2600 },
+  { month: 'Apr', year: 2024, totalSpending: 1550, totalIncome: 2500 },
+  { month: 'May', year: 2024, totalSpending: 1800, totalIncome: 2700 },
+  { month: 'Jun', year: 2024, totalSpending: 1650, totalIncome: 2500 },
+];
+
+// Cast the hooks as mocks
+const mockUseAnalytics = useAnalytics as Mock;
+const mockUseDBContext = useDBContext as Mock;
 
 describe('SpendingTrend Component', () => {
   beforeEach(() => {
@@ -112,7 +126,14 @@ describe('SpendingTrend Component', () => {
   });
 
   test('displays loading state', () => {
-    mockUseDBContext.mockReturnValueOnce({
+    // Clear and setup fresh mocks
+    mockUseAnalytics.mockClear();
+    mockUseDBContext.mockClear();
+    
+    mockUseAnalytics.mockReturnValue({
+      spendingOverview: mockSpendingOverview,
+    });
+    mockUseDBContext.mockReturnValue({
       loading: true,
     });
 
@@ -123,8 +144,15 @@ describe('SpendingTrend Component', () => {
   });
 
   test('displays no data message when spendingOverview is empty', () => {
-    mockUseAnalytics.mockReturnValueOnce({
+    // Clear and setup fresh mocks
+    mockUseAnalytics.mockClear();
+    mockUseDBContext.mockClear();
+    
+    mockUseAnalytics.mockReturnValue({
       spendingOverview: [],
+    });
+    mockUseDBContext.mockReturnValue({
+      loading: false,
     });
 
     render(<SpendingTrend />);
@@ -148,8 +176,15 @@ describe('SpendingTrend Component', () => {
       { month: 'Aug', year: 2023, totalSpending: 1450, totalIncome: 2400 },
     ];
 
-    mockUseAnalytics.mockReturnValueOnce({
+    // Clear and setup fresh mocks
+    mockUseAnalytics.mockClear();
+    mockUseDBContext.mockClear();
+    
+    mockUseAnalytics.mockReturnValue({
       spendingOverview: mixedYearData,
+    });
+    mockUseDBContext.mockReturnValue({
+      loading: false,
     });
 
     render(<SpendingTrend selectedYear={2024} />);
@@ -160,8 +195,15 @@ describe('SpendingTrend Component', () => {
   });
 
   test('handles single data point gracefully', () => {
-    mockUseAnalytics.mockReturnValueOnce({
+    // Clear and setup fresh mocks
+    mockUseAnalytics.mockClear();
+    mockUseDBContext.mockClear();
+    
+    mockUseAnalytics.mockReturnValue({
       spendingOverview: [{ month: 'Jan', year: 2024, totalSpending: 1500, totalIncome: 2500 }],
+    });
+    mockUseDBContext.mockReturnValue({
+      loading: false,
     });
 
     render(<SpendingTrend />);

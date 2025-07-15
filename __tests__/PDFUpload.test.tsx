@@ -4,6 +4,7 @@ import { vi } from 'vitest';
 
 // Create mock functions that we can control
 const mockAddTransaction = vi.fn();
+const mockAddTransactionsBatch = vi.fn();
 const mockRefreshData = vi.fn();
 const mockToast = vi.fn();
 
@@ -11,7 +12,9 @@ const mockToast = vi.fn();
 vi.mock('../src/context/DatabaseContext', () => ({
   useDBContext: () => ({
     addTransaction: mockAddTransaction,
+    addTransactionsBatch: mockAddTransactionsBatch,
     refreshData: mockRefreshData,
+    categories: [],
   }),
 }));
 
@@ -36,6 +39,21 @@ vi.mock('../src/services/logger', () => ({
     info: vi.fn(),
     warn: vi.fn(),
   },
+}));
+
+vi.mock('../src/utils/smartCategorization', () => ({
+  getSmartCategorizationSettings: vi.fn().mockReturnValue({ enabled: false }),
+  categorizeTransactionsBatchWithAI: vi.fn(),
+}));
+
+vi.mock('../src/utils/userErrors', () => ({
+  showUserError: vi.fn((error, toast, context) => {
+    toast({
+      title: 'Error',
+      description: 'Unable to read this PDF file. It may be corrupted or password-protected. Try opening the file in a PDF reader first to verify it\'s valid.',
+      variant: 'destructive',
+    });
+  }),
 }));
 
 import PDFUpload from '../components/PDFUpload';
@@ -81,15 +99,15 @@ describe('PDFUpload Component', () => {
     });
 
     await waitFor(() => {
-      expect(mockAddTransaction).toHaveBeenCalledWith(
+      expect(mockAddTransactionsBatch).toHaveBeenCalledWith([
         expect.objectContaining({
-          date: expect.any(Date),
+          date: expect.any(String), // Date is converted to ISO string
           description: 'Test Transaction',
           amount: -100,
           category: 'Food',
           type: 'expense',
         }),
-      );
+      ]);
     });
 
     expect(mockToast).toHaveBeenCalledWith(
@@ -144,7 +162,7 @@ describe('PDFUpload Component', () => {
       expect(mockToast).toHaveBeenCalledWith(
         expect.objectContaining({
           title: 'Error',
-          description: expect.stringContaining('Failed to process invalid.pdf'),
+          description: expect.stringContaining('Unable to read this PDF file'),
           variant: 'destructive',
         }),
       );

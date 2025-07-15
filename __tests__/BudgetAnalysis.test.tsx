@@ -10,7 +10,12 @@ const localStorageMock = {
   removeItem: vi.fn(),
   clear: vi.fn(),
 };
-global.localStorage = localStorageMock as any;
+
+// Use Object.defineProperty to mock localStorage
+Object.defineProperty(window, 'localStorage', {
+  value: localStorageMock,
+  writable: true,
+});
 
 describe('BudgetGoal Component', () => {
   beforeEach(() => {
