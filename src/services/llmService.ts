@@ -46,9 +46,15 @@ export class LLMService {
 
   constructor(config: LLMConfig) {
     this.apiKey = config.apiKey;
-    this.model = config.model || 'gpt-3.5-turbo';
+    this.model = config.model || 'gpt-4o-mini';
     this.temperature = config.temperature || 0.3;
     this.maxTokens = config.maxTokens || 150;
+    
+    logger.info('LLM Service initialized', { 
+      model: this.model,
+      hasApiKey: !!this.apiKey,
+      temperature: this.temperature 
+    });
   }
 
   async categorizeTransaction(
@@ -62,6 +68,11 @@ export class LLMService {
       ];
 
       const prompt = this.buildCategorizationPrompt(transaction, categories);
+
+      logger.info('Sending categorization request to OpenAI', {
+        model: this.model,
+        transactionDescription: transaction.description.substring(0, 50) + '...'
+      });
 
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
@@ -88,7 +99,13 @@ export class LLMService {
       });
 
       if (!response.ok) {
-        throw new Error(`OpenAI API error: ${response.statusText}`);
+        const errorBody = await response.text();
+        logger.error('OpenAI API error', {
+          status: response.status,
+          statusText: response.statusText,
+          errorBody: errorBody.substring(0, 200)
+        });
+        throw new Error(`OpenAI API error: ${response.status} ${response.statusText}`);
       }
 
       const data = await response.json();
@@ -118,6 +135,12 @@ export class LLMService {
       ];
 
       const prompt = this.buildBatchCategorizationPrompt(transactions, categories);
+
+      logger.info('Sending batch categorization request to OpenAI', {
+        model: this.model,
+        transactionCount: transactions.length,
+        batchSize: transactions.length
+      });
 
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
@@ -292,13 +315,23 @@ Respond with a JSON array where each object has:
 }
 
 // Factory function to create LLM service instance
-export function createLLMService(apiKey?: string): LLMService | null {
-  const key = apiKey || process.env.NEXT_PUBLIC_OPENAI_API_KEY;
+export function createLLMService(apiKey?: string, model?: string): LLMService | null {
+  // Priority: provided apiKey > environment variable > localStorage
+  const key = apiKey || process.env.NEXT_PUBLIC_OPENAI_API_KEY || 
+    (typeof window !== 'undefined' ? localStorage.getItem('smartCategorization.apiKey') : null) || '';
 
   if (!key) {
     logger.warn('OpenAI API key not configured');
     return null;
   }
 
-  return new LLMService({ apiKey: key });
+  // Get model from parameter, environment, or localStorage
+  const selectedModel = model || 
+    (typeof window !== 'undefined' ? localStorage.getItem('smartCategorization.model') : null) ||
+    'gpt-4o-mini';
+
+  return new LLMService({ 
+    apiKey: key,
+    model: selectedModel 
+  });
 }

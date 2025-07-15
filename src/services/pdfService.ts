@@ -1750,7 +1750,8 @@ class PDFService {
 
               if (smartCategorizationEnabled) {
                 const apiKey = localStorage.getItem('smartCategorization.apiKey');
-                const llmService = createLLMService(apiKey || undefined);
+                const model = localStorage.getItem('smartCategorization.model') || 'gpt-4o-mini';
+                const llmService = createLLMService(apiKey || undefined, model);
 
                 if (llmService) {
                   try {

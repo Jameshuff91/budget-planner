@@ -18,16 +18,18 @@ export default function SmartCategorizationSettings() {
   const [apiKey, setApiKey] = useState('');
   const [isTestingConnection, setIsTestingConnection] = useState(false);
   const [showApiKey, setShowApiKey] = useState(false);
-  const [model, setModel] = useState('gpt-3.5-turbo');
+  const [model, setModel] = useState('gpt-4o-mini');
 
   useEffect(() => {
-    // Load settings from localStorage
+    // Load settings from localStorage or environment
     const savedEnabled = localStorage.getItem('smartCategorization.enabled') === 'true';
+    const envApiKey = process.env.NEXT_PUBLIC_OPENAI_API_KEY;
     const savedApiKey = localStorage.getItem('smartCategorization.apiKey') || '';
-    const savedModel = localStorage.getItem('smartCategorization.model') || 'gpt-3.5-turbo';
+    const savedModel = localStorage.getItem('smartCategorization.model') || 'gpt-4o-mini';
 
     setIsEnabled(savedEnabled);
-    setApiKey(savedApiKey);
+    // Use environment variable if available, otherwise use saved key
+    setApiKey(envApiKey || savedApiKey);
     setModel(savedModel);
   }, []);
 
@@ -132,15 +134,21 @@ export default function SmartCategorizationSettings() {
                   </Button>
                 </div>
                 <p className='text-xs text-muted-foreground'>
-                  Get your API key from{' '}
-                  <a
-                    href='https://platform.openai.com/api-keys'
-                    target='_blank'
-                    rel='noopener noreferrer'
-                    className='underline'
-                  >
-                    OpenAI Platform
-                  </a>
+                  {process.env.NEXT_PUBLIC_OPENAI_API_KEY ? (
+                    <span className='text-green-600'>✓ Using API key from environment variable</span>
+                  ) : (
+                    <>
+                      Get your API key from{' '}
+                      <a
+                        href='https://platform.openai.com/api-keys'
+                        target='_blank'
+                        rel='noopener noreferrer'
+                        className='underline'
+                      >
+                        OpenAI Platform
+                      </a>
+                    </>
+                  )}
                 </p>
               </div>
 
@@ -152,12 +160,13 @@ export default function SmartCategorizationSettings() {
                   onChange={(e) => setModel(e.target.value)}
                   className='w-full px-3 py-2 border border-gray-300 rounded-md text-sm'
                 >
-                  <option value='gpt-3.5-turbo'>GPT-3.5 Turbo (Fast & Affordable)</option>
-                  <option value='gpt-4'>GPT-4 (Most Accurate)</option>
-                  <option value='gpt-4-turbo-preview'>GPT-4 Turbo (Fast & Accurate)</option>
+                  <option value='gpt-4o-mini'>GPT-4o Mini (Fastest & Cheapest - Recommended)</option>
+                  <option value='gpt-4o'>GPT-4o (Best Performance)</option>
+                  <option value='gpt-4-turbo'>GPT-4 Turbo (Legacy)</option>
+                  <option value='gpt-3.5-turbo'>GPT-3.5 Turbo (Legacy)</option>
                 </select>
                 <p className='text-xs text-muted-foreground'>
-                  GPT-3.5 is recommended for most use cases due to lower cost
+                  GPT-4o Mini is recommended - 60% cheaper than GPT-3.5 Turbo with better performance
                 </p>
               </div>
 

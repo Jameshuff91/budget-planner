@@ -8,10 +8,14 @@ export interface SmartCategorizationSettings {
 }
 
 export function getSmartCategorizationSettings(): SmartCategorizationSettings {
+  // Check environment variable first, then localStorage
+  const apiKey = process.env.NEXT_PUBLIC_OPENAI_API_KEY || 
+    localStorage.getItem('smartCategorization.apiKey') || '';
+  
   return {
     enabled: localStorage.getItem('smartCategorization.enabled') === 'true',
-    apiKey: localStorage.getItem('smartCategorization.apiKey') || '',
-    model: localStorage.getItem('smartCategorization.model') || 'gpt-3.5-turbo',
+    apiKey: apiKey,
+    model: localStorage.getItem('smartCategorization.model') || 'gpt-4o-mini',
   };
 }
 
@@ -26,7 +30,7 @@ export async function categorizeTransactionWithAI(
       return transaction.existingCategory || 'Uncategorized';
     }
 
-    const llmService = createLLMService(settings.apiKey);
+    const llmService = createLLMService(settings.apiKey, settings.model);
     if (!llmService) {
       return transaction.existingCategory || 'Uncategorized';
     }
@@ -67,7 +71,7 @@ export async function categorizeTransactionsBatchWithAI(
       return transactions.map((t) => t.existingCategory || 'Uncategorized');
     }
 
-    const llmService = createLLMService(settings.apiKey);
+    const llmService = createLLMService(settings.apiKey, settings.model);
     if (!llmService) {
       return transactions.map((t) => t.existingCategory || 'Uncategorized');
     }
