@@ -1,38 +1,147 @@
-# Budget Planner App - Compilation Error Fix
+# Data Ingestion Pipeline - Product Requirements Document
 
-## Project Overview
-Fix compilation errors in the budget planner Next.js application to ensure it builds successfully and runs without errors.
+## Executive Summary
 
-## Current Issues
-The application is failing to compile due to numerous ESLint errors and warnings including:
-- TypeScript errors with explicit `any` types
-- Import order violations
-- Prettier formatting issues
-- React JSX unescaped entities
-- Unused variables and imports
-- Duplicate files causing conflicts
+Build a comprehensive data ingestion pipeline to automatically keep bank statements and transaction data up-to-date in the budget planner application. The pipeline should handle real-time transaction updates, scheduled syncing, webhook processing, and ensure data consistency across multiple data sources.
 
-## Success Criteria
-- All ESLint errors resolved
-- Application builds successfully with `npm run build`
-- Application runs without compilation warnings
-- Code follows proper TypeScript and React best practices
-- No duplicate files in the codebase
+## Problem Statement
+
+Currently, the budget planner has basic Plaid integration for initial transaction import, but lacks a robust pipeline for ongoing data synchronization. Users need:
+
+1. **Automatic Updates**: Transactions should sync automatically without manual intervention
+2. **Real-time Processing**: New transactions should appear quickly after they occur
+3. **Webhook Handling**: Proper webhook infrastructure to receive bank notifications
+4. **Data Consistency**: Prevent duplicates and handle transaction modifications
+5. **Scheduled Syncing**: Fallback mechanism for missed webhook events
+6. **Error Recovery**: Robust error handling and retry mechanisms
+7. **Multi-source Integration**: Handle both Plaid and manual data sources seamlessly
 
 ## Technical Requirements
-1. Fix all `@typescript-eslint/no-explicit-any` errors by providing proper types
-2. Resolve all `import/order` violations
-3. Fix all Prettier formatting issues
-4. Escape unescaped entities in JSX
-5. Remove unused imports and variables
-6. Ensure consistent code formatting
-7. Verify no duplicate files exist
 
-## Implementation Priority
-1. Remove duplicate files (already done)
-2. Fix TypeScript type errors
-3. Fix import order issues
-4. Fix Prettier formatting
-5. Fix React JSX issues
-6. Clean up unused code
-7. Final build verification 
+### Core Components
+
+1. **Webhook Infrastructure**
+   - Next.js API route for Plaid webhook handling
+   - Webhook signature verification for security
+   - Event processing for different transaction types (added, modified, removed)
+   - Async processing queue for high-volume events
+
+2. **Scheduled Sync Service**
+   - Background job scheduler using Node.js cron
+   - Configurable sync intervals (hourly, daily, weekly)
+   - Incremental sync using Plaid's transactions/sync endpoint
+   - Fallback for webhook failures
+
+3. **Data Processing Pipeline**
+   - Transaction deduplication logic
+   - Data transformation and validation
+   - Category assignment using existing AI/rule system
+   - Batch processing for performance
+
+4. **Error Handling & Recovery**
+   - Retry mechanisms with exponential backoff
+   - Dead letter queue for failed operations
+   - Monitoring and alerting for sync failures
+   - Manual recovery tools for admins
+
+5. **Data Consistency**
+   - Transaction state management (pending → posted)
+   - Conflict resolution for concurrent updates
+   - Audit trail for all data changes
+   - Backup and restore capabilities
+
+### Implementation Details
+
+**Technology Stack:**
+- Next.js API routes for webhook endpoints
+- Node.js cron jobs for scheduled tasks
+- IndexedDB for client-side storage
+- Plaid API for bank data
+- Service Worker for offline support
+
+**Database Schema:**
+- Transaction versioning for audit trail
+- Sync cursor management for incremental updates
+- Account connection status tracking
+- Error logging and metrics
+
+**Security:**
+- Webhook signature verification
+- API key rotation support
+- Encrypted data storage
+- Rate limiting and abuse prevention
+
+## User Stories
+
+### As a User
+- I want my transactions to automatically appear in the app when they occur at my bank
+- I want to be notified if there are sync issues with my bank account
+- I want to manually trigger a sync if needed
+- I want to see when my accounts were last synchronized
+- I want confidence that no transactions are missed or duplicated
+
+### As an Admin
+- I want to monitor the health of all sync operations
+- I want to retry failed sync operations
+- I want to see metrics on sync performance and errors
+- I want to configure sync schedules and parameters
+
+## Success Criteria
+
+1. **Reliability**: 99.9% of transactions sync successfully within 5 minutes
+2. **Performance**: Webhook processing completes within 2 seconds
+3. **Accuracy**: Zero duplicate transactions in normal operation
+4. **Monitoring**: Full visibility into sync status and errors
+5. **Recovery**: Automatic recovery from 95% of sync failures
+
+## Implementation Phases
+
+### Phase 1: Webhook Infrastructure
+- Create webhook API endpoint
+- Implement signature verification
+- Add basic event processing
+- Set up error logging
+
+### Phase 2: Scheduled Sync Service
+- Build cron job scheduler
+- Implement incremental sync
+- Add retry mechanisms
+- Create admin dashboard
+
+### Phase 3: Data Processing Pipeline
+- Enhance deduplication logic
+- Improve error handling
+- Add performance monitoring
+- Implement audit trails
+
+### Phase 4: Advanced Features
+- Real-time notifications
+- Conflict resolution
+- Advanced monitoring
+- Performance optimization
+
+## Dependencies
+
+- Existing Plaid integration
+- Current transaction categorization system
+- IndexedDB database service
+- Error handling infrastructure
+
+## Risk Mitigation
+
+- **API Rate Limits**: Implement proper rate limiting and queuing
+- **Data Loss**: Comprehensive backup and recovery procedures
+- **Security**: Regular security audits and key rotation
+- **Performance**: Load testing and optimization
+- **Reliability**: Redundant sync mechanisms and monitoring
+
+## Acceptance Criteria
+
+1. Webhook endpoint receives and processes Plaid events correctly
+2. Scheduled sync runs reliably and handles incremental updates
+3. No duplicate transactions are created during normal operation
+4. Failed sync operations are retried automatically
+5. Users can view sync status and manually trigger syncs
+6. Admin dashboard shows comprehensive sync metrics
+7. All sensitive data is properly encrypted and secured
+8. System recovers gracefully from various failure scenarios 
