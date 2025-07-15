@@ -12,42 +12,42 @@ const chartComponents = {
     {
       loading: () => <ChartSkeleton />,
       ssr: false,
-    }
+    },
   ),
   SpendingTrend: dynamic(
     () => import('@components/SpendingTrend').then((mod) => mod.default || mod),
     {
       loading: () => <ChartSkeleton />,
       ssr: false,
-    }
+    },
   ),
   SpendingOverview: dynamic(
     () => import('@components/SpendingOverview').then((mod) => mod.default || mod),
     {
       loading: () => <ChartSkeleton />,
       ssr: false,
-    }
+    },
   ),
   SpendingVelocity: dynamic(
     () => import('@components/SpendingVelocity').then((mod) => mod.default || mod),
     {
       loading: () => <ChartSkeleton />,
       ssr: false,
-    }
+    },
   ),
   SpendingByMerchant: dynamic(
     () => import('@components/SpendingByMerchant').then((mod) => mod.default || mod),
     {
       loading: () => <ChartSkeleton />,
       ssr: false,
-    }
+    },
   ),
   YearOverYearComparison: dynamic(
     () => import('@components/YearOverYearComparison').then((mod) => mod.default || mod),
     {
       loading: () => <ChartSkeleton />,
       ssr: false,
-    }
+    },
   ),
 };
 
@@ -80,8 +80,8 @@ export function LazyChart({ type, ...props }: LazyChartProps) {
   }
 
   return (
-    <Suspense fallback={<ChartSkeleton />}>
-      <ChartComponent {...props} />
+    <Suspense fallback={<div className='h-96 animate-pulse bg-gray-200 rounded-lg' />}>
+      <ChartComponent {...props} selectedYear={props.selectedYear || new Date().getFullYear()} />
     </Suspense>
   );
 }
