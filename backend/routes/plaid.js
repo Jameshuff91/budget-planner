@@ -103,7 +103,7 @@ router.post('/link/exchange',
       console.error('Error exchanging token:', error);
       res.status(500).json({ 
         error: 'Failed to exchange token',
-        details: process.env.NODE_ENV === 'development' ? error.message : undefined
+        details: process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test' ? error.message : undefined
       });
     }
   }

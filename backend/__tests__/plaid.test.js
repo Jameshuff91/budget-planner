@@ -9,6 +9,7 @@ process.env.PLAID_ENV = 'sandbox';
 
 const app = require('../server');
 const jwt = require('jsonwebtoken');
+const { initializeDatabase } = require('../db/init');
 
 // Mock Plaid
 jest.mock('plaid', () => {
@@ -80,13 +81,33 @@ describe('Plaid Endpoints', () => {
   let authToken;
   let userId = 1;
 
-  beforeAll(() => {
+  beforeAll(async () => {
+    // Initialize database first
+    await initializeDatabase();
+    
+    // Create a test user in the database
+    const { getDatabase } = require('../db/init');
+    const db = getDatabase();
+    const stmt = db.prepare(`
+      INSERT INTO users (id, email, password_hash, created_at, updated_at)
+      VALUES (?, ?, ?, datetime('now'), datetime('now'))
+    `);
+    stmt.run(userId, 'test@example.com', 'fake-hash');
+    
     // Create a valid auth token
     authToken = jwt.sign(
       { id: userId, email: 'test@example.com' },
       process.env.JWT_SECRET,
       { expiresIn: '1h' }
     );
+  });
+
+  afterEach(() => {
+    // Clean up test data
+    const { getDatabase } = require('../db/init');
+    const db = getDatabase();
+    db.exec('DELETE FROM plaid_items WHERE user_id = 1');
+    db.exec('DELETE FROM audit_logs WHERE user_id = 1');
   });
 
   describe('POST /api/plaid/link/token', () => {

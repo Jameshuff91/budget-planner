@@ -5,12 +5,13 @@ process.env.JWT_SECRET = 'test-jwt-secret-for-testing';
 process.env.NODE_ENV = 'test';
 
 const app = require('../server');
-const { getDatabase } = require('../db/init');
+const { getDatabase, initializeDatabase } = require('../db/init');
 
 describe('Authentication Endpoints', () => {
   let db;
 
-  beforeAll(() => {
+  beforeAll(async () => {
+    await initializeDatabase();
     db = getDatabase();
   });
 
