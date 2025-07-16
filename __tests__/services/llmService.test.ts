@@ -162,13 +162,15 @@ describe('LLMService', () => {
     test('should handle API error responses', async () => {
       const mockResponse = {
         ok: false,
+        status: 400,
         statusText: 'Bad Request',
+        text: vi.fn().mockResolvedValue('Error details'),
       };
 
       mockFetch.mockResolvedValueOnce(mockResponse);
 
       await expect(llmService.categorizeTransaction(mockTransaction)).rejects.toThrow(
-        'OpenAI API error: Bad Request',
+        'OpenAI API error: 400 Bad Request',
       );
     });
 
@@ -185,12 +187,13 @@ describe('LLMService', () => {
         ok: false,
         status: 429,
         statusText: 'Too Many Requests',
+        text: vi.fn().mockResolvedValue('Rate limit exceeded'),
       };
 
       mockFetch.mockResolvedValueOnce(mockResponse);
 
       await expect(llmService.categorizeTransaction(mockTransaction)).rejects.toThrow(
-        'OpenAI API error: Too Many Requests',
+        'OpenAI API error: 429 Too Many Requests',
       );
     });
 
@@ -199,12 +202,13 @@ describe('LLMService', () => {
         ok: false,
         status: 401,
         statusText: 'Unauthorized',
+        text: vi.fn().mockResolvedValue('Invalid API key'),
       };
 
       mockFetch.mockResolvedValueOnce(mockResponse);
 
       await expect(llmService.categorizeTransaction(mockTransaction)).rejects.toThrow(
-        'OpenAI API error: Unauthorized',
+        'OpenAI API error: 401 Unauthorized',
       );
     });
 
@@ -989,6 +993,7 @@ describe('LLMService Rate Limiting and Error Recovery', () => {
       ok: false,
       status: 429,
       statusText: 'Too Many Requests',
+      text: vi.fn().mockResolvedValue('Rate limit exceeded'),
     };
 
     mockFetch.mockResolvedValueOnce(mockResponse);
@@ -1000,7 +1005,7 @@ describe('LLMService Rate Limiting and Error Recovery', () => {
     };
 
     await expect(llmService.categorizeTransaction(transaction)).rejects.toThrow(
-      'OpenAI API error: Too Many Requests',
+      'OpenAI API error: 429 Too Many Requests',
     );
   });
 
@@ -1009,6 +1014,7 @@ describe('LLMService Rate Limiting and Error Recovery', () => {
       ok: false,
       status: 503,
       statusText: 'Service Unavailable',
+      text: vi.fn().mockResolvedValue('Service temporarily unavailable'),
     };
 
     mockFetch.mockResolvedValueOnce(mockResponse);
@@ -1020,7 +1026,7 @@ describe('LLMService Rate Limiting and Error Recovery', () => {
     };
 
     await expect(llmService.categorizeTransaction(transaction)).rejects.toThrow(
-      'OpenAI API error: Service Unavailable',
+      'OpenAI API error: 503 Service Unavailable',
     );
   });
 
@@ -1029,6 +1035,7 @@ describe('LLMService Rate Limiting and Error Recovery', () => {
       ok: false,
       status: 429,
       statusText: 'Quota exceeded',
+      text: vi.fn().mockResolvedValue('Monthly quota exceeded'),
     };
 
     mockFetch.mockResolvedValueOnce(mockResponse);
@@ -1040,7 +1047,7 @@ describe('LLMService Rate Limiting and Error Recovery', () => {
     };
 
     await expect(llmService.categorizeTransaction(transaction)).rejects.toThrow(
-      'OpenAI API error: Quota exceeded',
+      'OpenAI API error: 429 Quota exceeded',
     );
   });
 
