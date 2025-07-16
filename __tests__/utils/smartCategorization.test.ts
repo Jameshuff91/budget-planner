@@ -56,7 +56,7 @@ describe('Smart Categorization - getSmartCategorizationSettings', () => {
     expect(settings).toEqual({
       enabled: false,
       apiKey: '',
-      model: 'gpt-3.5-turbo',
+      model: 'gpt-4o-mini',
     });
   });
 
@@ -84,7 +84,7 @@ describe('Smart Categorization - getSmartCategorizationSettings', () => {
     expect(settings).toEqual({
       enabled: true,
       apiKey: 'partial-key',
-      model: 'gpt-3.5-turbo', // Should use default
+      model: 'gpt-4o-mini', // Should use default
     });
   });
 
@@ -105,7 +105,7 @@ describe('Smart Categorization - getSmartCategorizationSettings', () => {
     expect(settings).toEqual({
       enabled: false, // Empty string is falsy
       apiKey: '',
-      model: 'gpt-3.5-turbo', // Should use default for empty model
+      model: 'gpt-4o-mini', // Should use default for empty model
     });
   });
 });

@@ -1,12 +1,13 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { vi } from 'vitest';
 import DateRangeSelector from '../DateRangeSelector';
 
 describe('DateRangeSelector', () => {
-  const mockOnDateRangeChange = jest.fn();
+  const mockOnDateRangeChange = vi.fn();
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('renders with default month range', () => {

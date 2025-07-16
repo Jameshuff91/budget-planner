@@ -969,6 +969,10 @@ describe('LLMService Factory Function', () => {
   });
 
   test('should return null when no API key available', () => {
+    // Clear localStorage as well
+    if (typeof window !== 'undefined') {
+      localStorage.clear();
+    }
     const service = createLLMService();
     expect(service).toBeNull();
   });

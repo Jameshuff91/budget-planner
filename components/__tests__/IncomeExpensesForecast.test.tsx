@@ -2,9 +2,9 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { vi } from 'vitest';
 import IncomeExpensesForecast from '../IncomeExpensesForecast';
-import { useDatabase } from '../../hooks/useDatabase';
+import { useDatabase } from '@hooks/useDatabase';
 
-vi.mock('../../hooks/useDatabase');
+vi.mock('@hooks/useDatabase');
 
 const mockTransactions = [
   { id: '1', date: '2024-01-15', amount: 5000, description: 'Salary', category: 'Income' },

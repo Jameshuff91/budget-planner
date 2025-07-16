@@ -20,6 +20,7 @@ export default defineConfig({
       '**/playwright/**',
       '**/*.spec.ts',  // Exclude all .spec.ts files (Playwright tests)
       '**/*.spec.tsx', // Exclude all .spec.tsx files if any
+      '**/backend/**',  // Exclude backend tests (they use Jest)
     ],
     maxConcurrency: 1,
     pool: 'forks',
