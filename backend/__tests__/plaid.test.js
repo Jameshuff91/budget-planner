@@ -18,23 +18,23 @@ jest.mock('plaid', () => {
       linkTokenCreate: jest.fn().mockResolvedValue({
         data: {
           link_token: 'test-link-token',
-          expiration: '2025-01-01T00:00:00Z'
-        }
+          expiration: '2025-01-01T00:00:00Z',
+        },
       }),
       itemPublicTokenExchange: jest.fn().mockResolvedValue({
         data: {
           access_token: 'test-access-token',
-          item_id: 'test-item-id'
-        }
+          item_id: 'test-item-id',
+        },
       }),
       itemGet: jest.fn().mockResolvedValue({
         data: {
           item: {
-            institution_id: 'test-institution'
+            institution_id: 'test-institution',
           },
           institution: {
-            name: 'Test Bank'
-          }
+            name: 'Test Bank',
+          },
         }
       }),
       accountsGet: jest.fn().mockResolvedValue({
