@@ -1,4 +1,12 @@
 const request = require('supertest');
+
+// Set up environment variables before requiring the app
+process.env.JWT_SECRET = 'test-jwt-secret-for-testing';
+process.env.NODE_ENV = 'test';
+process.env.PLAID_CLIENT_ID = 'test-client-id';
+process.env.PLAID_SECRET = 'test-secret';
+process.env.PLAID_ENV = 'sandbox';
+
 const app = require('../server');
 const jwt = require('jsonwebtoken');
 

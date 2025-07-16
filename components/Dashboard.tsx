@@ -23,6 +23,9 @@ import SpendingTrend from './SpendingTrend';
 import TransactionList from './TransactionList';
 import YearOverYearComparison from './YearOverYearComparison';
 import SpendingVelocity from './SpendingVelocity';
+import CategoryTrendAnalysis from './CategoryTrendAnalysis';
+import IncomeExpensesForecast from './IncomeExpensesForecast';
+import DateRangeSelector from './DateRangeSelector';
 import { ExportDialog } from './ExportDialog';
 
 // Default values for empty state
@@ -35,6 +38,11 @@ export default function Dashboard() {
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [activeTab, setActiveTab] = useState('overview');
   const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
+  const [dateRange, setDateRange] = useState<{ startDate: Date; endDate: Date; label: string }>({
+    startDate: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
+    endDate: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0),
+    label: 'This Month',
+  });
   const { transactions, loading, error } = useDatabase();
 
   // Get current date information
@@ -69,14 +77,14 @@ export default function Dashboard() {
       };
     }
 
-    // Filter transactions for selected year only
-    const selectedYearTransactions = transactions.filter((transaction) => {
+    // Filter transactions based on date range
+    const filteredTransactions = transactions.filter((transaction) => {
       const transactionDate = new Date(transaction.date);
-      return transactionDate.getFullYear() === selectedYear;
+      return transactionDate >= dateRange.startDate && transactionDate <= dateRange.endDate;
     });
 
-    // Group transactions by month for selected year only
-    const monthlyData = selectedYearTransactions.reduce((acc, transaction) => {
+    // Group transactions by month for date range
+    const monthlyData = filteredTransactions.reduce((acc, transaction) => {
       const date = new Date(transaction.date);
       const monthKey = `${date.getFullYear()}-${date.getMonth() + 1}`;
 
@@ -144,6 +152,16 @@ export default function Dashboard() {
       <div className='flex justify-between items-center'>
         <h2 className='text-3xl font-bold text-gray-800'>Financial Dashboard</h2>
         <div className='flex items-center gap-3'>
+          <DateRangeSelector
+            onDateRangeChange={(range) => {
+              setDateRange(range);
+              // Update selected year if date range changes year
+              if (range.startDate.getFullYear() === range.endDate.getFullYear()) {
+                setSelectedYear(range.startDate.getFullYear());
+              }
+            }}
+            defaultRange='month'
+          />
           <Button variant='outline' size='sm' onClick={() => setIsExportDialogOpen(true)}>
             <Download className='h-4 w-4 mr-2' />
             Export Data
@@ -169,7 +187,7 @@ export default function Dashboard() {
       <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-3'>
         <Card className='bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg'>
           <CardHeader className='flex flex-row items-center justify-between pb-2'>
-            <CardTitle className='text-lg font-medium'>Total Annual Income</CardTitle>
+            <CardTitle className='text-lg font-medium'>Total Income ({dateRange.label})</CardTitle>
             <DollarSign className='h-6 w-6 opacity-75' />
           </CardHeader>
           <CardContent>
@@ -179,7 +197,7 @@ export default function Dashboard() {
         </Card>
         <Card className='bg-gradient-to-br from-purple-500 to-purple-600 text-white shadow-lg'>
           <CardHeader className='flex flex-row items-center justify-between pb-2'>
-            <CardTitle className='text-lg font-medium'>Annual Spending</CardTitle>
+            <CardTitle className='text-lg font-medium'>Total Spending ({dateRange.label})</CardTitle>
             <TrendingUp className='h-6 w-6 opacity-75' />
           </CardHeader>
           <CardContent>
@@ -189,7 +207,7 @@ export default function Dashboard() {
         </Card>
         <Card className='bg-gradient-to-br from-green-500 to-green-600 text-white shadow-lg'>
           <CardHeader className='flex flex-row items-center justify-between pb-2'>
-            <CardTitle className='text-lg font-medium'>Annual Savings</CardTitle>
+            <CardTitle className='text-lg font-medium'>Total Savings ({dateRange.label})</CardTitle>
             <PiggyBank className='h-6 w-6 opacity-75' />
           </CardHeader>
           <CardContent>
@@ -251,6 +269,12 @@ export default function Dashboard() {
           </ChartErrorBoundary>
           <ChartErrorBoundary chartName='Spending Velocity'>
             <SpendingVelocity selectedYear={selectedYear} />
+          </ChartErrorBoundary>
+          <ChartErrorBoundary chartName='Category Trend Analysis'>
+            <CategoryTrendAnalysis selectedYear={selectedYear} />
+          </ChartErrorBoundary>
+          <ChartErrorBoundary chartName='Income vs Expenses Forecast'>
+            <IncomeExpensesForecast selectedYear={selectedYear} />
           </ChartErrorBoundary>
         </TabsContent>
         <TabsContent value='transactions'>

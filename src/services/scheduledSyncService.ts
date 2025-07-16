@@ -3,16 +3,17 @@ import { syncService } from './syncService';
 
 export class ScheduledSyncService {
   private static instance: ScheduledSyncService;
-  private syncInterval: NodeJS.Timeout | null = null;
+  private syncInterval: ReturnType<typeof setInterval> | null = null;
   private isRunning = false;
   private intervalMs: number;
 
   private constructor() {
     // Default to 1 hour (3600000 ms)
     // Use process.env only if available (Node.js environment)
-    const interval = typeof process !== 'undefined' && process.env?.SYNC_SCHEDULE_INTERVAL 
-      ? process.env.SYNC_SCHEDULE_INTERVAL 
-      : '3600000';
+    const interval =
+      typeof process !== 'undefined' && process.env?.SYNC_SCHEDULE_INTERVAL
+        ? process.env.SYNC_SCHEDULE_INTERVAL
+        : '3600000';
     this.intervalMs = parseInt(interval, 10);
   }
 
@@ -109,7 +110,8 @@ export class ScheduledSyncService {
 }
 
 // Export singleton instance (only create in browser)
-export const scheduledSyncService = typeof window !== 'undefined' ? ScheduledSyncService.getInstance() : null;
+export const scheduledSyncService =
+  typeof window !== 'undefined' ? ScheduledSyncService.getInstance() : null;
 
 // Auto-start in browser environment
 if (typeof window !== 'undefined' && scheduledSyncService) {
@@ -118,6 +120,6 @@ if (typeof window !== 'undefined' && scheduledSyncService) {
 
   // Stop scheduled sync when the page is unloaded
   window.addEventListener('beforeunload', () => {
-    scheduledSyncService.stop();
+    scheduledSyncService?.stop();
   });
 }

@@ -4,7 +4,15 @@
 
 The Budget Planner has evolved from a basic PDF parsing tool to a comprehensive personal finance management platform with AI categorization, bank connections, smart alerts, and advanced analytics. Recent additions include year-over-year comparisons, spending velocity tracking, automated E2E testing, and comprehensive offline support with PWA capabilities.
 
-## Recently Completed (July 2024)
+## Recently Completed (November 2024)
+
+- ✅ Category Trend Analysis - Interactive multi-category spending trends over time
+- ✅ Income vs Expenses Forecasting - ML-based predictions with seasonal adjustments
+- ✅ Custom Date Range Selections - Flexible date filtering across entire dashboard
+- ✅ Fixed linting issues in PlaidConnection and scheduledSyncService
+- ✅ Enhanced analytics tab with three new powerful visualization tools
+
+## Previously Completed (July 2024)
 
 - ✅ Year-over-year spending comparison with variance analysis
 - ✅ Spending velocity tracking with daily rates and projections
@@ -66,9 +74,9 @@ The Budget Planner has evolved from a basic PDF parsing tool to a comprehensive 
 
 - [x] Year-over-year comparison charts ✅
 - [x] Spending velocity indicators ✅
-- [ ] Category trend analysis
-- [ ] Income vs expenses forecasting
-- [ ] Custom date range selections
+- [x] Category trend analysis ✅
+- [x] Income vs expenses forecasting ✅
+- [x] Custom date range selections ✅
 - [ ] Exportable reports (PDF/Excel)
 
 ### 2. Advanced Categorization

@@ -1,4 +1,9 @@
 const request = require('supertest');
+
+// Set up environment variables before requiring the app
+process.env.JWT_SECRET = 'test-jwt-secret-for-testing';
+process.env.NODE_ENV = 'test';
+
 const app = require('../server');
 const { getDatabase } = require('../db/init');
 

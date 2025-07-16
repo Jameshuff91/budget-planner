@@ -294,6 +294,33 @@ This document provides a comprehensive summary of all features implemented in th
 - `/e2e/smart-categorization.spec.ts` - AI categorization settings and integration
 - `/e2e/plaid-connection.spec.ts` - Bank connection flow and account management
 
+### Recent Feature Additions (NEW)
+
+#### Category Trend Analysis
+- `/components/CategoryTrendAnalysis.tsx` - Interactive line chart for tracking category spending trends over time
+- Allows users to select multiple categories for comparison
+- Shows monthly trends for the past 12 months
+- Includes quick selection options (Top 5, Select All/Clear All)
+- Displays total spending per category in the selection interface
+
+#### Income vs Expenses Forecast
+- `/components/IncomeExpensesForecast.tsx` - Advanced forecasting component using linear regression
+- Predicts future income and expenses based on historical trends
+- Supports 3, 6, and 12-month forecast periods
+- Includes seasonal adjustments for more accurate predictions
+- Shows trend indicators (growth/decline percentages)
+- `/components/skeletons/IncomeExpensesForecastSkeleton.tsx` - Loading state for forecast component
+- `/components/__tests__/IncomeExpensesForecast.test.tsx` - Comprehensive unit tests
+
+#### Custom Date Range Selection
+- `/components/DateRangeSelector.tsx` - Flexible date range picker component
+- Preset ranges: This Month, This Quarter, This Year, All Time
+- Quick ranges: Last 7/30/90 days, Last Month/Quarter/Year, Year to Date
+- Custom date range picker with calendar inputs
+- Integrated with Dashboard to filter all financial data
+- `/src/context/DateRangeContext.tsx` - Context provider for app-wide date range management
+- `/components/__tests__/DateRangeSelector.test.tsx` - Full test coverage
+
 ## Dependencies Added
 
 - `plaid` - Plaid SDK
@@ -347,6 +374,32 @@ PLAID_REDIRECT_URI=optional_redirect_uri
 **Implementation**:
 
 - Fixed module import paths to use TypeScript path aliases
+
+### 2. Category Trend Analysis
+
+**Purpose**: Enable users to track and visualize spending trends for individual categories over time.
+
+**Implementation**:
+
+- Created `components/CategoryTrendAnalysis.tsx` - interactive line chart component
+- Added to Analytics tab in Dashboard
+- Features:
+  - Monthly spending visualization for each category
+  - Multi-category comparison on single chart
+  - Interactive category selection with checkboxes
+  - Quick selection buttons (Top 5, Select All/Clear All)
+  - Total spending display for each category
+  - Responsive design with chart on right, controls on left
+  - Color-coded lines for easy category identification
+  - Supports both current year and historical year views
+
+**Benefits**:
+
+- Identify spending patterns and trends by category
+- Compare multiple categories simultaneously
+- Spot seasonal spending variations
+- Track budget performance over time
+- Make data-driven financial decisions
 - Resolved Settings icon import error in SpendingAlerts
 - Fixed TabsList display issue (vertical to horizontal)
 - Cleared Next.js cache to resolve manifest errors

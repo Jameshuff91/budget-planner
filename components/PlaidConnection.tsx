@@ -4,12 +4,10 @@ import { Building2, Link, Trash2, RefreshCw, AlertCircle } from 'lucide-react';
 import React, { useState, useEffect, useCallback } from 'react';
 import { usePlaidLink } from 'react-plaid-link';
 
-import { useDBContext } from '@context/DatabaseContext';
 import { useAuth } from '@context/AuthContext';
-import { logger } from '@services/logger';
 import { apiService } from '@services/api';
-import { showUserError, ErrorMessages } from '@utils/userErrors';
-import { syncService } from '@services/syncService';
+import { logger } from '@services/logger';
+import { showUserError } from '@utils/userErrors';
 
 import { Alert, AlertDescription } from './ui/alert';
 import { Button } from './ui/button';
@@ -31,19 +29,32 @@ export default function PlaidConnection() {
   const [linkedAccounts, setLinkedAccounts] = useState<LinkedAccount[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSyncing, setIsSyncing] = useState<string | null>(null);
-  const { addTransactionsBatch } = useDBContext();
   const { isAuthenticated } = useAuth();
   const { toast } = useToast();
 
-  useEffect(() => {
-    // Initialize link token and load accounts if authenticated
-    if (isAuthenticated) {
-      createLinkToken();
-      loadAccounts();
+  // Function declarations need to be before useEffect
+  const loadAccounts = useCallback(async () => {
+    try {
+      const response = await apiService.getAccounts();
+      if (response.data) {
+        setLinkedAccounts(
+          response.data.accounts.map((item: any) => ({
+            id: item.item_id,
+            institutionName: item.institution_name,
+            accountName: item.accounts[0]?.name || 'Account',
+            accountType: item.accounts[0]?.subtype || 'bank',
+            mask: item.accounts[0]?.mask || '****',
+            accessToken: item.item_id, // Using item_id as identifier
+            lastSync: new Date().toISOString(),
+          })),
+        );
+      }
+    } catch (error) {
+      logger.error('Failed to load accounts:', error);
     }
-  }, [isAuthenticated]);
+  }, []);
 
-  const createLinkToken = async () => {
+  const createLinkToken = useCallback(async () => {
     setIsLoading(true);
     try {
       const response = await apiService.createLinkToken();
@@ -65,56 +76,17 @@ export default function PlaidConnection() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [toast]);
 
-  const onSuccess = useCallback(
-    async (publicToken: string, metadata: any) => {
-      try {
-        // Exchange public token using backend API
-        const exchangeResponse = await apiService.exchangePublicToken(publicToken);
-        
-        if (exchangeResponse.error) {
-          throw new Error(exchangeResponse.error);
-        }
+  useEffect(() => {
+    // Initialize link token and load accounts if authenticated
+    if (isAuthenticated) {
+      createLinkToken();
+      loadAccounts();
+    }
+  }, [isAuthenticated, createLinkToken, loadAccounts]);
 
-        // Get accounts from backend
-        const accountsResponse = await apiService.getAccounts();
-        
-        if (accountsResponse.error) {
-          throw new Error(accountsResponse.error);
-        }
-
-        toast({
-          title: 'Account Connected',
-          description: `Successfully connected ${exchangeResponse.data?.institution_name || 'bank'}`,
-        });
-
-        // Sync initial transactions
-        await syncTransactions();
-        
-        // Reload accounts to show the new connection
-        await loadAccounts();
-      } catch (error) {
-        logger.error('Failed to process Plaid connection:', error);
-        showUserError(error, toast, 'plaid');
-      }
-    },
-    [],
-  );
-
-  const config = {
-    token: linkToken,
-    onSuccess,
-    onExit: (err: any) => {
-      if (err) {
-        logger.error('Plaid Link error:', err);
-      }
-    },
-  };
-
-  const { open, ready } = usePlaidLink(config);
-
-  const syncTransactions = async () => {
+  const syncTransactions = useCallback(async () => {
     setIsSyncing('syncing');
     try {
       // Get transactions for the last 90 days
@@ -122,14 +94,17 @@ export default function PlaidConnection() {
       const startDate = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
       const response = await apiService.syncTransactions(startDate, endDate);
-      
+
       if (response.error) {
         throw new Error(response.error);
       }
 
       if (response.data) {
-        const totalTransactions = response.data.synced.reduce((sum, item) => sum + item.transaction_count, 0);
-        
+        const totalTransactions = response.data.synced.reduce(
+          (sum: number, item: any) => sum + item.transaction_count,
+          0,
+        );
+
         toast({
           title: 'Sync Complete',
           description: `Imported ${totalTransactions} transactions from ${response.data.synced.length} accounts`,
@@ -145,55 +120,85 @@ export default function PlaidConnection() {
     } finally {
       setIsSyncing(null);
     }
+  }, [toast]);
+
+  const onSuccess = useCallback(
+    async (publicToken: string, _metadata: any) => {
+      try {
+        // Exchange public token using backend API
+        const exchangeResponse = await apiService.exchangePublicToken(publicToken);
+        if (exchangeResponse.error) {
+          throw new Error(exchangeResponse.error);
+        }
+
+        // Get accounts from backend
+        const accountsResponse = await apiService.getAccounts();
+
+        if (accountsResponse.error) {
+          throw new Error(accountsResponse.error);
+        }
+
+        toast({
+          title: 'Account Connected',
+          description: `Successfully connected ${exchangeResponse.data?.institution_name || 'bank'}`,
+        });
+
+        // Sync initial transactions
+        await syncTransactions();
+
+        // Reload accounts to show the new connection
+        await loadAccounts();
+      } catch (error) {
+        logger.error('Failed to process Plaid connection:', error);
+        showUserError(error, toast, 'plaid');
+      }
+    },
+    [loadAccounts, syncTransactions, toast],
+  );
+
+  const config = {
+    token: linkToken,
+    onSuccess,
+    onExit: (err: any) => {
+      if (err) {
+        logger.error('Plaid Link error:', err);
+      }
+    },
   };
 
-  const removeAccount = async (itemId: string, institutionName: string) => {
-    if (!confirm(`Remove ${institutionName}?`)) {
-      return;
-    }
+  const { open, ready } = usePlaidLink(config);
 
-    try {
-      const response = await apiService.removeBank(itemId);
-      
-      if (response.error) {
-        throw new Error(response.error);
+  const removeAccount = useCallback(
+    async (itemId: string, institutionName: string) => {
+      if (!confirm(`Remove ${institutionName}?`)) {
+        return;
       }
 
-      toast({
-        title: 'Account Removed',
-        description: `${institutionName} has been disconnected`,
-      });
-      
-      // Refresh accounts list
-      await loadAccounts();
-    } catch (error) {
-      logger.error('Failed to remove account:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to remove account connection',
-        variant: 'destructive',
-      });
-    }
-  };
+      try {
+        const response = await apiService.removeBank(itemId);
 
-  const loadAccounts = async () => {
-    try {
-      const response = await apiService.getAccounts();
-      if (response.data) {
-        setLinkedAccounts(response.data.accounts.map((item: any) => ({
-          id: item.item_id,
-          institutionName: item.institution_name,
-          accountName: item.accounts[0]?.name || 'Account',
-          accountType: item.accounts[0]?.subtype || 'bank',
-          mask: item.accounts[0]?.mask || '****',
-          accessToken: item.item_id, // Using item_id as identifier
-          lastSync: new Date().toISOString(),
-        })));
+        if (response.error) {
+          throw new Error(response.error);
+        }
+
+        toast({
+          title: 'Account Removed',
+          description: `${institutionName} has been disconnected`,
+        });
+
+        // Refresh accounts list
+        await loadAccounts();
+      } catch (error) {
+        logger.error('Failed to remove account:', error);
+        toast({
+          title: 'Error',
+          description: 'Failed to remove account connection',
+          variant: 'destructive',
+        });
       }
-    } catch (error) {
-      logger.error('Failed to load accounts:', error);
-    }
-  };
+    },
+    [loadAccounts, toast],
+  );
 
   return (
     <Card>
@@ -210,9 +215,7 @@ export default function PlaidConnection() {
         {!isAuthenticated && (
           <Alert>
             <AlertCircle className='h-4 w-4' />
-            <AlertDescription>
-              Please sign in to connect your bank accounts.
-            </AlertDescription>
+            <AlertDescription>Please sign in to connect your bank accounts.</AlertDescription>
           </Alert>
         )}
 
@@ -248,7 +251,11 @@ export default function PlaidConnection() {
                       <RefreshCw className='h-4 w-4' />
                     )}
                   </Button>
-                  <Button variant='outline' size='sm' onClick={() => removeAccount(account.id, account.institutionName)}>
+                  <Button
+                    variant='outline'
+                    size='sm'
+                    onClick={() => removeAccount(account.id, account.institutionName)}
+                  >
                     <Trash2 className='h-4 w-4' />
                   </Button>
                 </div>

@@ -99,11 +99,19 @@ export class LLMService {
       });
 
       if (!response.ok) {
-        const errorBody = await response.text();
+        let errorBody = '';
+        try {
+          if (typeof response.text === 'function') {
+            errorBody = await response.text();
+          }
+        } catch (e) {
+          // Ignore text parsing errors
+        }
+        
         logger.error('OpenAI API error', {
           status: response.status,
           statusText: response.statusText,
-          errorBody: errorBody.substring(0, 200)
+          errorBody: errorBody ? errorBody.substring(0, 200) : 'No error body available'
         });
         throw new Error(`OpenAI API error: ${response.status} ${response.statusText}`);
       }
@@ -167,7 +175,21 @@ export class LLMService {
       });
 
       if (!response.ok) {
-        throw new Error(`OpenAI API error: ${response.statusText}`);
+        let errorBody = '';
+        try {
+          if (typeof response.text === 'function') {
+            errorBody = await response.text();
+          }
+        } catch (e) {
+          // Ignore text parsing errors
+        }
+        
+        logger.error('OpenAI API error', {
+          status: response.status,
+          statusText: response.statusText,
+          errorBody: errorBody ? errorBody.substring(0, 200) : 'No error body available'
+        });
+        throw new Error(`OpenAI API error: ${response.status} ${response.statusText}`);
       }
 
       const data = await response.json();
@@ -216,7 +238,21 @@ Suggest up to 5 new categories that would better organize these transactions. Re
       });
 
       if (!response.ok) {
-        throw new Error(`OpenAI API error: ${response.statusText}`);
+        let errorBody = '';
+        try {
+          if (typeof response.text === 'function') {
+            errorBody = await response.text();
+          }
+        } catch (e) {
+          // Ignore text parsing errors
+        }
+        
+        logger.error('OpenAI API error', {
+          status: response.status,
+          statusText: response.statusText,
+          errorBody: errorBody ? errorBody.substring(0, 200) : 'No error body available'
+        });
+        throw new Error(`OpenAI API error: ${response.status} ${response.statusText}`);
       }
 
       const data = await response.json();
