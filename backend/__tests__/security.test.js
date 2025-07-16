@@ -1,22 +1,33 @@
 const request = require('supertest');
+const jwt = require('jsonwebtoken');
 
 // Set up environment variables before requiring the app
 process.env.JWT_SECRET = 'test-jwt-secret-for-testing';
 process.env.NODE_ENV = 'test';
 
-const app = require('../server');
+let app;
 
 describe('Security Middleware', () => {
+  beforeAll(() => {
+    // Clear the require cache to ensure fresh app instance
+    jest.resetModules();
+    app = require('../server');
+  });
   describe('Rate Limiting', () => {
     it('should enforce rate limits on API endpoints', async () => {
+      jest.resetModules();
+      // Set a lower rate limit for this specific test
+      process.env.RATE_LIMIT_MAX_REQUESTS = '5';
+      process.env.RATE_LIMIT_WINDOW_MS = '60000';
+      
+      const testApp = require('../server');
       const requests = [];
       
-      // Make 101 requests (assuming limit is 100)
-      for (let i = 0; i < 101; i++) {
+      // Make 6 requests (limit is set to 5)
+      for (let i = 0; i < 6; i++) {
         requests.push(
-          request(app)
-            .get('/api/transactions')
-            .set('Authorization', 'Bearer invalid-token')
+          request(testApp)
+            .get('/api/health')
         );
       }
 
@@ -24,6 +35,10 @@ describe('Security Middleware', () => {
       const tooManyRequests = responses.filter(res => res.status === 429);
       
       expect(tooManyRequests.length).toBeGreaterThan(0);
+      
+      // Reset for other tests
+      delete process.env.RATE_LIMIT_MAX_REQUESTS;
+      delete process.env.RATE_LIMIT_WINDOW_MS;
     });
   });
 
@@ -64,7 +79,6 @@ describe('Security Middleware', () => {
 
     it('should reject requests with expired token', async () => {
       // Create an expired token
-      const jwt = require('jsonwebtoken');
       const expiredToken = jwt.sign(
         { id: 1, email: 'test@example.com' },
         process.env.JWT_SECRET,
