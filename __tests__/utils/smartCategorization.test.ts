@@ -23,6 +23,8 @@ vi.mock('@services/llmService', () => ({
   createLLMService: vi.fn(),
 }));
 
+
+
 // Mock localStorage
 const localStorageMock = (() => {
   let store: Record<string, string> = {};
@@ -45,9 +47,18 @@ Object.defineProperty(window, 'localStorage', {
 });
 
 describe('Smart Categorization - getSmartCategorizationSettings', () => {
+  const originalEnv = process.env;
+  
   beforeEach(() => {
     vi.clearAllMocks();
     localStorageMock.clear();
+    // Reset environment variable for each test
+    process.env = { ...originalEnv };
+    delete process.env.NEXT_PUBLIC_OPENAI_API_KEY;
+  });
+  
+  afterEach(() => {
+    process.env = originalEnv;
   });
 
   test('should return default settings when localStorage is empty', () => {

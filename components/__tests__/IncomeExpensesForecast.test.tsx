@@ -71,11 +71,11 @@ describe('IncomeExpensesForecast', () => {
     render(<IncomeExpensesForecast />);
 
     // Default is 3 months
-    expect(screen.getByText('3 Months').parentElement).toHaveClass('bg-primary');
+    expect(screen.getByText('3 Months')).toHaveClass('bg-primary');
 
     // Click 6 months
     fireEvent.click(screen.getByText('6 Months'));
-    expect(screen.getByText('6 Months').parentElement).toHaveClass('bg-primary');
+    expect(screen.getByText('6 Months')).toHaveClass('bg-primary');
 
     // Click 12 months
     fireEvent.click(screen.getByText('12 Months'));
@@ -108,7 +108,8 @@ describe('IncomeExpensesForecast', () => {
 
     await waitFor(() => {
       // Should show positive income trend (salary increased from 5000 to 5200)
-      expect(screen.getByText(/\+.*% monthly/)).toBeInTheDocument();
+      const trendElements = screen.getAllByText(/\+.*% monthly/);
+      expect(trendElements.length).toBeGreaterThan(0);
     });
   });
 

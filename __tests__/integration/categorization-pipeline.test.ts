@@ -39,6 +39,9 @@ Object.defineProperty(window, 'localStorage', {
   value: localStorageMock,
 });
 
+// Mock environment variables
+const originalEnv = process.env;
+
 // Mock fetch for OpenAI API calls
 const mockFetch = vi.fn();
 global.fetch = mockFetch;
@@ -180,6 +183,16 @@ describe('Categorization Pipeline Integration Tests', () => {
   });
 
   describe('AI Categorization', () => {
+    beforeEach(() => {
+      // Clear environment variable so localStorage takes precedence
+      process.env = { ...originalEnv };
+      delete process.env.NEXT_PUBLIC_OPENAI_API_KEY;
+    });
+    
+    afterEach(() => {
+      process.env = originalEnv;
+    });
+    
     test('should categorize with AI when enabled and confidence is high', async () => {
       // Setup AI categorization settings
       localStorageMock.setItem('smartCategorization.enabled', 'true');

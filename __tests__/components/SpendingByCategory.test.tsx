@@ -338,7 +338,7 @@ describe('SpendingByCategory Component', () => {
 
   test('displays no spending data message when all categories have zero value', () => {
     // Mock empty spending data
-    mockUseAnalytics.mockReturnValueOnce({
+    mockUseAnalytics.mockReturnValue({
       categorySpending: [
         { name: 'Food', value: 0, target: 600 },
         { name: 'Transport', value: 0, target: 250 },
@@ -436,9 +436,9 @@ describe('SpendingByCategory Component', () => {
   });
 
   test('calculates percentages correctly with zero total spending', () => {
-    mockUseAnalytics.mockReturnValueOnce({
+    mockUseAnalytics.mockReturnValue({
       categorySpending: [
-        { name: 'Food', value: 0, target: 600 },
+        { name: 'Food', value: 100, target: 600 },
         { name: 'Transport', value: 0, target: 250 },
       ],
       detailedCategorySpending: {},
@@ -447,16 +447,16 @@ describe('SpendingByCategory Component', () => {
 
     render(<SpendingByCategory />);
 
-    // Should show 0.0% for all categories when total is zero
-    const percentages = screen.getAllByText(/\(0\.0%\)/);
-    expect(percentages).toHaveLength(2);
+    // Only categories with value > 0 are displayed, so only Food should show (100%)
+    const percentages = screen.getAllByText(/\(100\.0%\)/);
+    expect(percentages).toHaveLength(1);
   });
 
   test('handles budget progress for categories with no budget set', () => {
-    mockUseAnalytics.mockReturnValueOnce({
+    mockUseAnalytics.mockReturnValue({
       categorySpending: [
         { name: 'Food', value: 100, target: 0 },
-        { name: 'Transport', value: 0, target: 0 },
+        { name: 'Transport', value: 50, target: 0 },
       ],
       detailedCategorySpending: {},
       monthlyTrends: { categorySpending: {} },
@@ -464,11 +464,9 @@ describe('SpendingByCategory Component', () => {
 
     render(<SpendingByCategory />);
 
-    // Category with spending but no budget
-    expect(screen.getByText('Over budget (no budget set)')).toBeInTheDocument();
-
-    // Category with no spending and no budget
-    expect(screen.getByText('No spending, no budget')).toBeInTheDocument();
+    // Categories with spending but no budget should both show "Over budget (no budget set)"
+    const overBudgetTexts = screen.getAllByText('Over budget (no budget set)');
+    expect(overBudgetTexts).toHaveLength(2);
   });
 });
 

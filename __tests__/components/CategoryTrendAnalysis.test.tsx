@@ -74,6 +74,21 @@ const mockCategories = [
   { id: '3', name: 'Utilities', type: 'expense' as const, budget: 150 },
 ];
 
+const mockContextValue = {
+  transactions: mockTransactions,
+  categories: mockCategories,
+  loading: false,
+  error: null,
+  addTransaction: vi.fn(),
+  updateTransaction: vi.fn(),
+  deleteTransaction: vi.fn(),
+  addCategory: vi.fn(),
+  updateCategory: vi.fn(),
+  deleteCategory: vi.fn(),
+  importData: vi.fn(),
+  exportData: vi.fn(),
+};
+
 describe('CategoryTrendAnalysis', () => {
   const mockUseDBContext = __mockUseDBContext as ReturnType<typeof vi.fn>;
 
@@ -125,11 +140,7 @@ describe('CategoryTrendAnalysis', () => {
   });
 
   it('handles Top 5 button click', async () => {
-    render(
-      <DatabaseProvider value={mockContextValue}>
-        <CategoryTrendAnalysis />
-      </DatabaseProvider>
-    );
+    render(<CategoryTrendAnalysis />);
     
     const top5Button = screen.getByRole('button', { name: /Top 5/i });
     fireEvent.click(top5Button);
@@ -144,11 +155,9 @@ describe('CategoryTrendAnalysis', () => {
   });
 
   it('handles Select All / Clear All button', async () => {
-    render(
-      <DatabaseProvider value={mockContextValue}>
-        <CategoryTrendAnalysis />
-      </DatabaseProvider>
-    );
+    __mockUseDBContext.mockReturnValue(mockContextValue);
+    
+    render(<CategoryTrendAnalysis />);
     
     const selectAllButton = screen.getByRole('button', { name: /Select All/i });
     
@@ -179,21 +188,17 @@ describe('CategoryTrendAnalysis', () => {
       transactions: [],
     };
     
-    render(
-      <DatabaseProvider value={emptyContext}>
-        <CategoryTrendAnalysis />
-      </DatabaseProvider>
-    );
+    __mockUseDBContext.mockReturnValue(emptyContext);
+    
+    render(<CategoryTrendAnalysis />);
     
     expect(screen.getByText('No categories selected')).toBeInTheDocument();
   });
 
   it('respects selectedYear prop', () => {
-    render(
-      <DatabaseProvider value={mockContextValue}>
-        <CategoryTrendAnalysis selectedYear={2023} />
-      </DatabaseProvider>
-    );
+    __mockUseDBContext.mockReturnValue(mockContextValue);
+    
+    render(<CategoryTrendAnalysis selectedYear={2023} />);
     
     // Component should render without errors
     expect(screen.getByText('Category Spending Trends')).toBeInTheDocument();
