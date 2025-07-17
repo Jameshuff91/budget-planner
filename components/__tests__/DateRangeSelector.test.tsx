@@ -1,5 +1,6 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { vi } from 'vitest';
 import DateRangeSelector from '../DateRangeSelector';
 
@@ -17,10 +18,11 @@ describe('DateRangeSelector', () => {
   });
 
   it('opens dropdown when clicked', async () => {
+    const user = userEvent.setup();
     render(<DateRangeSelector onDateRangeChange={mockOnDateRangeChange} />);
     
     const button = screen.getByRole('button');
-    fireEvent.click(button);
+    await user.click(button);
     
     await waitFor(() => {
       expect(screen.getByText('This Quarter')).toBeInTheDocument();
@@ -33,13 +35,14 @@ describe('DateRangeSelector', () => {
   });
 
   it('selects quarter range', async () => {
+    const user = userEvent.setup();
     render(<DateRangeSelector onDateRangeChange={mockOnDateRangeChange} />);
     
     const button = screen.getByRole('button');
-    fireEvent.click(button);
+    await user.click(button);
     
     const quarterOption = await screen.findByText('This Quarter');
-    fireEvent.click(quarterOption);
+    await user.click(quarterOption);
     
     expect(mockOnDateRangeChange).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -49,13 +52,14 @@ describe('DateRangeSelector', () => {
   });
 
   it('selects last 30 days range', async () => {
+    const user = userEvent.setup();
     render(<DateRangeSelector onDateRangeChange={mockOnDateRangeChange} />);
     
     const button = screen.getByRole('button');
-    fireEvent.click(button);
+    await user.click(button);
     
     const last30Days = await screen.findByText('Last 30 Days');
-    fireEvent.click(last30Days);
+    await user.click(last30Days);
     
     expect(mockOnDateRangeChange).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -65,13 +69,14 @@ describe('DateRangeSelector', () => {
   });
 
   it('opens custom range dialog', async () => {
+    const user = userEvent.setup();
     render(<DateRangeSelector onDateRangeChange={mockOnDateRangeChange} />);
     
     const button = screen.getByRole('button');
-    fireEvent.click(button);
+    await user.click(button);
     
     const customOption = await screen.findByText('Custom Range...');
-    fireEvent.click(customOption);
+    await user.click(customOption);
     
     await waitFor(() => {
       expect(screen.getByText('Select Custom Date Range')).toBeInTheDocument();
@@ -81,13 +86,14 @@ describe('DateRangeSelector', () => {
   });
 
   it('applies custom date range', async () => {
+    const user = userEvent.setup();
     render(<DateRangeSelector onDateRangeChange={mockOnDateRangeChange} />);
     
     const button = screen.getByRole('button');
-    fireEvent.click(button);
+    await user.click(button);
     
     const customOption = await screen.findByText('Custom Range...');
-    fireEvent.click(customOption);
+    await user.click(customOption);
     
     const startDateInput = screen.getByLabelText('Start Date');
     const endDateInput = screen.getByLabelText('End Date');
@@ -108,16 +114,17 @@ describe('DateRangeSelector', () => {
   });
 
   it('cancels custom range selection', async () => {
+    const user = userEvent.setup();
     render(<DateRangeSelector onDateRangeChange={mockOnDateRangeChange} />);
     
     const button = screen.getByRole('button');
-    fireEvent.click(button);
+    await user.click(button);
     
     const customOption = await screen.findByText('Custom Range...');
-    fireEvent.click(customOption);
+    await user.click(customOption);
     
     const cancelButton = screen.getByText('Cancel');
-    fireEvent.click(cancelButton);
+    await user.click(cancelButton);
     
     await waitFor(() => {
       expect(screen.queryByText('Select Custom Date Range')).not.toBeInTheDocument();
@@ -127,13 +134,14 @@ describe('DateRangeSelector', () => {
   });
 
   it('disables apply button when dates are not selected', async () => {
+    const user = userEvent.setup();
     render(<DateRangeSelector onDateRangeChange={mockOnDateRangeChange} />);
     
     const button = screen.getByRole('button');
-    fireEvent.click(button);
+    await user.click(button);
     
     const customOption = await screen.findByText('Custom Range...');
-    fireEvent.click(customOption);
+    await user.click(customOption);
     
     const applyButton = screen.getByText('Apply');
     expect(applyButton).toBeDisabled();
