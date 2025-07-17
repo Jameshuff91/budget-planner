@@ -2,8 +2,16 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import CategoryTrendAnalysis from '../../components/CategoryTrendAnalysis';
-import { DatabaseProvider } from '../../src/context/DatabaseContext';
 import { vi } from 'vitest';
+
+// Mock the DatabaseContext
+vi.mock('@context/DatabaseContext', () => {
+  const mockUseDBContext = vi.fn();
+  return {
+    useDBContext: mockUseDBContext,
+    __mockUseDBContext: mockUseDBContext,
+  };
+});
 
 // Mock the chart components
 vi.mock('recharts', () => ({
@@ -17,11 +25,18 @@ vi.mock('recharts', () => ({
   Legend: () => <div data-testid="legend" />,
 }));
 
-// Mock transactions data
+// Import the mock function
+import { __mockUseDBContext } from '@context/DatabaseContext';
+
+// Mock transactions data with recent dates
+const currentDate = new Date();
+const lastMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 15);
+const twoMonthsAgo = new Date(currentDate.getFullYear(), currentDate.getMonth() - 2, 10);
+
 const mockTransactions = [
   {
     id: '1',
-    date: new Date('2024-01-15').toISOString(),
+    date: lastMonth.toISOString(),
     description: 'Grocery Store',
     amount: 100,
     type: 'expense' as const,
@@ -29,7 +44,7 @@ const mockTransactions = [
   },
   {
     id: '2',
-    date: new Date('2024-01-20').toISOString(),
+    date: lastMonth.toISOString(),
     description: 'Gas Station',
     amount: 50,
     type: 'expense' as const,
@@ -37,7 +52,7 @@ const mockTransactions = [
   },
   {
     id: '3',
-    date: new Date('2024-02-10').toISOString(),
+    date: twoMonthsAgo.toISOString(),
     description: 'Restaurant',
     amount: 75,
     type: 'expense' as const,
@@ -45,7 +60,7 @@ const mockTransactions = [
   },
   {
     id: '4',
-    date: new Date('2024-02-15').toISOString(),
+    date: twoMonthsAgo.toISOString(),
     description: 'Electric Bill',
     amount: 120,
     type: 'expense' as const,
@@ -60,54 +75,28 @@ const mockCategories = [
 ];
 
 describe('CategoryTrendAnalysis', () => {
-  const mockContextValue = {
-    transactions: mockTransactions,
-    categories: mockCategories,
-    loading: false,
-    error: null,
-    // Add other required context properties
-    addTransaction: vi.fn(),
-    updateTransaction: vi.fn(),
-    deleteTransaction: vi.fn(),
-    addCategory: vi.fn(),
-    updateCategory: vi.fn(),
-    deleteCategory: vi.fn(),
-    updateCategoryBudget: vi.fn(),
-    pdfs: [],
-    addPDF: vi.fn(),
-    deletePDF: vi.fn(),
-    assets: [],
-    liabilities: [],
-    addAsset: vi.fn(),
-    updateAsset: vi.fn(),
-    deleteAsset: vi.fn(),
-    addLiability: vi.fn(),
-    updateLiability: vi.fn(),
-    deleteLiability: vi.fn(),
-    recurringPreferences: [],
-    addRecurringPreference: vi.fn(),
-    updateRecurringPreference: vi.fn(),
-    deleteRecurringPreference: vi.fn(),
-    getTransactionsByDateRange: vi.fn(),
-    monthlyStats: { totalIncome: 0, totalExpenses: 0 },
-  };
+  const mockUseDBContext = __mockUseDBContext as ReturnType<typeof vi.fn>;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    
+    // Set up default mock context values
+    mockUseDBContext.mockReturnValue({
+      transactions: mockTransactions,
+      categories: mockCategories,
+      loading: false,
+      error: null,
+    });
+  });
 
   it('renders without crashing', () => {
-    render(
-      <DatabaseProvider value={mockContextValue}>
-        <CategoryTrendAnalysis />
-      </DatabaseProvider>
-    );
+    render(<CategoryTrendAnalysis />);
     
     expect(screen.getByText('Category Spending Trends')).toBeInTheDocument();
   });
 
   it('displays available categories in the selection list', () => {
-    render(
-      <DatabaseProvider value={mockContextValue}>
-        <CategoryTrendAnalysis />
-      </DatabaseProvider>
-    );
+    render(<CategoryTrendAnalysis />);
     
     expect(screen.getByText('Food')).toBeInTheDocument();
     expect(screen.getByText('Transportation')).toBeInTheDocument();
@@ -115,11 +104,7 @@ describe('CategoryTrendAnalysis', () => {
   });
 
   it('allows toggling category selection', async () => {
-    render(
-      <DatabaseProvider value={mockContextValue}>
-        <CategoryTrendAnalysis />
-      </DatabaseProvider>
-    );
+    render(<CategoryTrendAnalysis />);
     
     const foodCheckbox = screen.getByRole('checkbox', { name: /Food/i });
     
