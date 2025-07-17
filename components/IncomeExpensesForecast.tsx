@@ -17,8 +17,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/
 import { Button } from './ui/button';
 import { Alert, AlertDescription } from './ui/alert';
 import { IncomeExpensesForecastSkeleton } from './skeletons/IncomeExpensesForecastSkeleton';
-import { formatCurrency } from '../utils/formatters';
-import { useDatabase } from '../hooks/useDatabase';
+import { formatCurrency } from '@utils/helpers';
+import { useDatabase } from '@hooks/useDatabase';
 
 interface ForecastData {
   month: string;
@@ -109,10 +109,8 @@ export default function IncomeExpensesForecast({ selectedYear }: Props) {
 
     for (let i = 1; i <= forecastMonths; i++) {
       const forecastDate = new Date(lastDate.getFullYear(), lastDate.getMonth() + i, 1);
-      const monthKey = `${forecastDate.getFullYear()}-${String(forecastDate.getMonth() + 1).padStart(
-        2,
-        '0',
-      )}`;
+      const monthKey = `${forecastDate.getFullYear()}-${String(        forecastDate.getMonth() + 1,
+      ).padStart(2, '0')}`;
 
       // Apply seasonal adjustments based on historical data
       const historicalMonth = sortedData.find(
