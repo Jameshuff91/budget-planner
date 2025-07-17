@@ -1,5 +1,6 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import CategoryTrendAnalysis from '../../components/CategoryTrendAnalysis';
 import { vi } from 'vitest';
@@ -162,7 +163,7 @@ describe('CategoryTrendAnalysis', () => {
     const selectAllButton = screen.getByRole('button', { name: /Select All/i });
     
     // Click Select All
-    fireEvent.click(selectAllButton);
+    await userEvent.click(selectAllButton);
     await waitFor(() => {
       const checkboxes = screen.getAllByRole('checkbox');
       checkboxes.forEach(checkbox => {
@@ -170,9 +171,13 @@ describe('CategoryTrendAnalysis', () => {
       });
     });
     
-    // Button should now say "Clear All"
+    // Wait for button text to update to "Clear All"
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /Clear All/i })).toBeInTheDocument();
+    });
+    
     const clearAllButton = screen.getByRole('button', { name: /Clear All/i });
-    fireEvent.click(clearAllButton);
+    await userEvent.click(clearAllButton);
     
     await waitFor(() => {
       const checkboxes = screen.getAllByRole('checkbox');

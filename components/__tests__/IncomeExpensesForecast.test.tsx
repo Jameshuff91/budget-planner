@@ -79,7 +79,7 @@ describe('IncomeExpensesForecast', () => {
 
     // Click 12 months
     fireEvent.click(screen.getByText('12 Months'));
-    expect(screen.getByText('12 Months').parentElement).toHaveClass('bg-primary');
+    expect(screen.getByText('12 Months')).toHaveClass('bg-primary');
   });
 
   it('toggles forecast visibility', async () => {
