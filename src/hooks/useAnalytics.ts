@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect, useCallback } from 'react';
+import { useMemo } from 'react';
 
 import { useDBContext } from '../context/DatabaseContext';
 import { logger } from '../services/logger';
@@ -152,11 +152,21 @@ export const useAnalytics = (timeRange?: { startDate?: Date; endDate?: Date }) =
   const { transactions, categories } = useDBContext();
   // Removed selectedMonth state and useEffect for monthSelected event
 
-  const today = new Date();
-  const defaultStartDate = new Date(today.getFullYear(), today.getMonth(), 1);
-  defaultStartDate.setHours(0, 0, 0, 0);
-  const defaultEndDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-  defaultEndDate.setHours(23, 59, 59, 999);
+  const today = useMemo(() => {
+    const date = new Date();
+    // Normalize to just date components to avoid changes within the same day
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  }, []);
+  const defaultStartDate = useMemo(() => {
+    const start = new Date(today.getFullYear(), today.getMonth(), 1);
+    start.setHours(0, 0, 0, 0);
+    return start;
+  }, [today]);
+  const defaultEndDate = useMemo(() => {
+    const end = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+    end.setHours(23, 59, 59, 999);
+    return end;
+  }, [today]);
 
   const { startDate = defaultStartDate, endDate = defaultEndDate } = timeRange || {};
 
@@ -309,7 +319,7 @@ export const useAnalytics = (timeRange?: { startDate?: Date; endDate?: Date }) =
     } finally {
       marker.end();
     }
-  }, [transactions, months]);
+  }, [transactions, months, today]);
 
   // Memoize filtered transactions to avoid recalculating when same period is requested
   const filteredTransactions = useMemo(() => {
@@ -375,7 +385,7 @@ export const useAnalytics = (timeRange?: { startDate?: Date; endDate?: Date }) =
 
   const detailedCategorySpending = useMemo(() => {
     try {
-      const details: Record<string, any[]> = {};
+      const details: Record<string, Array<{ name: string; value: number }>> = {};
 
       logger.info(
         `Calculating detailed category spending for period: ${startDate.toISOString()} - ${endDate.toISOString()}`,

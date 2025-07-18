@@ -1,7 +1,7 @@
 'use client';
 
 import { Trash2, Edit, PlusCircle } from 'lucide-react';
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 
 import { Button } from '@components/ui/button';
 import {
@@ -19,7 +19,6 @@ import {
   DialogDescription,
   DialogFooter,
   DialogTrigger,
-  DialogClose, // Added for explicit close
 } from '@components/ui/dialog';
 import { Input } from '@components/ui/input';
 import { Label } from '@components/ui/label';

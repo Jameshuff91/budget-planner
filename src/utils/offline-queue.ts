@@ -4,7 +4,7 @@
  */
 
 import { logger } from '../services/logger';
-import { Transaction, Category, Asset, Liability } from '../types';
+import { Transaction, Asset, Liability } from '../types';
 
 import { generateUUID } from './helpers';
 
@@ -21,7 +21,7 @@ export interface QueuedOperation {
     | 'UPDATE_LIABILITY'
     | 'DELETE_ASSET'
     | 'DELETE_LIABILITY';
-  payload: any;
+  payload: unknown;
   timestamp: number;
   retryCount: number;
   synced: boolean;
@@ -117,7 +117,7 @@ class OfflineQueue {
     }
   }
 
-  private async handleServiceWorkerSync(transaction: any): Promise<void> {
+  private async handleServiceWorkerSync(transaction: Record<string, unknown>): Promise<void> {
     // Handle transaction sync from service worker
     try {
       await this.markOperationSynced(transaction.id);
@@ -347,7 +347,7 @@ class OfflineQueue {
   }
 
   // Service Worker communication
-  private notifyServiceWorker(type: string, payload: any): void {
+  private notifyServiceWorker(type: string, payload: unknown): void {
     if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
       navigator.serviceWorker.controller.postMessage({ type, payload });
     }

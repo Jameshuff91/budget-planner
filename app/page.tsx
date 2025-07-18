@@ -78,7 +78,7 @@ export default function Home() {
         title: 'Dashboard Reset',
         description: `All data has been reset and ${extractedTransactions.length} transactions reprocessed.`,
       });
-    } catch (error) {
+    } catch {
       toast({
         title: 'Reset Failed',
         description: 'Failed to reset dashboard. Please try again.',

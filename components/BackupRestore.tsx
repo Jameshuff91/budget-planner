@@ -12,7 +12,6 @@ import {
   History,
   Eye,
   EyeOff,
-  Trash2,
   Calendar,
 } from 'lucide-react';
 import React, { useState, useRef, useCallback } from 'react';
@@ -22,7 +21,6 @@ import { useDBContext } from '@context/DatabaseContext';
 import {
   BackupService,
   BackupOptions,
-  RestoreOptions,
   BackupProgress,
   RestoreProgress,
   BackupSchedule,
@@ -72,7 +70,10 @@ export function BackupRestore({ isOpen, onClose }: BackupRestoreProps) {
   });
   const [backupProgress, setBackupProgress] = useState<BackupProgress | null>(null);
   const [showPassword, setShowPassword] = useState(false);
-  const [passwordStrength, setPasswordStrength] = useState<any>(null);
+  const [passwordStrength, setPasswordStrength] = useState<{
+    score: number;
+    feedback: string[];
+  } | null>(null);
 
   // Restore state
   const [restoreFile, setRestoreFile] = useState<File | null>(null);
@@ -82,7 +83,11 @@ export function BackupRestore({ isOpen, onClose }: BackupRestoreProps) {
     validateOnly: false,
   });
   const [restoreProgress, setRestoreProgress] = useState<RestoreProgress | null>(null);
-  const [validationResult, setValidationResult] = useState<any>(null);
+  const [validationResult, setValidationResult] = useState<{
+    isValid: boolean;
+    errors: string[];
+    summary: Record<string, number>;
+  } | null>(null);
 
   // Schedule state
   const [schedule, setSchedule] = useState<BackupSchedule>(
@@ -664,7 +669,7 @@ export function BackupRestore({ isOpen, onClose }: BackupRestoreProps) {
                       <Label>Frequency</Label>
                       <RadioGroup
                         value={schedule.frequency}
-                        onValueChange={(value: any) =>
+                        onValueChange={(value: 'daily' | 'weekly' | 'monthly') =>
                           setSchedule((prev) => ({ ...prev, frequency: value }))
                         }
                       >
@@ -774,7 +779,7 @@ export function BackupRestore({ isOpen, onClose }: BackupRestoreProps) {
 
 // Backup History List Component
 function BackupHistoryList() {
-  const [history, setHistory] = useState(() => BackupService.getBackupHistory());
+  const history = BackupService.getBackupHistory();
 
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return '0 Bytes';

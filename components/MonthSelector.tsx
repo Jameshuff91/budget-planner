@@ -7,12 +7,8 @@ import { useState, useEffect, useMemo } from 'react';
 import { Button } from '@components/ui/button';
 import { useDBContext } from '@context/DatabaseContext';
 
+import { Transaction } from '../src/types';
 import { formatCurrency } from '../src/utils/helpers';
-
-type SpendingTrendData = {
-  name: string;
-  spending: number;
-};
 
 export default function MonthSelector() {
   const [selectedMonth, setSelectedMonth] = useState<Date>(new Date());
@@ -21,8 +17,8 @@ export default function MonthSelector() {
     [key: string]: {
       income: number;
       expenses: number;
-      summaryTransactions: any[];
-      individualTransactions: any[];
+      summaryTransactions: Transaction[];
+      individualTransactions: Transaction[];
     };
   }>({});
   const [isLoading, setIsLoading] = useState(true);
@@ -61,54 +57,6 @@ export default function MonthSelector() {
     return monthsArray.reverse(); // Most recent first
   }, [transactions]);
 
-  const spendingTrend = useMemo((): SpendingTrendData[] => {
-    try {
-      const monthlySpending = new Map<string, number>();
-      const months = [
-        'Jan',
-        'Feb',
-        'Mar',
-        'Apr',
-        'May',
-        'Jun',
-        'Jul',
-        'Aug',
-        'Sep',
-        'Oct',
-        'Nov',
-        'Dec',
-      ];
-
-      // Get current year and month
-      const currentDate = new Date();
-      const currentYear = currentDate.getFullYear();
-      const currentMonth = currentDate.getMonth();
-
-      // Initialize last 12 months with 0
-      for (let i = 11; i >= 0; i--) {
-        const date = new Date(currentYear, currentMonth - i, 1);
-        const monthKey = `${months[date.getMonth()]} ${date.getFullYear()}`;
-        monthlySpending.set(monthKey, 0);
-      }
-
-      // Process transactions from monthlyData
-      Object.entries(monthlyData).forEach(([monthKey, data]) => {
-        if (monthlySpending.has(monthKey)) {
-          monthlySpending.set(monthKey, data.expenses);
-        }
-      });
-
-      // Convert to array format
-      return Array.from(monthlySpending.entries()).map(([name, spending]) => ({
-        name,
-        spending,
-      }));
-    } catch (error) {
-      console.error('Error calculating spending trend:', error);
-      return [];
-    }
-  }, [monthlyData]);
-
   useEffect(() => {
     const loadMonthlyData = async () => {
       try {
@@ -117,8 +65,8 @@ export default function MonthSelector() {
           [key: string]: {
             income: number;
             expenses: number;
-            summaryTransactions: any[];
-            individualTransactions: any[];
+            summaryTransactions: Transaction[];
+            individualTransactions: Transaction[];
           };
         } = {};
 

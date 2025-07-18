@@ -45,8 +45,8 @@ describe('IndexedDB Mock', () => {
     return new Promise<void>((resolve, reject) => {
       const request = global.indexedDB.open('test-db', 1);
 
-      request.onupgradeneeded = (event: any) => {
-        const db = event.target.result;
+      request.onupgradeneeded = (event: IDBVersionChangeEvent) => {
+        const db = (event.target as IDBOpenDBRequest).result;
         const store = db.createObjectStore('test-store', { keyPath: 'id' });
         expect(store.name).toBe('test-store');
         expect(store.keyPath).toBe('id');
@@ -68,8 +68,8 @@ describe('IndexedDB Mock', () => {
     return new Promise<void>((resolve, reject) => {
       const request = global.indexedDB.open('test-db', 1);
 
-      request.onupgradeneeded = (event: any) => {
-        const db = event.target.result;
+      request.onupgradeneeded = (event: IDBVersionChangeEvent) => {
+        const db = (event.target as IDBOpenDBRequest).result;
         db.createObjectStore('test-store', { keyPath: 'id' });
       };
 
@@ -111,8 +111,8 @@ describe('IndexedDB Mock', () => {
     return new Promise<void>((resolve, reject) => {
       const request = global.indexedDB.open('test-db', 1);
 
-      request.onupgradeneeded = (event: any) => {
-        const db = event.target.result;
+      request.onupgradeneeded = (event: IDBVersionChangeEvent) => {
+        const db = (event.target as IDBOpenDBRequest).result;
         const store = db.createObjectStore('test-store', { keyPath: 'id' });
         store.createIndex('by-name', 'name');
       };

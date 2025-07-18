@@ -1,5 +1,4 @@
 import { Transaction } from '../types';
-import { generateUUID } from '../utils/helpers';
 
 import { logger } from './logger';
 
@@ -38,14 +37,16 @@ export class CSVService {
     let date: Date;
 
     switch (format) {
-      case 'MM/DD/YYYY':
-        const [month, day, year] = cleanDate.split(/[\/\-]/).map(Number);
+      case 'MM/DD/YYYY': {
+        const [month, day, year] = cleanDate.split(/[/-]/).map(Number);
         date = new Date(year, month - 1, day);
         break;
-      case 'DD/MM/YYYY':
-        const [dayDM, monthDM, yearDM] = cleanDate.split(/[\/\-]/).map(Number);
+      }
+      case 'DD/MM/YYYY': {
+        const [dayDM, monthDM, yearDM] = cleanDate.split(/[/-]/).map(Number);
         date = new Date(yearDM, monthDM - 1, dayDM);
         break;
+      }
       case 'YYYY-MM-DD':
         date = new Date(cleanDate);
         break;

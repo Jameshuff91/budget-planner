@@ -65,7 +65,7 @@ export class PlaidService {
   /**
    * Create a link token for Plaid Link initialization
    */
-  async createLinkToken(userId: string, products: string[] = ['transactions']): Promise<string> {
+  async createLinkToken(userId: string, _products: string[] = ['transactions']): Promise<string> {
     try {
       const response = await apiService.createLinkToken();
 

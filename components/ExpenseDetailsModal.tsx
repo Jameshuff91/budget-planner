@@ -11,8 +11,6 @@ import {
   TableRow,
 } from '@components/ui/table';
 
-import { Transaction } from '../src/hooks/useDatabase';
-
 interface ExpenseDetailsModalProps {
   isOpen?: boolean;
   onClose: () => void;

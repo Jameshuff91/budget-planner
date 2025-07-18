@@ -2,7 +2,7 @@
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 
-interface ApiResponse<T = any> {
+interface ApiResponse<T = unknown> {
   data?: T;
   error?: string;
   errors?: Array<{ msg: string }>;
@@ -20,7 +20,7 @@ class ApiService {
     }
   }
 
-  private async request<T = any>(
+  private async request<T = unknown>(
     endpoint: string,
     options: RequestInit = {},
   ): Promise<ApiResponse<T>> {
@@ -32,7 +32,7 @@ class ApiService {
 
       // Add auth header if token exists
       if (this.accessToken) {
-        (headers as any)['Authorization'] = `Bearer ${this.accessToken}`;
+        (headers as Record<string, string>)['Authorization'] = `Bearer ${this.accessToken}`;
       }
 
       const response = await fetch(`${API_BASE_URL}${endpoint}`, {
@@ -180,7 +180,13 @@ class ApiService {
       accounts: Array<{
         item_id: string;
         institution_name: string;
-        accounts: Array<any>;
+        accounts: Array<{
+          name?: string;
+          subtype?: string;
+          mask?: string;
+          account_id?: string;
+          balances?: Record<string, unknown>;
+        }>;
       }>;
     }>('/plaid/accounts');
   }
@@ -225,7 +231,27 @@ class ApiService {
     }
 
     return this.request<{
-      transactions: Array<any>;
+      transactions: Array<{
+        id: string;
+        account_id: string;
+        amount: number;
+        date: string;
+        name: string;
+        category?: string[];
+        merchant_name?: string;
+        account_name?: string;
+        iso_currency_code?: string;
+        unofficial_currency_code?: string;
+        pending?: boolean;
+        category_id?: string;
+        subcategory?: string;
+        transaction_type?: string;
+        location?: Record<string, unknown>;
+        payment_meta?: Record<string, unknown>;
+        account_owner?: string;
+        created_at?: string;
+        updated_at?: string;
+      }>;
       pagination: {
         page: number;
         limit: number;
@@ -309,7 +335,7 @@ class ApiService {
 
       const payload = JSON.parse(atob(parts[1]));
       return { id: payload.id, email: payload.email };
-    } catch (error) {
+    } catch {
       return null;
     }
   }

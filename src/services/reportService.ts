@@ -2,7 +2,6 @@ import { format } from 'date-fns';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 
-import { useAnalytics } from '../hooks/useAnalytics';
 import { Transaction } from '../types/index';
 import { formatCurrency } from '../utils/helpers';
 
@@ -31,9 +30,9 @@ export interface ReportData {
   transactions: Transaction[];
   categorySpending: Array<{ name: string; value: number; target?: number }>;
   spendingTrend: Array<{ name: string; spending: number }>;
-  monthlyTrends: any;
+  monthlyTrends: Record<string, unknown>;
   merchantSpending: Array<{ name: string; value: number; transactionCount: number }>;
-  potentialRecurringTransactions: Array<any>;
+  potentialRecurringTransactions: Array<Record<string, unknown>>;
   totalIncome: number;
   totalExpenses: number;
   netSavings: number;
@@ -71,9 +70,9 @@ export class ReportService {
       });
 
       let currentY = 20;
-      const pageHeight = pdf.internal.pageSize.height;
-      const margin = 20;
-      const usableHeight = pageHeight - 2 * margin;
+      // const _pageHeight = pdf.internal.pageSize.height;
+      // const _margin = 20;
+      // const _usableHeight = _pageHeight - 2 * _margin; // Reserved for future use
 
       // Add header and title
       currentY = this.addReportHeader(pdf, options, currentY);
@@ -107,7 +106,7 @@ export class ReportService {
       // Add recurring transactions analysis if requested
       if (options.includeRecurringAnalysis) {
         currentY = this.checkPageBreak(pdf, currentY, 60);
-        currentY = this.addRecurringAnalysis(pdf, reportData, currentY);
+        this.addRecurringAnalysis(pdf, reportData, currentY);
       }
 
       // Add footer to all pages
@@ -126,7 +125,7 @@ export class ReportService {
   /**
    * Generate CSV export for transaction data
    */
-  public generateCSVReport(reportData: ReportData, options: ReportOptions): Blob {
+  public generateCSVReport(reportData: ReportData, _options: ReportOptions): Blob {
     try {
       logger.info('Starting CSV report generation');
 
@@ -329,7 +328,7 @@ export class ReportService {
     pdf: jsPDF,
     reportData: ReportData,
     y: number,
-    options: ReportOptions,
+    _options: ReportOptions,
   ): number {
     pdf.setFontSize(16);
     pdf.setFont(undefined, 'bold');
@@ -516,9 +515,9 @@ export class ReportService {
    * Add footer to all pages
    */
   private addFooter(pdf: jsPDF): void {
-    const pageCount = (pdf as any).getNumberOfPages
-      ? (pdf as any).getNumberOfPages()
-      : pdf.internal.pages?.length || 1;
+    const pageCount = (pdf as unknown as { getNumberOfPages?: () => number }).getNumberOfPages
+      ? (pdf as unknown as { getNumberOfPages?: () => number }).getNumberOfPages()
+      : (pdf as unknown as { internal: { pages: unknown[] } }).internal.pages?.length || 1;
 
     for (let i = 1; i <= pageCount; i++) {
       pdf.setPage(i);

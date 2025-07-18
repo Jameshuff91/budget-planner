@@ -41,7 +41,7 @@ export function Auth({ onSuccess }: AuthProps) {
       } else {
         onSuccess?.();
       }
-    } catch (err) {
+    } catch {
       setError('An unexpected error occurred');
     } finally {
       setIsLoading(false);

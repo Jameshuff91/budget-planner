@@ -1,11 +1,19 @@
 'use client';
 
-import { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { getPerformanceMonitor } from '@utils/performance';
 
+interface WebVitalsMetric {
+  name: string;
+  value: number;
+  rating: 'good' | 'needs-improvement' | 'poor';
+  delta?: number;
+  entries?: PerformanceEntry[];
+}
+
 interface WebVitalsMonitorProps {
-  reportWebVitals?: (metric: any) => void;
+  reportWebVitals?: (metric: WebVitalsMetric) => void;
   debug?: boolean;
 }
 
@@ -98,7 +106,7 @@ export function WebVitalsMonitor({ reportWebVitals, debug = false }: WebVitalsMo
       });
 
       // Track form submissions
-      document.addEventListener('submit', (event) => {
+      document.addEventListener('submit', (_event) => {
         monitor.startMeasure('form_submit_response');
 
         // End measurement after a short delay to capture processing
@@ -121,7 +129,15 @@ export function WebVitalsMonitor({ reportWebVitals, debug = false }: WebVitalsMo
     if (!debug || !('memory' in performance)) return;
 
     const logMemoryUsage = () => {
-      const memory = (performance as any).memory;
+      const memory = (
+        performance as unknown as {
+          memory: {
+            usedJSHeapSize: number;
+            totalJSHeapSize: number;
+            jsHeapSizeLimit: number;
+          };
+        }
+      ).memory;
       console.log('Memory usage:', {
         used: Math.round(memory.usedJSHeapSize / 1024 / 1024) + ' MB',
         total: Math.round(memory.totalJSHeapSize / 1024 / 1024) + ' MB',
@@ -169,10 +185,31 @@ export function withPerformanceTracking<P extends object>(
 }
 
 /**
+ * Get suggestion for Web Vital improvement
+ */
+function getWebVitalSuggestion(metricName: string): string {
+  const suggestions: Record<string, string> = {
+    CLS: 'Ensure ad elements have reserved space, avoid animations, and use transform for layout changes',
+    FID: 'Reduce JavaScript execution time, minimize main thread work, and use code splitting',
+    LCP: 'Optimize images, improve server response times, and eliminate render-blocking resources',
+    FCP: 'Minimize render-blocking resources, optimize fonts, and reduce server response times',
+    TTFB: 'Improve server response times, use a CDN, and optimize database queries',
+  };
+  return suggestions[metricName] || 'Consider optimizing this metric';
+}
+
+/**
  * Performance insights component for development
  */
+interface PerformanceInsight {
+  type: 'warning' | 'info';
+  metric: string;
+  message: string;
+  suggestion: string;
+}
+
 export function PerformanceInsights() {
-  const [insights, setInsights] = useState<any[]>([]);
+  const [insights, setInsights] = useState<PerformanceInsight[]>([]);
 
   useEffect(() => {
     if (process.env.NODE_ENV !== 'development') return;
@@ -181,7 +218,7 @@ export function PerformanceInsights() {
 
     const generateInsights = () => {
       const metrics = monitor.getMetrics();
-      const newInsights = [];
+      const newInsights: PerformanceInsight[] = [];
 
       // Analyze Web Vitals
       metrics.webVitals.forEach((metric) => {
@@ -251,5 +288,3 @@ function getWebVitalSuggestion(metricName: string): string {
       return 'Check performance optimization guides';
   }
 }
-
-import { useState } from 'react';

@@ -137,38 +137,7 @@ const DEFAULT_TRANSACTIONS: BudgetDB['transactions']['value'][] = [
   },
 ];
 
-const DEFAULT_CATEGORIES: BudgetDB['categories']['value'][] = [
-  {
-    id: 'income',
-    name: 'Salary',
-    type: 'income' as const,
-  },
-  {
-    id: 'rent',
-    name: 'Rent',
-    type: 'expense' as const,
-  },
-  {
-    id: 'groceries',
-    name: 'Groceries',
-    type: 'expense' as const,
-  },
-  {
-    id: 'utilities',
-    name: 'Utilities',
-    type: 'expense' as const,
-  },
-  {
-    id: 'transport',
-    name: 'Transport',
-    type: 'expense' as const,
-  },
-  {
-    id: 'entertainment',
-    name: 'Entertainment',
-    type: 'expense' as const,
-  },
-];
+// Removed unused DEFAULT_CATEGORIES constant
 
 class DatabaseService {
   private db: IDBPDatabase<BudgetDB> | null = null;

@@ -1,7 +1,7 @@
 'use client';
 
 import { Bell, AlertTriangle, Settings, X } from 'lucide-react';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 import { useDBContext } from '@context/DatabaseContext';
 import { useAnalytics } from '@hooks/useAnalytics';
@@ -31,14 +31,14 @@ interface SpendingAlert {
   severity: 'info' | 'warning' | 'critical';
   timestamp: string;
   dismissed: boolean;
-  data?: any;
+  data?: Record<string, unknown>;
 }
 
 export default function SpendingAlerts() {
   const [alertRules, setAlertRules] = useState<AlertRule[]>([]);
   const [activeAlerts, setActiveAlerts] = useState<SpendingAlert[]>([]);
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
-  const { transactions, categories } = useDBContext();
+  const { transactions } = useDBContext();
   const { categorySpending, monthlyTrends } = useAnalytics();
 
   useEffect(() => {
@@ -78,12 +78,7 @@ export default function SpendingAlerts() {
     setNotificationsEnabled(notifPref);
   }, []);
 
-  useEffect(() => {
-    // Check for alerts based on rules
-    checkAlerts();
-  }, [transactions, alertRules, categorySpending]);
-
-  const checkAlerts = () => {
+  const checkAlerts = useCallback(() => {
     const newAlerts: SpendingAlert[] = [];
 
     alertRules.forEach((rule) => {
@@ -109,7 +104,7 @@ export default function SpendingAlerts() {
           });
           break;
 
-        case 'unusual_spending':
+        case 'unusual_spending': {
           const recentTransactions = transactions
             .filter((t) => {
               const date = new Date(t.date);
@@ -136,8 +131,9 @@ export default function SpendingAlerts() {
             }
           });
           break;
+        }
 
-        case 'savings_goal':
+        case 'savings_goal': {
           const currentSavings = monthlyTrends.netSavings.current;
           if (currentSavings < (rule.threshold || 500)) {
             newAlerts.push({
@@ -151,6 +147,7 @@ export default function SpendingAlerts() {
             });
           }
           break;
+        }
       }
     });
 
@@ -175,7 +172,19 @@ export default function SpendingAlerts() {
         });
       }
     }
-  };
+  }, [
+    transactions,
+    alertRules,
+    categorySpending,
+    monthlyTrends,
+    activeAlerts,
+    notificationsEnabled,
+  ]);
+
+  useEffect(() => {
+    // Check for alerts based on rules
+    checkAlerts();
+  }, [checkAlerts]);
 
   const requestNotificationPermission = async () => {
     if ('Notification' in window) {

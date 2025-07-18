@@ -42,7 +42,7 @@ export class DataMigration {
   /**
    * Validates backup data structure and version compatibility
    */
-  static validateBackupData(data: any): MigrationResult {
+  static validateBackupData(data: unknown): MigrationResult {
     const errors: string[] = [];
     const warnings: string[] = [];
 

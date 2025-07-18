@@ -87,10 +87,10 @@ export default function BudgetManagementPage() {
           description: `Budget for selected category set to ${formatCurrency(numValue)}.`,
         });
         // The context refresh will trigger the useEffect to update budgetInputs if needed
-      } catch (error: any) {
+      } catch (error: unknown) {
         toast({
           title: 'Error Updating Budget',
-          description: error.message || 'Could not update budget.',
+          description: error instanceof Error ? error.message : 'Could not update budget.',
           variant: 'destructive',
         });
         // Revert input on error

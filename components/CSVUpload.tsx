@@ -16,18 +16,25 @@ const CSVUpload: React.FC = () => {
 
         Papa.parse(file, {
           complete: (results) => {
-            const transactions = results.data.slice(1).map((row: any) => ({
+            const transactions = results.data.slice(1).map((row: string[]) => ({
               date: row[0],
               description: row[1],
               amount: parseFloat(row[2]),
               category: row[3] || 'Uncategorized',
             }));
 
-            transactions.forEach((transaction: any) => {
-              if (transaction.date && transaction.amount) {
-                addTransaction(transaction);
-              }
-            });
+            transactions.forEach(
+              (transaction: {
+                date: string;
+                description: string;
+                amount: number;
+                category: string;
+              }) => {
+                if (transaction.date && transaction.amount) {
+                  addTransaction(transaction);
+                }
+              },
+            );
           },
           header: true,
           error: (error) => {

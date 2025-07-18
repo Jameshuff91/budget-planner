@@ -1,7 +1,6 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import type { ComponentType } from 'react';
 
 // Create a loading component for charts
 const ChartLoadingComponent = () => (
@@ -12,37 +11,37 @@ const ChartLoadingComponent = () => (
 
 // Lazy load individual Recharts components with proper typing
 export const AreaChart = dynamic(
-  () => import('recharts').then((mod) => ({ default: mod.AreaChart as any })),
+  () => import('recharts').then((mod) => ({ default: mod.AreaChart })),
   { ssr: false, loading: ChartLoadingComponent },
 );
 
 export const BarChart = dynamic(
-  () => import('recharts').then((mod) => ({ default: mod.BarChart as any })),
+  () => import('recharts').then((mod) => ({ default: mod.BarChart })),
   { ssr: false, loading: ChartLoadingComponent },
 );
 
 export const LineChart = dynamic(
-  () => import('recharts').then((mod) => ({ default: mod.LineChart as any })),
+  () => import('recharts').then((mod) => ({ default: mod.LineChart })),
   { ssr: false, loading: ChartLoadingComponent },
 );
 
 export const PieChart = dynamic(
-  () => import('recharts').then((mod) => ({ default: mod.PieChart as any })),
+  () => import('recharts').then((mod) => ({ default: mod.PieChart })),
   { ssr: false, loading: ChartLoadingComponent },
 );
 
 export const RadarChart = dynamic(
-  () => import('recharts').then((mod) => ({ default: mod.RadarChart as any })),
+  () => import('recharts').then((mod) => ({ default: mod.RadarChart })),
   { ssr: false, loading: ChartLoadingComponent },
 );
 
 export const ScatterChart = dynamic(
-  () => import('recharts').then((mod) => ({ default: mod.ScatterChart as any })),
+  () => import('recharts').then((mod) => ({ default: mod.ScatterChart })),
   { ssr: false, loading: ChartLoadingComponent },
 );
 
 export const ComposedChart = dynamic(
-  () => import('recharts').then((mod) => ({ default: mod.ComposedChart as any })),
+  () => import('recharts').then((mod) => ({ default: mod.ComposedChart })),
   { ssr: false, loading: ChartLoadingComponent },
 );
 

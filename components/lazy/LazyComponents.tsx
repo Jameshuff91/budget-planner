@@ -97,11 +97,11 @@ export const LazySpendingByMerchant = dynamic(() => import('@components/Spending
 // Conditional lazy loading wrapper
 interface ConditionalLazyComponentProps {
   condition: boolean;
-  component: React.ComponentType<any>;
-  fallback?: React.ComponentType<any>;
-  loadingComponent?: React.ComponentType<any>;
+  component: React.ComponentType<Record<string, unknown>>;
+  fallback?: React.ComponentType<Record<string, unknown>>;
+  loadingComponent?: React.ComponentType<Record<string, unknown>>;
   children?: React.ReactNode;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 /**
@@ -166,11 +166,11 @@ export function PerformanceOptimizedComponent({
 
 // Intersection Observer based lazy loading
 interface InViewLazyComponentProps {
-  component: React.ComponentType<any>;
-  fallback?: React.ComponentType<any>;
+  component: React.ComponentType<Record<string, unknown>>;
+  fallback?: React.ComponentType<Record<string, unknown>>;
   rootMargin?: string;
   threshold?: number;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 /**

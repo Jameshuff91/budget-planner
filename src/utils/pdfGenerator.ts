@@ -36,7 +36,7 @@ export interface TableColumn {
   accessor: string;
   width: number;
   align?: 'left' | 'center' | 'right';
-  formatter?: (value: any) => string;
+  formatter?: (value: unknown) => string;
 }
 
 export interface ChartElement {
@@ -175,7 +175,7 @@ export class PDFGenerator {
   /**
    * Add a table to the document
    */
-  public addTable(data: any[], columns: TableColumn[]): PDFGenerator {
+  public addTable(data: Array<Record<string, unknown>>, columns: TableColumn[]): PDFGenerator {
     const tableWidth = this.pageWidth - this.options.margins.left - this.options.margins.right;
     const rowHeight = 8;
 
@@ -401,8 +401,8 @@ export class PDFGenerator {
    * Add footer to all pages
    */
   public addFooters(footerText?: string): PDFGenerator {
-    const pageCount = (this.pdf as any).getNumberOfPages
-      ? (this.pdf as any).getNumberOfPages()
+    const pageCount = (this.pdf as { getNumberOfPages?: () => number }).getNumberOfPages
+      ? (this.pdf as { getNumberOfPages: () => number }).getNumberOfPages()
       : this.pdf.internal.pages?.length || 1;
 
     for (let i = 1; i <= pageCount; i++) {

@@ -17,7 +17,6 @@ import { useDBContext } from '@context/DatabaseContext';
 import {
   shallowCompareProps,
   getOptimizedAnimationProps,
-  memoizeChartProps,
   createPerformanceMarker,
   optimizeChartData,
 } from '@utils/chartOptimization';
@@ -43,6 +42,7 @@ const MemoizedVelocityIcon = React.memo<{ trend: string }>(({ trend }) => {
       return <Activity className='h-5 w-5 text-blue-500' />;
   }
 });
+MemoizedVelocityIcon.displayName = 'MemoizedVelocityIcon';
 
 const SpendingVelocity = ({ selectedYear }: SpendingVelocityProps) => {
   const { transactions, loading } = useDBContext();
@@ -61,7 +61,7 @@ const SpendingVelocity = ({ selectedYear }: SpendingVelocityProps) => {
       const month = new Date(selectedYear, i, 1);
       const monthEnd = new Date(selectedYear, i + 1, 0);
 
-      const monthTransactions = transactions.filter((t: any) => {
+      const monthTransactions = transactions.filter((t: { date: string; type: string }) => {
         const tDate = new Date(t.date);
         return (
           tDate.getFullYear() === selectedYear && tDate.getMonth() === i && t.type === 'expense'
@@ -74,8 +74,8 @@ const SpendingVelocity = ({ selectedYear }: SpendingVelocityProps) => {
 
       for (let day = 1; day <= daysInMonth; day++) {
         const daySpending = monthTransactions
-          .filter((t: any) => new Date(t.date).getDate() === day)
-          .reduce((sum: number, t: any) => sum + Math.abs(t.amount), 0);
+          .filter((t: { date: string }) => new Date(t.date).getDate() === day)
+          .reduce((sum: number, t: { amount: number }) => sum + Math.abs(t.amount), 0);
         dailySpending.push(daySpending);
       }
 
@@ -151,24 +151,31 @@ const SpendingVelocity = ({ selectedYear }: SpendingVelocityProps) => {
   }, [currentMonthData]);
 
   // Memoized CustomTooltip component
-  const CustomTooltip = useMemo(() => {
-    return React.memo(
-      ({ active, payload, label }: { active?: boolean; payload?: any; label?: any }) => {
-        if (!active || !payload) return null;
+  const CustomTooltip = React.memo(
+    ({
+      active,
+      payload,
+      label,
+    }: {
+      active?: boolean;
+      payload?: Array<{ name: string; value: number; color: string }>;
+      label?: string;
+    }) => {
+      if (!active || !payload) return null;
 
-        return (
-          <div className='bg-white p-3 border rounded-lg shadow-lg'>
-            <p className='font-semibold'>Day {label}</p>
-            {payload.map((entry: any, index: number) => (
-              <p key={index} style={{ color: entry.color }}>
-                {entry.name}: {formatCurrency(entry.value)}
-              </p>
-            ))}
-          </div>
-        );
-      },
-    );
-  }, []);
+      return (
+        <div className='bg-white p-3 border rounded-lg shadow-lg'>
+          <p className='font-semibold'>Day {label}</p>
+          {payload.map((entry, index: number) => (
+            <p key={index} style={{ color: entry.color }}>
+              {entry.name}: {formatCurrency(entry.value)}
+            </p>
+          ))}
+        </div>
+      );
+    },
+  );
+  CustomTooltip.displayName = 'CustomTooltip';
 
   // Memoized utility functions
   const getVelocityColor = useCallback((trend: string) => {

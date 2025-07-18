@@ -1,6 +1,5 @@
-import { DataEncryption, EncryptionResult } from '../utils/dataEncryption';
+import { DataEncryption } from '../utils/dataEncryption';
 import {
-  DataMigration,
   BackupData,
   validateBackupData,
   migrateToCurrentVersion,
@@ -52,6 +51,16 @@ export interface BackupSchedule {
   nextBackup?: string; // ISO timestamp
   autoCleanup: boolean;
   keepCount: number; // Number of backups to keep
+}
+
+export interface BackupHistoryEntry {
+  id: string;
+  timestamp: string;
+  filename: string;
+  size?: number;
+  encrypted?: boolean;
+  success?: boolean;
+  error?: string;
 }
 
 /**
@@ -214,7 +223,7 @@ export class BackupService {
   static async restoreBackup(
     options: RestoreOptions,
     onProgress?: (progress: RestoreProgress) => void,
-  ): Promise<{ success: boolean; summary: any; warnings: string[] }> {
+  ): Promise<{ success: boolean; summary: Record<string, unknown>; warnings: string[] }> {
     try {
       // Stage 1: Reading backup file
       onProgress?.({
@@ -237,7 +246,7 @@ export class BackupService {
       });
 
       // Stage 2: Decryption (if needed)
-      let parsedData: any;
+      let parsedData: Record<string, unknown>;
       try {
         parsedData = JSON.parse(backupContent);
 
@@ -262,7 +271,7 @@ export class BackupService {
 
           parsedData = JSON.parse(decryptedData);
         }
-      } catch (error) {
+      } catch {
         throw new Error('Failed to parse or decrypt backup file - check password if encrypted');
       }
 
@@ -356,7 +365,10 @@ export class BackupService {
         // Clear other stores
         const stores = ['categories', 'assets', 'liabilities', 'recurringPreferences'];
         for (const storeName of stores) {
-          const tx = db.transaction(storeName as any, 'readwrite');
+          const tx = db.transaction(
+            storeName as 'categories' | 'assets' | 'liabilities' | 'recurringPreferences',
+            'readwrite',
+          );
           await tx.store.clear();
           await tx.done;
         }
@@ -631,7 +643,7 @@ export class BackupService {
   /**
    * Adds entry to backup history
    */
-  private static async addToBackupHistory(entry: any): Promise<void> {
+  private static async addToBackupHistory(entry: BackupHistoryEntry): Promise<void> {
     try {
       const history = this.getBackupHistory();
       history.push(entry);
@@ -644,7 +656,7 @@ export class BackupService {
   /**
    * Gets backup history
    */
-  static getBackupHistory(): any[] {
+  static getBackupHistory(): BackupHistoryEntry[] {
     try {
       const stored = localStorage.getItem(this.BACKUP_HISTORY_KEY);
       return stored ? JSON.parse(stored) : [];
@@ -660,7 +672,12 @@ export class BackupService {
   static async validateBackupFile(
     file: File | string,
     password?: string,
-  ): Promise<{ valid: boolean; summary?: any; errors: string[]; warnings: string[] }> {
+  ): Promise<{
+    valid: boolean;
+    summary?: Record<string, unknown>;
+    errors: string[];
+    warnings: string[];
+  }> {
     try {
       const result = await this.restoreBackup({
         data: file,

@@ -189,7 +189,10 @@ Suggest up to 5 new categories that would better organize these transactions. Re
   /**
    * Make API request with proper error handling and caching
    */
-  private async makeAPIRequest(requestBody: any): Promise<string> {
+  private async makeAPIRequest(requestBody: {
+    messages: Array<{ role: string; content: string }>;
+    [key: string]: unknown;
+  }): Promise<string> {
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -282,7 +285,7 @@ Respond with a JSON array where each object has:
   private parseBatchCategorizationResponse(response: string): CategorySuggestion[] {
     try {
       const parsed = JSON.parse(response);
-      return parsed.map((item: any) => ({
+      return parsed.map((item: { category?: string; confidence?: number }) => ({
         category: item.category || 'Other Expenses',
         confidence: item.confidence || 0.5,
       }));

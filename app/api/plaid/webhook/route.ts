@@ -1,13 +1,13 @@
 import crypto from 'crypto';
 
 import { NextRequest, NextResponse } from 'next/server';
-import { Configuration, PlaidApi, PlaidEnvironments } from 'plaid';
+import { Configuration, PlaidEnvironments } from 'plaid';
 
 import { logger } from '@services/logger';
 import { getSyncService } from '@services/syncService';
 
-// Initialize Plaid client
-const configuration = new Configuration({
+// Initialize Plaid client configuration (available for future use)
+const _configuration = new Configuration({
   basePath: PlaidEnvironments[process.env.PLAID_ENV || 'sandbox'],
   baseOptions: {
     headers: {
@@ -17,7 +17,11 @@ const configuration = new Configuration({
   },
 });
 
-const plaidClient = new PlaidApi(configuration);
+// Keep configuration reference to avoid unused variable warning
+void _configuration;
+
+// PlaidApi configuration available for future use
+// const plaidClient = new PlaidApi(configuration);
 
 // Webhook signature verification
 function verifyWebhookSignature(body: string, signature: string, secret: string): boolean {
@@ -37,15 +41,15 @@ function verifyWebhookSignature(body: string, signature: string, secret: string)
 // Event processing queue (in-memory for now, could be Redis/database later)
 const eventQueue: Array<{
   id: string;
-  event: any;
+  event: Record<string, unknown>;
   timestamp: number;
   processed: boolean;
   retryCount: number;
 }> = [];
 
 // Process webhook events
-async function processWebhookEvent(event: any) {
-  const { webhook_type, webhook_code, item_id, error } = event;
+async function processWebhookEvent(event: Record<string, unknown>) {
+  const { webhook_type, webhook_code, item_id } = event;
 
   logger.info(`Processing webhook event: ${webhook_type} - ${webhook_code}`, {
     item_id,
@@ -74,28 +78,28 @@ async function processWebhookEvent(event: any) {
 }
 
 // Handle transaction-related events
-async function handleTransactionEvent(event: any) {
+async function handleTransactionEvent(event: Record<string, unknown>) {
   const { webhook_code, item_id, new_transactions, removed_transactions } = event;
 
   switch (webhook_code) {
     case 'TRANSACTIONS_ADDED':
-      logger.info(`${new_transactions} new transactions added for item ${item_id}`);
-      await syncTransactionsForItem(item_id);
+      logger.info(`${new_transactions} new transactions added for item ${String(item_id)}`);
+      await syncTransactionsForItem(String(item_id));
       break;
 
     case 'TRANSACTIONS_MODIFIED':
-      logger.info(`Transactions modified for item ${item_id}`);
-      await syncTransactionsForItem(item_id);
+      logger.info(`Transactions modified for item ${String(item_id)}`);
+      await syncTransactionsForItem(String(item_id));
       break;
 
     case 'TRANSACTIONS_REMOVED':
-      logger.info(`${removed_transactions} transactions removed for item ${item_id}`);
-      await handleRemovedTransactions(item_id, removed_transactions);
+      logger.info(`${removed_transactions} transactions removed for item ${String(item_id)}`);
+      await handleRemovedTransactions(String(item_id), removed_transactions as unknown[]);
       break;
 
     case 'TRANSACTIONS_REFRESHED':
-      logger.info(`Transactions refreshed for item ${item_id}`);
-      await syncTransactionsForItem(item_id);
+      logger.info(`Transactions refreshed for item ${String(item_id)}`);
+      await syncTransactionsForItem(String(item_id));
       break;
 
     default:
@@ -104,17 +108,17 @@ async function handleTransactionEvent(event: any) {
 }
 
 // Handle item-related events
-async function handleItemEvent(event: any) {
+async function handleItemEvent(event: Record<string, unknown>) {
   const { webhook_code, item_id, error } = event;
 
   switch (webhook_code) {
     case 'ITEM_LOGIN_REQUIRED':
-      logger.warn(`Item ${item_id} requires re-authentication`);
+      logger.warn(`Item ${String(item_id)} requires re-authentication`);
       // TODO: Notify user to re-authenticate
       break;
 
     case 'ITEM_ERROR':
-      logger.error(`Item error for ${item_id}:`, error);
+      logger.error(`Item error for ${String(item_id)}:`, error);
       // TODO: Handle item errors
       break;
 
@@ -124,10 +128,10 @@ async function handleItemEvent(event: any) {
 }
 
 // Handle error events
-async function handleErrorEvent(event: any) {
+async function handleErrorEvent(event: Record<string, unknown>) {
   const { error_type, error_code, error_message, item_id } = event;
 
-  logger.error(`Webhook error for item ${item_id}:`, {
+  logger.error(`Webhook error for item ${String(item_id)}:`, {
     error_type,
     error_code,
     error_message,
@@ -154,7 +158,7 @@ async function syncTransactionsForItem(itemId: string) {
 }
 
 // Handle removed transactions
-async function handleRemovedTransactions(itemId: string, removedTransactions: any[]) {
+async function handleRemovedTransactions(itemId: string, removedTransactions: unknown[]) {
   try {
     logger.info(
       `Handling ${removedTransactions?.length || 0} removed transactions for item ${itemId}`,
@@ -174,7 +178,7 @@ async function handleRemovedTransactions(itemId: string, removedTransactions: an
 }
 
 // Add event to processing queue
-function queueEvent(event: any) {
+function queueEvent(event: Record<string, unknown>) {
   const queueItem = {
     id: crypto.randomUUID(),
     event,

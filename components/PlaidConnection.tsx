@@ -38,15 +38,21 @@ export default function PlaidConnection() {
       const response = await apiService.getAccounts();
       if (response.data) {
         setLinkedAccounts(
-          response.data.accounts.map((item: any) => ({
-            id: item.item_id,
-            institutionName: item.institution_name,
-            accountName: item.accounts[0]?.name || 'Account',
-            accountType: item.accounts[0]?.subtype || 'bank',
-            mask: item.accounts[0]?.mask || '****',
-            accessToken: item.item_id, // Using item_id as identifier
-            lastSync: new Date().toISOString(),
-          })),
+          response.data.accounts.map(
+            (item: {
+              item_id: string;
+              institution_name: string;
+              accounts: Array<{ name?: string; subtype?: string; mask?: string }>;
+            }) => ({
+              id: item.item_id,
+              institutionName: item.institution_name,
+              accountName: item.accounts[0]?.name || 'Account',
+              accountType: item.accounts[0]?.subtype || 'bank',
+              mask: item.accounts[0]?.mask || '****',
+              accessToken: item.item_id, // Using item_id as identifier
+              lastSync: new Date().toISOString(),
+            }),
+          ),
         );
       }
     } catch (error) {
@@ -101,7 +107,7 @@ export default function PlaidConnection() {
 
       if (response.data) {
         const totalTransactions = response.data.synced.reduce(
-          (sum: number, item: any) => sum + item.transaction_count,
+          (sum: number, item: { transaction_count: number }) => sum + item.transaction_count,
           0,
         );
 
@@ -123,7 +129,7 @@ export default function PlaidConnection() {
   }, [toast]);
 
   const onSuccess = useCallback(
-    async (publicToken: string, _metadata: any) => {
+    async (publicToken: string, _metadata: unknown) => {
       try {
         // Exchange public token using backend API
         const exchangeResponse = await apiService.exchangePublicToken(publicToken);
@@ -159,7 +165,7 @@ export default function PlaidConnection() {
   const config = {
     token: linkToken,
     onSuccess,
-    onExit: (err: any) => {
+    onExit: (err: unknown) => {
       if (err) {
         logger.error('Plaid Link error:', err);
       }

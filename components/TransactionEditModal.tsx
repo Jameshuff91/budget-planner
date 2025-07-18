@@ -1,6 +1,5 @@
 'use client';
 
-import { X } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 
 import { useDBContext } from '@context/DatabaseContext';
@@ -69,7 +68,7 @@ export function TransactionEditModal({
         description: 'Transaction updated successfully',
       });
       onClose();
-    } catch (error) {
+    } catch {
       toast({
         title: 'Error',
         description: 'Failed to update transaction',

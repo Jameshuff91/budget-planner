@@ -1,7 +1,7 @@
 'use client';
 
 import { Gauge, TrendingUp, TrendingDown, AlertTriangle, Activity } from 'lucide-react';
-import React, { useMemo, useCallback } from 'react';
+import React, { useMemo } from 'react';
 import {
   Area,
   AreaChart,
@@ -14,13 +14,6 @@ import {
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@components/ui/card';
 import { useDBContext } from '@context/DatabaseContext';
-import {
-  shallowCompareProps,
-  getOptimizedAnimationProps,
-  memoizeChartProps,
-  createPerformanceMarker,
-  optimizeChartData,
-} from '@utils/chartOptimization';
 import { formatCurrency } from '@utils/helpers';
 
 import { ChartSkeleton } from './skeletons/ChartSkeleton';
@@ -45,7 +38,7 @@ export default function SpendingVelocity({ selectedYear }: SpendingVelocityProps
       const month = new Date(selectedYear, i, 1);
       const monthEnd = new Date(selectedYear, i + 1, 0);
 
-      const monthTransactions = transactions.filter((t: any) => {
+      const monthTransactions = transactions.filter((t: { date: string; type: string }) => {
         const tDate = new Date(t.date);
         return (
           tDate.getFullYear() === selectedYear && tDate.getMonth() === i && t.type === 'expense'
@@ -58,8 +51,8 @@ export default function SpendingVelocity({ selectedYear }: SpendingVelocityProps
 
       for (let day = 1; day <= daysInMonth; day++) {
         const daySpending = monthTransactions
-          .filter((t: any) => new Date(t.date).getDate() === day)
-          .reduce((sum: number, t: any) => sum + Math.abs(t.amount), 0);
+          .filter((t: { date: string }) => new Date(t.date).getDate() === day)
+          .reduce((sum: number, t: { amount: number }) => sum + Math.abs(t.amount), 0);
         dailySpending.push(daySpending);
       }
 
@@ -137,15 +130,15 @@ export default function SpendingVelocity({ selectedYear }: SpendingVelocityProps
     label,
   }: {
     active?: boolean;
-    payload?: any;
-    label?: any;
+    payload?: Array<{ name: string; value: number; color: string }>;
+    label?: string;
   }) => {
     if (!active || !payload) return null;
 
     return (
       <div className='bg-white p-3 border rounded-lg shadow-lg'>
         <p className='font-semibold'>Day {label}</p>
-        {payload.map((entry: any, index: number) => (
+        {payload.map((entry: { name: string; value: number; color: string }, index: number) => (
           <p key={index} style={{ color: entry.color }}>
             {entry.name}: {formatCurrency(entry.value)}
           </p>

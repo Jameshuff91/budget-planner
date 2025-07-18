@@ -104,7 +104,7 @@ export class LLMService {
           if (typeof response.text === 'function') {
             errorBody = await response.text();
           }
-        } catch (e) {
+        } catch {
           // Ignore text parsing errors
         }
 
@@ -180,7 +180,7 @@ export class LLMService {
           if (typeof response.text === 'function') {
             errorBody = await response.text();
           }
-        } catch (e) {
+        } catch {
           // Ignore text parsing errors
         }
 
@@ -243,7 +243,7 @@ Suggest up to 5 new categories that would better organize these transactions. Re
           if (typeof response.text === 'function') {
             errorBody = await response.text();
           }
-        } catch (e) {
+        } catch {
           // Ignore text parsing errors
         }
 
@@ -339,7 +339,7 @@ Respond with a JSON array where each object has:
   private parseBatchCategorizationResponse(response: string): CategorySuggestion[] {
     try {
       const parsed = JSON.parse(response);
-      return parsed.map((item: any) => ({
+      return parsed.map((item: { category?: string; confidence?: number }) => ({
         category: item.category || 'Other Expenses',
         confidence: item.confidence || 0.5,
       }));

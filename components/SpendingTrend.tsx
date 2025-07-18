@@ -19,7 +19,6 @@ import { useAnalytics } from '../src/hooks/useAnalytics';
 import {
   shallowCompareProps,
   getOptimizedAnimationProps,
-  memoizeChartProps,
   createPerformanceMarker,
   optimizeChartData,
 } from '../src/utils/chartOptimization';
@@ -167,10 +166,13 @@ const SpendingTrend = ({ selectedYear }: SpendingTrendProps) => {
 
   // Memoized chart props and formatters
   const tooltipFormatter = useCallback((value: number) => formatCurrency(value), []);
-  const labelFormatter = useCallback((label: string, items: any[]) => {
-    const item = items[0]?.payload;
-    return `${label} ${item?.year || ''}`;
-  }, []);
+  const labelFormatter = useCallback(
+    (label: string, items: Array<{ payload?: SpendingTrendData }>) => {
+      const item = items[0]?.payload;
+      return `${label} ${item?.year || ''}`;
+    },
+    [],
+  );
 
   const tickFormatter = useCallback((value: number) => `${formatCurrency(value)}`, []);
   const xAxisTickFormatter = useCallback(

@@ -1,7 +1,7 @@
 'use client';
 
 import { format, startOfMonth, endOfMonth, startOfYear, endOfYear, subMonths } from 'date-fns';
-import { FileText, TrendingUp, PieChart, BarChart3, Calendar, Download } from 'lucide-react';
+import { FileText, TrendingUp, PieChart, BarChart3, Download } from 'lucide-react';
 import { useState } from 'react';
 
 import { Badge } from '@components/ui/badge';
@@ -14,11 +14,8 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@components/ui/dialog';
-import { Input } from '@components/ui/input';
 import { Label } from '@components/ui/label';
-import { Switch } from '@components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@components/ui/tabs';
 import { useToast } from '@components/ui/use-toast';
 import { useDBContext } from '@context/DatabaseContext';
@@ -27,7 +24,6 @@ import { logger } from '@services/logger';
 import { formatCurrency } from '@utils/helpers';
 
 import { reportService, ReportOptions, ReportData } from '../src/services/reportService';
-import { PDFGenerator, createFinancialReport } from '../src/utils/pdfGenerator';
 
 export interface ReportTemplate {
   id: string;
@@ -197,15 +193,13 @@ export default function ReportTemplates({ onTemplateSelect, className }: ReportT
   const [isGenerating, setIsGenerating] = useState(false);
   const [customOptions, setCustomOptions] = useState<Partial<ReportOptions>>({});
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [currentDateRange, setCurrentDateRange] = useState<{ startDate: Date; endDate: Date }>(
-    () => {
-      const now = new Date();
-      return {
-        startDate: startOfMonth(now),
-        endDate: endOfMonth(now),
-      };
-    },
-  );
+  const [currentDateRange] = useState<{ startDate: Date; endDate: Date }>(() => {
+    const now = new Date();
+    return {
+      startDate: startOfMonth(now),
+      endDate: endOfMonth(now),
+    };
+  });
 
   // Get analytics for the current date range
   const analytics = useAnalytics(currentDateRange);
@@ -239,7 +233,40 @@ export default function ReportTemplates({ onTemplateSelect, className }: ReportT
   };
 
   // Prepare report data for selected date range
-  const prepareReportData = (startDate: Date, endDate: Date, analyticsData: any): ReportData => {
+  const prepareReportData = (
+    startDate: Date,
+    endDate: Date,
+    analyticsData: {
+      spendingTrend: Array<{ name: string; spending: number }>;
+      spendingOverview: Array<{
+        month: string;
+        year: number;
+        totalSpending: number;
+        totalIncome: number;
+      }>;
+      categorySpending: Array<{ name: string; value: number; target?: number }>;
+      detailedCategorySpending: Record<string, Array<{ name: string; value: number }>>;
+      monthlyTrends: {
+        spending: { current: number; previous: number; percentageChange: number };
+        netSavings: { current: number; previous: number; percentageChange: number };
+        income: { current: number; previous: number; percentageChange: number };
+        categorySpending: Record<
+          string,
+          { current: number; previous: number; percentageChange: number }
+        >;
+      };
+      merchantSpending: Array<{ name: string; value: number; transactionCount: number }>;
+      potentialRecurringTransactions: Array<{
+        id: string;
+        merchantName: string;
+        amount: number;
+        frequency: string;
+        lastOccurrence: string;
+        nextPredicted: string;
+        confidence: number;
+      }>;
+    },
+  ): ReportData => {
     const filteredTransactions = transactions.filter((t) => {
       const transactionDate = new Date(t.date);
       return transactionDate >= startDate && transactionDate <= endDate;

@@ -1,8 +1,8 @@
 'use client';
 
 import { format, subMonths, startOfYear, endOfYear, startOfMonth, endOfMonth } from 'date-fns';
-import { Download, FileText, Calendar, Settings, ChartBar } from 'lucide-react';
-import { useState, useRef } from 'react';
+import { Download, FileText } from 'lucide-react';
+import { useState } from 'react';
 
 import { Button } from '@components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@components/ui/card';
@@ -24,7 +24,6 @@ import { logger } from '@services/logger';
 import { formatCurrency } from '@utils/helpers';
 
 import { reportService, ReportOptions, ReportData, ChartData } from '../src/services/reportService';
-import { PDFGenerator, createFinancialReport, captureCharts } from '../src/utils/pdfGenerator';
 
 interface ReportGeneratorProps {
   className?: string;
@@ -73,12 +72,13 @@ export default function ReportGenerator({ className }: ReportGeneratorProps) {
         end = endOfMonth(now);
         setReportType('monthly');
         break;
-      case 'last-month':
+      case 'last-month': {
         const lastMonth = subMonths(now, 1);
         start = startOfMonth(lastMonth);
         end = endOfMonth(lastMonth);
         setReportType('monthly');
         break;
+      }
       case 'current-year':
         start = startOfYear(now);
         end = endOfYear(now);
@@ -308,7 +308,10 @@ export default function ReportGenerator({ className }: ReportGeneratorProps) {
             <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
               <div className='space-y-4'>
                 <Label htmlFor='report-type'>Report Type</Label>
-                <Select value={reportType} onValueChange={(value: any) => setReportType(value)}>
+                <Select
+                  value={reportType}
+                  onValueChange={(value: 'monthly' | 'yearly' | 'custom') => setReportType(value)}
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -384,7 +387,10 @@ export default function ReportGenerator({ className }: ReportGeneratorProps) {
             {/* Export Format */}
             <div className='space-y-2'>
               <Label>Export Format</Label>
-              <Select value={exportFormat} onValueChange={(value: any) => setExportFormat(value)}>
+              <Select
+                value={exportFormat}
+                onValueChange={(value: 'pdf' | 'csv') => setExportFormat(value)}
+              >
                 <SelectTrigger className='w-[180px]'>
                   <SelectValue />
                 </SelectTrigger>

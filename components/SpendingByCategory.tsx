@@ -39,16 +39,31 @@ const MemoizedTrendIndicator = React.memo<{ value: number }>(({ value }) => {
 });
 MemoizedTrendIndicator.displayName = 'MemoizedTrendIndicator';
 
+interface CategoryData {
+  name: string;
+  value: number;
+  target?: number;
+}
+
+interface TrendData {
+  percentageChange: number;
+}
+
+interface DetailedSpendingItem {
+  name: string;
+  value: number;
+}
+
 const CategoryDetail = React.memo<{
-  category: any;
+  category: CategoryData;
   totalSpending: number;
-  trend: any;
+  trend: TrendData | null;
   budgetInput: string;
   selectedCategory: string | null;
   onBudgetChange: (categoryName: string, value: string) => void;
   onBudgetSave: (categoryName: string) => void;
   onCategoryClick: (categoryName: string) => void;
-  getDetailedSpending: (categoryName: string) => any[];
+  getDetailedSpending: (categoryName: string) => DetailedSpendingItem[];
 }>(
   ({
     category,
@@ -334,10 +349,10 @@ const SpendingByCategory = ({ selectedYear }: SpendingByCategoryProps) => {
           description: `Budget for ${categoryName} set to ${formatCurrency(numValue)}.`,
         });
         // Data will refresh via context, which updates categorySpending, then useEffect updates budgetInputs.
-      } catch (error: any) {
+      } catch (error: unknown) {
         toast({
           title: 'Error Updating Budget',
-          description: error.message || 'Could not update budget.',
+          description: error instanceof Error ? error.message : 'Could not update budget.',
           variant: 'destructive',
         });
       }
@@ -357,7 +372,7 @@ const SpendingByCategory = ({ selectedYear }: SpendingByCategoryProps) => {
   }, []);
 
   const handlePieClick = useCallback(
-    (data: any) => {
+    (data: { name: string }) => {
       handleCategoryClick(data.name);
     },
     [handleCategoryClick],

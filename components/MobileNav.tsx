@@ -1,6 +1,6 @@
 'use client';
 
-import { Home, PieChart, TrendingUp, List, Settings, BarChart3 } from 'lucide-react';
+import { Home, PieChart, TrendingUp, List, BarChart3 } from 'lucide-react';
 import React from 'react';
 
 import { cn } from '../lib/utils';

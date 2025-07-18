@@ -125,7 +125,7 @@ export class DataEncryption {
   /**
    * Validates if the provided data appears to be encrypted in the expected format
    */
-  static validateEncryptedData(encryptedData: any): boolean {
+  static validateEncryptedData(encryptedData: unknown): boolean {
     try {
       return (
         encryptedData &&
@@ -180,7 +180,7 @@ export class DataEncryption {
     if (/[0-9]/.test(password)) score += 15;
     else suggestions.push('Include numbers');
 
-    if (/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) score += 20;
+    if (/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password)) score += 20;
     else suggestions.push('Include special characters');
 
     // Deduct points for common patterns

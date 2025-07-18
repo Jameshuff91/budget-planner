@@ -132,7 +132,7 @@ export function OfflineIndicator({
             </div>
             <p className='text-xs text-yellow-700 dark:text-yellow-300 mt-1'>
               {isOffline
-                ? "These will sync automatically when you're back online."
+                ? 'These will sync automatically when you&apos;re back online.'
                 : 'These will sync shortly. You can force sync now if needed.'}
             </p>
           </div>
@@ -144,12 +144,12 @@ export function OfflineIndicator({
             <div className='flex items-center space-x-2'>
               <AlertCircle className='w-4 h-4 text-red-600' />
               <span className='text-sm font-medium text-red-800 dark:text-red-200'>
-                You're currently offline
+                You&apos;re currently offline
               </span>
             </div>
             <p className='text-xs text-red-700 dark:text-red-300 mt-1'>
-              You can continue working. All changes will be saved locally and synced when you're
-              back online.
+              You can continue working. All changes will be saved locally and synced when
+              you&apos;re back online.
             </p>
           </div>
         )}

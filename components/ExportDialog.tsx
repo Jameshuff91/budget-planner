@@ -1,6 +1,6 @@
 'use client';
 
-import { Calendar, Download } from 'lucide-react';
+import { Download } from 'lucide-react';
 import React, { useState } from 'react';
 
 import { useDBContext } from '@context/DatabaseContext';
@@ -104,7 +104,7 @@ export function ExportDialog({ isOpen, onClose }: ExportDialogProps) {
       }
 
       onClose();
-    } catch (error) {
+    } catch {
       toast({
         title: 'Error',
         description: 'Failed to export data',
@@ -133,7 +133,10 @@ export function ExportDialog({ isOpen, onClose }: ExportDialogProps) {
           {/* Date Range Selection */}
           <div className='space-y-3'>
             <Label>Date Range</Label>
-            <RadioGroup value={exportType} onValueChange={(value: any) => setExportType(value)}>
+            <RadioGroup
+              value={exportType}
+              onValueChange={(value: 'all' | 'range' | 'month' | 'year') => setExportType(value)}
+            >
               <div className='flex items-center space-x-2'>
                 <RadioGroupItem value='all' id='all' />
                 <Label htmlFor='all' className='font-normal'>
@@ -240,7 +243,10 @@ export function ExportDialog({ isOpen, onClose }: ExportDialogProps) {
           {/* Export Format */}
           <div className='space-y-3'>
             <Label>Export Format</Label>
-            <RadioGroup value={exportFormat} onValueChange={(value: any) => setExportFormat(value)}>
+            <RadioGroup
+              value={exportFormat}
+              onValueChange={(value: 'detailed' | 'summary') => setExportFormat(value)}
+            >
               <div className='flex items-center space-x-2'>
                 <RadioGroupItem value='detailed' id='detailed' />
                 <Label htmlFor='detailed' className='font-normal'>

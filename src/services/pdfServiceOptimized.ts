@@ -37,9 +37,9 @@ export interface ExtractedData {
 
 // Lazy load heavy dependencies
 let pdfjs: typeof import('pdfjs-dist') | null = null;
-let tesseractWorker: any = null;
-let openCvModule: any = null;
-let llmService: any = null;
+let tesseractWorker: unknown = null;
+let openCvModule: unknown = null;
+let llmService: unknown = null;
 
 /**
  * Initialize PDF.js library on demand
@@ -79,7 +79,7 @@ async function initializeTesseract() {
     const { createWorker } = await import('tesseract.js');
 
     const worker = await createWorker({
-      logger: (m: any) => {
+      logger: (m: { status: string; progress: number }) => {
         if (m.status === 'recognizing text') {
           logger.debug('OCR Progress:', Math.round(m.progress * 100) + '%');
         }
@@ -114,9 +114,9 @@ async function initializeOpenCV(): Promise<boolean> {
         script.onload = () => {
           // Wait for cv to be available
           const checkCv = setInterval(() => {
-            if (typeof (window as any).cv !== 'undefined') {
+            if (typeof (window as unknown as { cv: unknown }).cv !== 'undefined') {
               clearInterval(checkCv);
-              openCvModule = (window as any).cv;
+              openCvModule = (window as unknown as { cv: unknown }).cv;
               logger.info('OpenCV.js loaded successfully');
               resolve();
             }
@@ -166,7 +166,7 @@ class PDFServiceOptimized {
       // Match YYYYMMDD format
       const yyyymmddMatch = filename.match(/^(\d{4})(\d{2})(\d{2})/);
       if (yyyymmddMatch) {
-        const [_, year, month, day] = yyyymmddMatch;
+        const [, year, month, day] = yyyymmddMatch;
         const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
         if (!isNaN(date.getTime())) {
           logger.info(`Matched YYYYMMDD pattern. Parsed date: ${date}`);
@@ -177,7 +177,7 @@ class PDFServiceOptimized {
       // Match YYYY-MM-DD format
       const isoMatch = filename.match(/^(\d{4})-(\d{2})-(\d{2})/);
       if (isoMatch) {
-        const [_, year, month, day] = isoMatch;
+        const [, year, month, day] = isoMatch;
         const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
         if (!isNaN(date.getTime())) {
           logger.info(`Matched ISO pattern. Parsed date: ${date}`);
@@ -263,7 +263,7 @@ class PDFServiceOptimized {
           for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
             const page = await pdf.getPage(pageNum);
             const textContent = await page.getTextContent();
-            const text = textContent.items.map((item: any) => item.str).join(' ');
+            const text = textContent.items.map((item: { str: string }) => item.str).join(' ');
 
             // Extract transactions from text
             const pageTransactions = await this.extractTransactionsFromText(
@@ -340,7 +340,7 @@ class PDFServiceOptimized {
    * Perform OCR on a PDF page
    */
   private async performOCR(
-    page: any,
+    page: unknown,
     documentDate: Date | null,
     options: { enableOpenCV?: boolean; enableSmartCategorization?: boolean },
   ): Promise<ExtractedData[]> {

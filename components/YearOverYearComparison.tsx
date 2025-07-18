@@ -20,7 +20,6 @@ import { useAnalytics } from '@hooks/useAnalytics';
 import {
   shallowCompareProps,
   getOptimizedAnimationProps,
-  memoizeChartProps,
   optimizeChartData,
 } from '@utils/chartOptimization';
 import { formatCurrency } from '@utils/helpers';
@@ -60,6 +59,7 @@ const MemoizedTrendIcon = React.memo<{ value: number }>(({ value }) => {
   if (value < -5) return <TrendingDown className='h-4 w-4 text-green-500' />;
   return <Minus className='h-4 w-4 text-gray-500' />;
 });
+MemoizedTrendIcon.displayName = 'MemoizedTrendIcon';
 
 const YearOverYearComparison = ({ selectedYear }: YearOverYearComparisonProps) => {
   // Call useAnalytics directly, not inside useMemo
@@ -139,6 +139,7 @@ const YearOverYearComparison = ({ selectedYear }: YearOverYearComparisonProps) =
       );
     },
   );
+  CustomTooltip.displayName = 'CustomTooltip';
 
   // Memoize chart animation props
   const animationProps = useMemo(() => {

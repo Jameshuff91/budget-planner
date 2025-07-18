@@ -9,7 +9,6 @@ import {
   XCircle,
   ChevronDown,
 } from 'lucide-react';
-import Papa from 'papaparse';
 import { useState, useEffect } from 'react';
 
 import {
@@ -29,14 +28,6 @@ import { Button } from './ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible';
 import { Input } from './ui/input';
 import { useToast } from './ui/use-toast';
-
-interface CSVTransaction {
-  date: Date;
-  description: string;
-  amount: number;
-  category: string;
-  type: 'income' | 'expense';
-}
 
 export default function PDFUpload() {
   const [uploadedFiles, setUploadedFiles] = useState<PDFDocument[]>([]);

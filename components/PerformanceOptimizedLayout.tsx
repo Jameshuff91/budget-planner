@@ -186,11 +186,11 @@ interface PerformanceDebugPanelProps {
 
 function PerformanceDebugPanel({ monitor }: PerformanceDebugPanelProps) {
   const [isOpen, setIsOpen] = React.useState(false);
-  const [metrics, setMetrics] = React.useState<any>(null);
+  const [metrics, setMetrics] = React.useState<Record<string, unknown> | null>(null);
 
-  const refreshMetrics = () => {
+  const refreshMetrics = React.useCallback(() => {
     setMetrics(monitor.getMetrics());
-  };
+  }, [monitor]);
 
   React.useEffect(() => {
     if (isOpen) {
@@ -198,7 +198,7 @@ function PerformanceDebugPanel({ monitor }: PerformanceDebugPanelProps) {
       const interval = setInterval(refreshMetrics, 1000);
       return () => clearInterval(interval);
     }
-  }, [isOpen]);
+  }, [isOpen, refreshMetrics]);
 
   if (!isOpen) {
     return (
@@ -225,22 +225,26 @@ function PerformanceDebugPanel({ monitor }: PerformanceDebugPanelProps) {
         {metrics?.webVitals?.length > 0 && (
           <div className='mb-2'>
             <strong>Web Vitals:</strong>
-            {metrics.webVitals.map((metric: any, index: number) => (
-              <div key={index} className='ml-2'>
-                {metric.name}: {metric.value.toFixed(2)} ({metric.rating})
-              </div>
-            ))}
+            {(metrics.webVitals as Array<{ name: string; value: number; rating: string }>).map(
+              (metric, index: number) => (
+                <div key={index} className='ml-2'>
+                  {metric.name}: {metric.value.toFixed(2)} ({metric.rating})
+                </div>
+              ),
+            )}
           </div>
         )}
 
         {metrics?.custom?.length > 0 && (
           <div>
             <strong>Custom Metrics:</strong>
-            {metrics.custom.map((metric: any, index: number) => (
-              <div key={index} className='ml-2'>
-                {metric.name}: {metric.duration?.toFixed(2)}ms
-              </div>
-            ))}
+            {(metrics.custom as Array<{ name: string; value: number; unit?: string }>).map(
+              (metric, index: number) => (
+                <div key={index} className='ml-2'>
+                  {metric.name}: {metric.duration?.toFixed(2)}ms
+                </div>
+              ),
+            )}
           </div>
         )}
       </div>

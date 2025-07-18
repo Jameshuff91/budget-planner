@@ -231,9 +231,9 @@ export class SyncService {
 
   // Process transaction updates
   private async processTransactionUpdates(
-    added: any[],
-    modified: any[],
-    removed: any[],
+    added: Record<string, unknown>[],
+    modified: Record<string, unknown>[],
+    removed: Record<string, unknown>[],
   ): Promise<void> {
     try {
       const plaidService = await createPlaidService();
@@ -264,7 +264,7 @@ export class SyncService {
   }
 
   // Add transactions in batch
-  private async addTransactionsBatch(transactions: any[]): Promise<void> {
+  private async addTransactionsBatch(transactions: Record<string, unknown>[]): Promise<void> {
     // TODO: Integrate with existing database context
     // For now, we'll use the existing addTransactionsBatch method
     logger.info(`Adding ${transactions.length} transactions`);
@@ -281,7 +281,7 @@ export class SyncService {
   }
 
   // Update transactions in batch
-  private async updateTransactionsBatch(transactions: any[]): Promise<void> {
+  private async updateTransactionsBatch(transactions: Record<string, unknown>[]): Promise<void> {
     logger.info(`Updating ${transactions.length} transactions`);
 
     if (typeof window !== 'undefined' && window.dispatchEvent) {

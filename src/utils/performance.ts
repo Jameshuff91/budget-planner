@@ -3,6 +3,7 @@
  * Tracks Web Vitals, custom metrics, and provides performance benchmarking
  */
 
+import React from 'react';
 import { onCLS, onFCP, onINP, onLCP, onTTFB, Metric } from 'web-vitals';
 
 type PerformanceMetric = {
@@ -251,7 +252,7 @@ export function withPerformanceTracking<P extends object>(
       return () => {
         monitor.endMeasure(`${componentName}_mount`);
       };
-    }, []);
+    }, [monitor]);
 
     return React.createElement(Component, props);
   };
@@ -296,5 +297,4 @@ export function useDataFetchPerformance(operationName: string) {
 // Re-export web-vitals types for convenience
 export type { Metric } from 'web-vitals';
 
-// Import React for the performance tracking utilities
-import React from 'react';
+// React is already imported at the top

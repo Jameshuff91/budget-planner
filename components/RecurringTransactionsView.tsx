@@ -3,7 +3,7 @@
 'use client';
 
 import { CheckCircle2, XCircle } from 'lucide-react'; // Import icons
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 
 import { Button } from '@components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@components/ui/card';
@@ -135,7 +135,7 @@ export default function RecurringTransactionsView() {
         {!isDataAvailable ? (
           <p>No potential recurring transactions identified overall.</p>
         ) : !isFilteredDataAvailable ? (
-          <p>No transactions match the current filter '{activeFilter}'.</p>
+          <p>No transactions match the current filter &apos;{activeFilter}&apos;.</p>
         ) : (
           <ScrollArea className='h-[350px] pr-3'>
             {' '}

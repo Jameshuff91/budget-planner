@@ -127,7 +127,10 @@ describe('Smart Categorization - categorizeTransactionWithAI', () => {
     existingCategory: 'Uncategorized',
   };
 
-  let mockLLMService: any;
+  let mockLLMService: {
+    categorizeTransaction: Mock;
+    categorizeTransactionsBatch: Mock;
+  };
 
   beforeEach(async () => {
     vi.clearAllMocks();
@@ -533,7 +536,10 @@ describe('Smart Categorization - categorizeTransactionsBatchWithAI', () => {
     },
   ];
 
-  let mockLLMService: any;
+  let mockLLMService: {
+    categorizeTransaction: Mock;
+    categorizeTransactionsBatch: Mock;
+  };
 
   beforeEach(async () => {
     vi.clearAllMocks();
@@ -824,8 +830,9 @@ describe('Smart Categorization - categorizeTransactionsBatchWithAI', () => {
         Array.from({ length: 10 }, () => ({ category: 'BatchResult', confidence: 0.8 })),
       );
 
-      mockLLMService.categorizeTransactionsBatch.mockImplementation((batch: any) =>
-        Promise.resolve(mockBatchResults[Math.floor(mockBatchResults.length * Math.random())]),
+      mockLLMService.categorizeTransactionsBatch.mockImplementation(
+        (batch: TransactionForCategorization[]) =>
+          Promise.resolve(mockBatchResults[Math.floor(mockBatchResults.length * Math.random())]),
       );
 
       const startTime = performance.now();
@@ -891,7 +898,10 @@ describe('Smart Categorization - categorizeTransactionsBatchWithAI', () => {
 });
 
 describe('Smart Categorization - Integration Tests', () => {
-  let mockLLMService: any;
+  let mockLLMService: {
+    categorizeTransaction: Mock;
+    categorizeTransactionsBatch: Mock;
+  };
 
   beforeEach(async () => {
     vi.clearAllMocks();

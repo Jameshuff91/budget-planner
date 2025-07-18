@@ -1,7 +1,7 @@
 'use client';
 
-import { AlertCircle, CheckCircle, XCircle, Database, FileText, BarChart3 } from 'lucide-react';
-import React, { useEffect, useState } from 'react';
+import { AlertCircle, CheckCircle, XCircle, BarChart3 } from 'lucide-react';
+import React, { useCallback, useEffect, useState } from 'react';
 
 import { useDBContext } from '@context/DatabaseContext';
 import { useAnalytics } from '@hooks/useAnalytics';
@@ -17,12 +17,10 @@ interface DiagnosticItem {
 
 export default function ChartDiagnostics() {
   const [diagnostics, setDiagnostics] = useState<DiagnosticItem[]>([]);
-  const [isRunning, setIsRunning] = useState(false);
   const { transactions, categories } = useDBContext();
-  const { categorySpending, spendingOverview, monthlyTrends } = useAnalytics();
+  const { categorySpending, spendingOverview } = useAnalytics();
 
-  const runDiagnostics = async () => {
-    setIsRunning(true);
+  const runDiagnostics = useCallback(async () => {
     const results: DiagnosticItem[] = [];
 
     // 1. Check database connection
@@ -188,12 +186,11 @@ export default function ChartDiagnostics() {
     }
 
     setDiagnostics(results);
-    setIsRunning(false);
-  };
+  }, [transactions, categories, categorySpending, spendingOverview]);
 
   useEffect(() => {
     runDiagnostics();
-  }, [transactions, categories]);
+  }, [runDiagnostics]);
 
   const getStatusIcon = (status: DiagnosticItem['status']) => {
     switch (status) {

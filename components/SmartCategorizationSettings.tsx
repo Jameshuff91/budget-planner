@@ -1,6 +1,6 @@
 'use client';
 
-import { Brain, Settings, AlertCircle, Check, X } from 'lucide-react';
+import { Brain, AlertCircle, Check, X } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 
 import { createLLMService } from '@services/llmService';
@@ -74,7 +74,7 @@ export default function SmartCategorizationSettings() {
           description: `Test categorization: "${result.category}" (${(result.confidence * 100).toFixed(0)}% confidence)`,
         });
       }
-    } catch (error) {
+    } catch {
       toast({
         title: 'Connection Failed',
         description: 'Failed to connect to OpenAI API. Please check your API key.',

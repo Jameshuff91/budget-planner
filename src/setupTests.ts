@@ -24,8 +24,8 @@ const indexedDBMock = {
 };
 
 // Mock browser APIs
-global.indexedDB = indexedDBMock as any;
-global.IDBKeyRange = { bound: vi.fn() } as any;
+global.indexedDB = indexedDBMock as unknown as IDBFactory;
+global.IDBKeyRange = { bound: vi.fn() } as unknown as IDBKeyRange;
 
 // Mock window.URL.createObjectURL
 global.URL.createObjectURL = vi.fn(() => 'mock-object-url');
@@ -61,11 +61,11 @@ global.jest = {
 global.jest = {
   fn: vi.fn,
   mock: vi.fn,
-} as any;
+} as unknown as typeof jest;
 
 // Mock ImageData for PDF processing tests - lightweight version
 global.ImageData = vi.fn().mockImplementation((width: number, height: number) => ({
   data: new Uint8ClampedArray(4),
   width: width || 1,
   height: height || 1,
-})) as any;
+})) as unknown as typeof ImageData;

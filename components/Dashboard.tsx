@@ -34,7 +34,6 @@ const DEFAULT_SPENDING = 0;
 const DEFAULT_SAVINGS = 0;
 
 export default function Dashboard() {
-  const [timeRange, setTimeRange] = useState('month');
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [activeTab, setActiveTab] = useState('overview');
   const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
@@ -47,9 +46,7 @@ export default function Dashboard() {
 
   // Get current date information
   const currentDate = new Date(); // Use actual current date
-  const currentYear = currentDate.getFullYear();
   const currentMonth = currentDate.getMonth();
-  const previousMonth = (currentMonth - 1 + 12) % 12;
   const monthNames = [
     'January',
     'February',
@@ -124,7 +121,7 @@ export default function Dashboard() {
       savingsPercentage: ((totalSavings / nonZeroIncome) * 100).toFixed(2),
       monthlyData,
     };
-  }, [transactions, selectedYear]);
+  }, [transactions, dateRange.startDate, dateRange.endDate]);
 
   // Get available years from transactions
   const availableYears = useMemo(() => {

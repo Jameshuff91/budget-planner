@@ -11,7 +11,7 @@ import { getPerformanceMonitor } from '@utils/performance';
 // Lazy load heavy providers
 const LazyDatabaseProvider = ({ children }: { children: React.ReactNode }) => {
   // Initialize performance monitoring for database operations
-  const monitor = getPerformanceMonitor();
+  getPerformanceMonitor();
 
   return <DatabaseProvider>{children}</DatabaseProvider>;
 };

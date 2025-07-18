@@ -24,7 +24,7 @@ if (typeof window !== 'undefined') {
       range.commonAncestorContainer = {
         nodeName: 'BODY',
         ownerDocument: document,
-      } as any;
+      } as Node;
       range.selectNode = vi.fn();
       range.selectNodeContents = vi.fn();
       range.collapse = vi.fn();
@@ -61,7 +61,7 @@ if (typeof window !== 'undefined') {
       range.toString = vi.fn(() => '');
       range.surroundContents = vi.fn();
 
-      return range as any;
+      return range as Range;
     };
   }
 
@@ -91,7 +91,7 @@ if (typeof window !== 'undefined') {
       focusOffset: 0,
       isCollapsed: true,
       type: 'None',
-    })) as any;
+    })) as Selection;
   }
 
   // Mock Element.prototype.scrollIntoView if not available
@@ -100,13 +100,13 @@ if (typeof window !== 'undefined') {
   }
 
   // Mock HTMLElement methods that might be missing
-  if (!HTMLElement.prototype.hasOwnProperty('inert')) {
+  if (!Object.hasOwn(HTMLElement.prototype, 'inert')) {
     Object.defineProperty(HTMLElement.prototype, 'inert', {
       get() {
         try {
           // Use hasAttribute which is safer than getAttribute
           return this.hasAttribute && this.hasAttribute('inert');
-        } catch (e) {
+        } catch {
           return false;
         }
       },
@@ -119,7 +119,7 @@ if (typeof window !== 'undefined') {
               this.removeAttribute('inert');
             }
           }
-        } catch (e) {
+        } catch {
           // Silently ignore if element doesn't support these methods
         }
       },
@@ -169,7 +169,7 @@ if (typeof window !== 'undefined' && !window.CSS) {
   window.CSS = {
     supports: () => false,
     escape: (str: string) => str,
-  } as any;
+  } as CSS;
 }
 
 // Mock window.matchMedia

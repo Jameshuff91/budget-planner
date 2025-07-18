@@ -1,7 +1,7 @@
 // pdfservice.ts
 
 import * as pdfjs from 'pdfjs-dist';
-import { createWorker, WorkerOptions } from 'tesseract.js';
+import { createWorker } from 'tesseract.js';
 
 import { applyCategoryRules, loadCategoryRules } from '../utils/categoryRules';
 
@@ -11,7 +11,7 @@ import { logger } from './logger';
 
 // Type declaration for OpenCV global variable
 declare global {
-  var cv: any;
+  const cv: unknown;
 }
 
 // Set worker path before any PDF operations
@@ -85,7 +85,7 @@ class PDFService {
       // Match YYYYMMDD format (e.g., 20241219-statements-8731-.pdf)
       const yyyymmddMatch = filename.match(/^(\d{4})(\d{2})(\d{2})/);
       if (yyyymmddMatch) {
-        const [_, year, month, day] = yyyymmddMatch;
+        const [, year, month, day] = yyyymmddMatch;
         const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
         if (!isNaN(date.getTime())) {
           logger.info(`Matched YYYYMMDD pattern. Parsed date: ${date}`, { filename });
@@ -96,7 +96,7 @@ class PDFService {
       // Match YYYY-MM-DD format (e.g., 2023-06-08.pdf)
       const isoMatch = filename.match(/^(\d{4})-(\d{2})-(\d{2})/);
       if (isoMatch) {
-        const [_, year, month, day] = isoMatch;
+        const [, year, month, day] = isoMatch;
         const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
         if (!isNaN(date.getTime())) {
           logger.info(`Matched YYYY-MM-DD pattern. Parsed date: ${date}`, { filename });
@@ -122,7 +122,7 @@ class PDFService {
     }
   }
 
-  async pdfToImage(pdfPage: any): Promise<ImageData> {
+  async pdfToImage(pdfPage: pdfjs.PDFPageProxy): Promise<ImageData> {
     if (typeof window === 'undefined') {
       throw new Error('This function can only be used in browser environment');
     }
@@ -160,7 +160,10 @@ class PDFService {
   private preprocessImage(imageData: ImageData): ImageData {
     // Check if OpenCV (cv) is loaded and available globally
     // In browser environment, cv would be on window. In test environment, it's on global.
-    const cvLib = typeof window !== 'undefined' ? (window as any).cv : (global as any).cv;
+    const cvLib =
+      typeof window !== 'undefined'
+        ? (window as { cv: unknown }).cv
+        : (global as { cv: unknown }).cv;
 
     if (!cvLib) {
       // Log error for test expectations
@@ -196,13 +199,13 @@ class PDFService {
       return new ImageData(newData, imageData.width, imageData.height);
     }
 
-    let src: any = null;
-    let gray: any = null;
-    const edges: any = null;
-    const lines: any = null;
-    let deskewed: any = null;
-    let blurred: any = null;
-    let adaptThresh: any = null;
+    let src: unknown = null;
+    let gray: unknown = null;
+    const edges: unknown = null;
+    const lines: unknown = null;
+    let deskewed: unknown = null;
+    let blurred: unknown = null;
+    let adaptThresh: unknown = null;
 
     try {
       // Mark OpenCV as available on first successful use
@@ -381,7 +384,7 @@ class PDFService {
       .replace(/[–—]/g, '-'); // En-dash, Em-dash to hyphen
 
     // Remove currency symbols (common ones) and excess whitespace
-    str = str.replace(/[\$€£¥\s]/g, '');
+    str = str.replace(/[$€£¥\s]/g, '');
 
     // Check for trailing negative sign and move to front
     if (str.endsWith('-')) {
@@ -1554,15 +1557,20 @@ class PDFService {
 
       // Initialize Tesseract worker with optimized settings
       const worker = await createWorker();
-      (worker as any).logger = (m: { status: string; progress: number }) => {
+      (worker as { logger: (m: { status: string; progress: number }) => void }).logger = (m: {
+        status: string;
+        progress: number;
+      }) => {
         logger.info(`Tesseract.js: ${m.status} ${Math.round(m.progress * 100)}%`);
       };
 
       // Start the Tesseract worker with proper typing
-      await (worker as any).load();
-      await (worker as any).loadLanguage('eng');
-      await (worker as any).initialize('eng');
-      await (worker as any).setParameters({
+      await (worker as { load: () => Promise<void> }).load();
+      await (worker as { loadLanguage: (lang: string) => Promise<void> }).loadLanguage('eng');
+      await (worker as { initialize: (lang: string) => Promise<void> }).initialize('eng');
+      await (
+        worker as { setParameters: (params: Record<string, unknown>) => Promise<void> }
+      ).setParameters({
         tessedit_char_whitelist:
           '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ.,/- ',
       });
@@ -1591,7 +1599,21 @@ class PDFService {
         // Perform OCR on the image with enhanced configuration
         const {
           data: { text },
-        } = await (worker as any).recognize(canvas);
+        } = await (
+          worker as {
+            recognize: (canvas: HTMLCanvasElement) => Promise<{
+              data: {
+                text: string;
+                confidence: number;
+                words: Array<{
+                  text: string;
+                  confidence: number;
+                  bbox: { x0: number; y0: number; x1: number; y1: number };
+                }>;
+              };
+            }>;
+          }
+        ).recognize(canvas);
         logger.info('OCR extracted text:', text);
 
         // Extract statement period if not already detected
@@ -1609,7 +1631,7 @@ class PDFService {
           accountNumber: /(?:Account\s*Ending|ending\s*in)\s*([\d-]+)/i,
           paymentAmount: /(?:AutoPay\s*Amount|Payment\s*Amount)\s*\$?\s*([0-9,.]+)/i,
           transactions: /(?:Transaction Date|Date|TRANSACTION DETAIL)/i,
-          transactionLine: /(\d{2}\/\d{2})\s+([^$]+?)\s+([\-]?[0-9,.]+\.\d{2})\s+[0-9,.]+\.\d{2}/i,
+          transactionLine: /(\d{2}\/\d{2})\s+([^$]+?)\s+([-]?[0-9,.]+\.\d{2})\s+[0-9,.]+\.\d{2}/i,
         };
 
         // Extract bill summary and individual transactions
@@ -1680,8 +1702,10 @@ class PDFService {
 
         // Process extracted text line by line
         const lines = text.split('\n');
-        let currentMonth: number | null = null;
-        let currentYear: number | null = null;
+        // These variables are reserved for future month/year context tracking
+        // Currently unused but maintained for potential enhancement
+        // const _currentMonth: number | null = null;
+        // const _currentYear: number | null = null;
 
         for (const line of lines) {
           // Check for month headers (e.g., "Jan 2025" or "January 2025")
@@ -1707,15 +1731,22 @@ class PDFService {
               dec: 11,
             };
 
-            currentMonth = monthMap[monthStr];
-            currentYear = parseInt(yearStr);
+            // Extract month and year for context
+            const month = monthMap[monthStr];
+            const year = parseInt(yearStr);
+
+            // These values are extracted but currently unused
+            // Future enhancement: Use for date context validation
+            void month;
+            void year;
+
             continue;
           }
 
           const match = line.match(patterns.transactionLine);
           if (!match) continue;
 
-          const [_, dateStr, rawDesc, rawAmt] = match;
+          const [, dateStr, rawDesc, rawAmt] = match;
           const amount = this.parseCurrencyAmount(rawAmt);
 
           try {

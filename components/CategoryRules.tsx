@@ -1,6 +1,6 @@
 'use client';
 
-import { Tags, Plus, Trash2, Edit2, Save, X } from 'lucide-react';
+import { Tags, Plus, Trash2, Edit2, Save } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 
 import { useDBContext } from '@context/DatabaseContext';
@@ -99,29 +99,6 @@ export default function CategoryRules() {
     }
   };
 
-  const testRule = (rule: CategoryRule, testString: string): boolean => {
-    const pattern = rule.pattern.toLowerCase();
-    const text = testString.toLowerCase();
-
-    switch (rule.matchType) {
-      case 'contains':
-        return text.includes(pattern);
-      case 'startsWith':
-        return text.startsWith(pattern);
-      case 'endsWith':
-        return text.endsWith(pattern);
-      case 'regex':
-        try {
-          const regex = new RegExp(pattern, 'i');
-          return regex.test(text);
-        } catch {
-          return false;
-        }
-      default:
-        return false;
-    }
-  };
-
   const expenseCategories = categories.filter((c) => c.type === 'expense');
 
   return (
@@ -156,7 +133,11 @@ export default function CategoryRules() {
                   />
                   <Select
                     value={rule.matchType}
-                    onValueChange={(value) => updateRule(rule.id, { matchType: value as any })}
+                    onValueChange={(value) =>
+                      updateRule(rule.id, {
+                        matchType: value as 'contains' | 'startsWith' | 'endsWith' | 'regex',
+                      })
+                    }
                   >
                     <SelectTrigger className='w-32'>
                       <SelectValue />
@@ -233,7 +214,12 @@ export default function CategoryRules() {
                 <Label htmlFor='matchType'>Match Type</Label>
                 <Select
                   value={newRule.matchType}
-                  onValueChange={(value) => setNewRule({ ...newRule, matchType: value as any })}
+                  onValueChange={(value) =>
+                    setNewRule({
+                      ...newRule,
+                      matchType: value as 'contains' | 'startsWith' | 'endsWith' | 'regex',
+                    })
+                  }
                 >
                   <SelectTrigger id='matchType'>
                     <SelectValue />

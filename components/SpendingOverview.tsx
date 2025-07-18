@@ -43,6 +43,8 @@ const MemoizedTrendIndicator = React.memo<{ value: number }>(({ value }) => {
   );
 });
 
+MemoizedTrendIndicator.displayName = 'MemoizedTrendIndicator';
+
 // Memoized month names to avoid recreation
 const monthNames = [
   'January',
@@ -86,7 +88,7 @@ const SpendingOverview = ({ selectedYear: propSelectedYear }: SpendingOverviewPr
   }, [spendingOverview, selectedYear]);
 
   // Memoized event handlers
-  const handleBarClick = useCallback((data: any) => {
+  const handleBarClick = useCallback((data: { payload: (typeof spendingOverview)[0] }) => {
     setSelectedMonth(data.payload);
   }, []);
 
@@ -118,7 +120,13 @@ const SpendingOverview = ({ selectedYear: propSelectedYear }: SpendingOverviewPr
     () =>
       memoizeChartProps(
         {
-          content: ({ active, payload }: { active?: boolean; payload?: any }) => {
+          content: ({
+            active,
+            payload,
+          }: {
+            active?: boolean;
+            payload?: Array<{ payload: (typeof spendingOverview)[0] }>;
+          }) => {
             if (active && payload && payload.length) {
               return (
                 <div className='bg-white p-4 rounded-lg shadow-lg border'>

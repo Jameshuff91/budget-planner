@@ -86,7 +86,6 @@ async function mockPlaidLinkSuccess(page: Page) {
 }
 
 test.describe('Plaid Bank Connection', () => {
-
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
 

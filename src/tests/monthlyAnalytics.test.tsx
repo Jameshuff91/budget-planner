@@ -1,16 +1,15 @@
 /**
  * @vitest-environment jsdom
  */
+// Setup jsdom environment for tests
 import { renderHook } from '@testing-library/react';
+import { JSDOM } from 'jsdom';
 import React from 'react';
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 
 import { DatabaseProvider, useDBContext } from '../context/DatabaseContext';
 import { useAnalytics } from '../hooks/useAnalytics';
 import '@testing-library/jest-dom';
-
-// Setup jsdom environment for tests
-import { JSDOM } from 'jsdom';
 const dom = new JSDOM('<!doctype html><html><body></body></html>');
 global.document = dom.window.document;
 global.window = dom.window as unknown as Window & typeof globalThis;

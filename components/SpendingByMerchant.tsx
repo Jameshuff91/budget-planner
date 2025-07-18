@@ -3,7 +3,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@components/ui/card';
 import { ScrollArea } from '@components/ui/scroll-area';
 import { useAnalytics } from '@hooks/useAnalytics';
-import { logger } from '@services/logger'; // Optional: for debugging if needed
 import { formatCurrency } from '@utils/helpers';
 
 export default function SpendingByMerchant() {

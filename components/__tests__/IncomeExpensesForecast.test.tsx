@@ -7,6 +7,7 @@ import { useDatabase } from '@hooks/useDatabase';
 import IncomeExpensesForecast from '../IncomeExpensesForecast';
 
 vi.mock('@hooks/useDatabase');
+const mockUseDatabase = vi.mocked(useDatabase);
 
 const mockTransactions = [
   { id: '1', date: '2024-01-15', amount: 5000, description: 'Salary', category: 'Income' },
@@ -26,7 +27,7 @@ describe('IncomeExpensesForecast', () => {
   });
 
   it('renders loading skeleton when data is loading', () => {
-    (useDatabase as any).mockReturnValue({
+    mockUseDatabase.mockReturnValue({
       transactions: [],
       loading: true,
     });
@@ -36,7 +37,7 @@ describe('IncomeExpensesForecast', () => {
   });
 
   it('renders empty state when no transactions', () => {
-    (useDatabase as any).mockReturnValue({
+    mockUseDatabase.mockReturnValue({
       transactions: [],
       loading: false,
     });
@@ -51,7 +52,7 @@ describe('IncomeExpensesForecast', () => {
   });
 
   it('renders forecast chart with transactions', async () => {
-    (useDatabase as any).mockReturnValue({
+    mockUseDatabase.mockReturnValue({
       transactions: mockTransactions,
       loading: false,
     });
@@ -67,7 +68,7 @@ describe('IncomeExpensesForecast', () => {
   });
 
   it('switches between different forecast periods', async () => {
-    (useDatabase as any).mockReturnValue({
+    mockUseDatabase.mockReturnValue({
       transactions: mockTransactions,
       loading: false,
     });
@@ -87,7 +88,7 @@ describe('IncomeExpensesForecast', () => {
   });
 
   it('toggles forecast visibility', async () => {
-    (useDatabase as any).mockReturnValue({
+    mockUseDatabase.mockReturnValue({
       transactions: mockTransactions,
       loading: false,
     });
@@ -103,7 +104,7 @@ describe('IncomeExpensesForecast', () => {
   });
 
   it('calculates trends correctly', async () => {
-    (useDatabase as any).mockReturnValue({
+    mockUseDatabase.mockReturnValue({
       transactions: mockTransactions,
       loading: false,
     });
@@ -124,7 +125,7 @@ describe('IncomeExpensesForecast', () => {
       { id: '11', date: '2023-01-20', amount: -1000, description: 'Rent', category: 'Housing' },
     ];
 
-    (useDatabase as any).mockReturnValue({
+    mockUseDatabase.mockReturnValue({
       transactions: transactionsMultiYear,
       loading: false,
     });
@@ -140,7 +141,7 @@ describe('IncomeExpensesForecast', () => {
   });
 
   it('displays forecast warning alert', () => {
-    (useDatabase as any).mockReturnValue({
+    mockUseDatabase.mockReturnValue({
       transactions: mockTransactions,
       loading: false,
     });

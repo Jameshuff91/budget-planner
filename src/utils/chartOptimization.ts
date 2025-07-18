@@ -44,7 +44,7 @@ export const usePerformanceTracker = () => {
 };
 
 // React.memo comparison functions for different prop types
-export const shallowCompareProps = <T extends Record<string, any>>(
+export const shallowCompareProps = <T extends Record<string, unknown>>(
   prevProps: T,
   nextProps: T,
 ): boolean => {
@@ -65,8 +65,8 @@ export const shallowCompareProps = <T extends Record<string, any>>(
 };
 
 export const compareArrayProps = (
-  prevArray: any[],
-  nextArray: any[],
+  prevArray: unknown[],
+  nextArray: unknown[],
   compareKey?: string,
 ): boolean => {
   if (prevArray.length !== nextArray.length) {
@@ -105,23 +105,25 @@ export const compareTimeRangeProps = (
 // Data transformation utilities with memoization helpers
 export const createDataTransformer = <TInput, TOutput>(
   transformer: (data: TInput) => TOutput,
-  dependencyExtractor?: (data: TInput) => any[],
+  dependencyExtractor?: (data: TInput) => unknown[],
 ) => {
   return (data: TInput): TOutput => {
-    return useMemo(
-      () => {
-        const marker = createPerformanceMarker('dataTransformation');
-        const result = transformer(data);
-        marker.end();
-        return result;
-      },
-      dependencyExtractor ? dependencyExtractor(data) : [data],
-    );
+    const dependencyList = useMemo(() => {
+      return dependencyExtractor ? dependencyExtractor(data) : [data];
+    }, [data, dependencyExtractor]);
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    return useMemo(() => {
+      const marker = createPerformanceMarker('dataTransformation');
+      const result = transformer(data);
+      marker.end();
+      return result;
+    }, dependencyList);
   };
 };
 
 // Chart-specific optimization helpers
-export const optimizeChartData = <T extends Record<string, any>>(
+export const optimizeChartData = <T extends Record<string, unknown>>(
   data: T[],
   maxDataPoints: number = 1000,
 ): T[] => {
@@ -138,7 +140,7 @@ export const optimizeChartData = <T extends Record<string, any>>(
   return optimized;
 };
 
-export const memoizeChartProps = <T>(props: T, _deps: any[]): T => {
+export const memoizeChartProps = <T>(props: T, _deps: unknown[]): T => {
   // Note: This is a utility function, not a React component or hook
   // It should be used within React components where useMemo is available
   return props;
@@ -263,7 +265,7 @@ export const withPerformanceMonitoring = <P extends object>(
         setMetrics(newMetrics);
         logger.info(`Component [${componentName}] render time:`, newMetrics);
       }
-    });
+    }, []);
 
     return React.createElement(Component, props);
   });
@@ -273,7 +275,7 @@ export const withPerformanceMonitoring = <P extends object>(
 };
 
 // Data cache for expensive computations
-const DATA_CACHE = new Map<string, { data: any; timestamp: number }>();
+const DATA_CACHE = new Map<string, { data: unknown; timestamp: number }>();
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
 export const getCachedData = <T>(key: string, computeFn: () => T): T => {

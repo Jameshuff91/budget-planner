@@ -18,9 +18,9 @@ vi.mock('./logger', () => ({
 describe('PDFService', () => {
   afterEach(() => {
     // Clear mock call counts after each test
-    (logger.info as any).mockClear();
-    (logger.warn as any).mockClear();
-    (logger.error as any).mockClear();
+    vi.mocked(logger.info).mockClear();
+    vi.mocked(logger.warn).mockClear();
+    vi.mocked(logger.error).mockClear();
   });
 
   describe('parseCurrencyAmount', () => {
@@ -285,7 +285,7 @@ describe('PDFService', () => {
 
   describe('determineExpenseCategory', () => {
     const testCategory = (description: string, expectedCategory: string) => {
-      // @ts-ignore - Accessing private method for testing
+      // @ts-expect-error - Accessing private method for testing
       expect(pdfService['determineExpenseCategory'](description)).toBe(expectedCategory);
     };
 
@@ -712,7 +712,7 @@ describe('PDFService', () => {
 
   describe('cleanDescription', () => {
     const testClean = (input: string, expected: string) => {
-      // @ts-ignore
+      // @ts-expect-error - Accessing private method for testing
       expect(pdfService['cleanDescription'](input)).toBe(expected);
     };
 
@@ -929,8 +929,8 @@ describe('PDFService', () => {
     // 1. If `cv` is undefined, it falls back to basic processing or returns original.
     // 2. If `cv` is mocked, were the expected OpenCV functions called?
 
-    let mockCv: any;
-    let originalCv: any; // To store the original global.cv
+    let mockCv: Record<string, unknown>;
+    let originalCv: unknown; // To store the original global.cv
 
     beforeEach(() => {
       originalCv = global.cv; // Store original cv
@@ -1002,7 +1002,7 @@ describe('PDFService', () => {
     });
 
     it('should fallback to basic processing if cv is undefined', () => {
-      global.cv = undefined as any; // Simulate cv not being loaded for this specific test
+      global.cv = undefined as unknown; // Simulate cv not being loaded for this specific test
 
       const imageData = new ImageData(new Uint8ClampedArray([100, 150, 200, 255]), 1, 1);
       const processedData = pdfService['preprocessImage'](imageData);
@@ -1019,7 +1019,7 @@ describe('PDFService', () => {
 
     it('should call OpenCV functions if cv is available', () => {
       // Reset the openCvAvailable flag to ensure OpenCV is used
-      (pdfService as any).openCvAvailable = null;
+      (pdfService as unknown as { openCvAvailable: null }).openCvAvailable = null;
 
       const imageData = new ImageData(new Uint8ClampedArray(100 * 100 * 4), 100, 100);
 
@@ -1086,7 +1086,7 @@ describe('PDFService', () => {
 
     it('should handle deskewing logic branches correctly', () => {
       // Reset the openCvAvailable flag to ensure OpenCV is used
-      (pdfService as any).openCvAvailable = null;
+      (pdfService as unknown as { openCvAvailable: null }).openCvAvailable = null;
 
       const imageData = new ImageData(new Uint8ClampedArray(100 * 100 * 4), 100, 100);
 
@@ -1129,7 +1129,7 @@ describe('PDFService', () => {
 
       // Scenario 2: Contours found, but angle not significant (no deskewing)
       {
-        (pdfService as any).openCvAvailable = null; // Reset flag
+        (pdfService as unknown as { openCvAvailable: null }).openCvAvailable = null; // Reset flag
 
         const mockMat = {
           delete: vi.fn(),
@@ -1169,7 +1169,7 @@ describe('PDFService', () => {
 
       // Scenario 3: Contours found, significant angle (should deskew)
       {
-        (pdfService as any).openCvAvailable = null; // Reset flag
+        (pdfService as unknown as { openCvAvailable: null }).openCvAvailable = null; // Reset flag
 
         const mockMat = {
           delete: vi.fn(),

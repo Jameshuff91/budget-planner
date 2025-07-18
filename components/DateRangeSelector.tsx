@@ -26,12 +26,7 @@ interface Props {
 }
 
 export default function DateRangeSelector({ onDateRangeChange, defaultRange = 'month' }: Props) {
-  const [selectedRange, setSelectedRange] = useState<DateRange>(getPresetRange(defaultRange));
-  const [isCustomOpen, setIsCustomOpen] = useState(false);
-  const [customStart, setCustomStart] = useState('');
-  const [customEnd, setCustomEnd] = useState('');
-
-  function getPresetRange(preset: string): DateRange {
+  const getPresetRange = useCallback((preset: string): DateRange => {
     const today = new Date();
     const currentYear = today.getFullYear();
     const currentMonth = today.getMonth();
@@ -43,13 +38,14 @@ export default function DateRangeSelector({ onDateRangeChange, defaultRange = 'm
           endDate: new Date(currentYear, currentMonth + 1, 0),
           label: 'This Month',
         };
-      case 'quarter':
+      case 'quarter': {
         const currentQuarter = Math.floor(currentMonth / 3);
         return {
           startDate: new Date(currentYear, currentQuarter * 3, 1),
           endDate: new Date(currentYear, currentQuarter * 3 + 3, 0),
           label: 'This Quarter',
         };
+      }
       case 'year':
         return {
           startDate: new Date(currentYear, 0, 1),
@@ -63,9 +59,18 @@ export default function DateRangeSelector({ onDateRangeChange, defaultRange = 'm
           label: 'All Time',
         };
       default:
-        return getPresetRange('month');
+        return {
+          startDate: new Date(currentYear, currentMonth, 1),
+          endDate: new Date(currentYear, currentMonth + 1, 0),
+          label: 'This Month',
+        };
     }
-  }
+  }, []);
+
+  const [selectedRange, setSelectedRange] = useState<DateRange>(() => getPresetRange(defaultRange));
+  const [isCustomOpen, setIsCustomOpen] = useState(false);
+  const [customStart, setCustomStart] = useState('');
+  const [customEnd, setCustomEnd] = useState('');
 
   const handlePresetSelect = useCallback(
     (preset: string) => {
@@ -74,7 +79,7 @@ export default function DateRangeSelector({ onDateRangeChange, defaultRange = 'm
       onDateRangeChange(range);
       setIsCustomOpen(false);
     },
-    [onDateRangeChange],
+    [getPresetRange, onDateRangeChange],
   );
 
   const handleCustomRange = useCallback(() => {

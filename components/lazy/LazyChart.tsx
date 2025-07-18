@@ -57,7 +57,7 @@ export type ChartType = keyof typeof chartComponents;
 interface LazyChartProps {
   type: ChartType;
   selectedYear?: number;
-  [key: string]: any; // Allow passing through any props to the chart component
+  [key: string]: unknown; // Allow passing through any props to the chart component
 }
 
 /**
@@ -93,7 +93,7 @@ export function LazyChart({ type, ...props }: LazyChartProps) {
 export function preloadChart(type: ChartType) {
   const component = chartComponents[type];
   if (component && 'preload' in component) {
-    (component as any).preload();
+    (component as { preload: () => void }).preload();
   }
 }
 
