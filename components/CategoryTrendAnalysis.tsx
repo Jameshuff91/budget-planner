@@ -12,20 +12,21 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 
+import { Button } from '@components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@components/ui/card';
 import { Checkbox } from '@components/ui/checkbox';
 import { Label } from '@components/ui/label';
 import { ScrollArea } from '@components/ui/scroll-area';
-import { Button } from '@components/ui/button';
 import { useDBContext } from '@context/DatabaseContext';
-import { formatCurrency } from '@utils/helpers';
-import { ChartSkeleton } from './skeletons/ChartSkeleton';
 import {
   shallowCompareProps,
   getOptimizedAnimationProps,
   memoizeChartProps,
   createPerformanceMarker,
 } from '@utils/chartOptimization';
+import { formatCurrency } from '@utils/helpers';
+
+import { ChartSkeleton } from './skeletons/ChartSkeleton';
 
 // Define color palette for categories
 const CATEGORY_COLORS: Record<string, string> = {
@@ -59,7 +60,7 @@ const CategoryTrendAnalysis = ({ selectedYear }: CategoryTrendAnalysisProps) => 
     const today = new Date();
     const endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
     endDate.setHours(23, 59, 59, 999);
-    
+
     // For selected year, show all months of that year
     if (selectedYear && selectedYear !== today.getFullYear()) {
       const startDate = new Date(selectedYear, 0, 1);
@@ -68,7 +69,7 @@ const CategoryTrendAnalysis = ({ selectedYear }: CategoryTrendAnalysisProps) => 
       yearEndDate.setHours(23, 59, 59, 999);
       return { startDate, endDate: yearEndDate };
     }
-    
+
     // Otherwise show last 12 months
     const startDate = new Date(today.getFullYear(), today.getMonth() - 11, 1);
     startDate.setHours(0, 0, 0, 0);
@@ -78,11 +79,24 @@ const CategoryTrendAnalysis = ({ selectedYear }: CategoryTrendAnalysisProps) => 
   // Process transaction data to get monthly category spending
   const categoryTrendData = useMemo(() => {
     const marker = createPerformanceMarker('category-trend-calculation');
-    
+
     try {
       const monthlyData = new Map<string, Map<string, number>>();
-      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-      
+      const months = [
+        'Jan',
+        'Feb',
+        'Mar',
+        'Apr',
+        'May',
+        'Jun',
+        'Jul',
+        'Aug',
+        'Sep',
+        'Oct',
+        'Nov',
+        'Dec',
+      ];
+
       // Initialize months in range
       const currentDate = new Date(dateRange.startDate);
       while (currentDate <= dateRange.endDate) {
@@ -90,7 +104,7 @@ const CategoryTrendAnalysis = ({ selectedYear }: CategoryTrendAnalysisProps) => 
         monthlyData.set(monthKey, new Map<string, number>());
         currentDate.setMonth(currentDate.getMonth() + 1);
       }
-      
+
       // Process transactions
       transactions.forEach((transaction) => {
         if (transaction.type === 'expense') {
@@ -98,7 +112,7 @@ const CategoryTrendAnalysis = ({ selectedYear }: CategoryTrendAnalysisProps) => 
           if (transactionDate >= dateRange.startDate && transactionDate <= dateRange.endDate) {
             const monthKey = `${months[transactionDate.getMonth()]} ${transactionDate.getFullYear()}`;
             const monthData = monthlyData.get(monthKey);
-            
+
             if (monthData) {
               const currentAmount = monthData.get(transaction.category) || 0;
               monthData.set(transaction.category, currentAmount + Math.abs(transaction.amount));
@@ -106,7 +120,7 @@ const CategoryTrendAnalysis = ({ selectedYear }: CategoryTrendAnalysisProps) => 
           }
         }
       });
-      
+
       // Convert to array format for chart
       const chartData: CategoryTrendData[] = [];
       monthlyData.forEach((categoryMap, month) => {
@@ -116,7 +130,7 @@ const CategoryTrendAnalysis = ({ selectedYear }: CategoryTrendAnalysisProps) => 
         });
         chartData.push(dataPoint);
       });
-      
+
       marker.end();
       return chartData;
     } catch (error) {
@@ -130,7 +144,7 @@ const CategoryTrendAnalysis = ({ selectedYear }: CategoryTrendAnalysisProps) => 
     const categoriesWithSpending = new Set<string>();
     categoryTrendData.forEach((monthData) => {
       Object.keys(monthData).forEach((key) => {
-        if (key !== 'month' && monthData[key] > 0) {
+        if (key !== 'month' && typeof monthData[key] === 'number' && monthData[key] > 0) {
           categoriesWithSpending.add(key);
         }
       });
@@ -148,7 +162,7 @@ const CategoryTrendAnalysis = ({ selectedYear }: CategoryTrendAnalysisProps) => 
         }, 0);
         return { category, total };
       });
-      
+
       categoryTotals.sort((a, b) => b.total - a.total);
       const top3 = categoryTotals.slice(0, 3).map((item) => item.category);
       setSelectedCategories(top3);
@@ -183,7 +197,7 @@ const CategoryTrendAnalysis = ({ selectedYear }: CategoryTrendAnalysisProps) => 
       }, 0);
       return { category, total };
     });
-    
+
     categoryTotals.sort((a, b) => b.total - a.total);
     const top5 = categoryTotals.slice(0, 5).map((item) => item.category);
     setSelectedCategories(top5);
@@ -208,39 +222,31 @@ const CategoryTrendAnalysis = ({ selectedYear }: CategoryTrendAnalysisProps) => 
         <CardTitle>Category Spending Trends</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <div className='grid grid-cols-1 lg:grid-cols-4 gap-6'>
           {/* Category Selection */}
-          <div className="lg:col-span-1">
-            <div className="space-y-4">
+          <div className='lg:col-span-1'>
+            <div className='space-y-4'>
               <div>
-                <h3 className="text-sm font-medium mb-2">Select Categories</h3>
-                <div className="space-x-2 mb-3">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleSelectTop5}
-                  >
+                <h3 className='text-sm font-medium mb-2'>Select Categories</h3>
+                <div className='space-x-2 mb-3'>
+                  <Button variant='outline' size='sm' onClick={handleSelectTop5}>
                     Top 5
                   </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleSelectAll}
-                  >
+                  <Button variant='outline' size='sm' onClick={handleSelectAll}>
                     {showAllCategories ? 'Clear All' : 'Select All'}
                   </Button>
                 </div>
               </div>
-              <ScrollArea className="h-[300px] pr-4">
-                <div className="space-y-2">
+              <ScrollArea className='h-[300px] pr-4'>
+                <div className='space-y-2'>
                   {availableCategories.map((category) => {
                     const isSelected = selectedCategories.includes(category);
                     const categoryTotal = categoryTrendData.reduce((sum, month) => {
                       return sum + (typeof month[category] === 'number' ? month[category] : 0);
                     }, 0);
-                    
+
                     return (
-                      <div key={category} className="flex items-center space-x-2">
+                      <div key={category} className='flex items-center space-x-2'>
                         <Checkbox
                           id={`category-${category}`}
                           checked={isSelected}
@@ -248,12 +254,18 @@ const CategoryTrendAnalysis = ({ selectedYear }: CategoryTrendAnalysisProps) => 
                         />
                         <Label
                           htmlFor={`category-${category}`}
-                          className="flex-1 cursor-pointer flex justify-between items-center"
+                          className='flex-1 cursor-pointer flex justify-between items-center'
                         >
-                          <span style={{ color: isSelected ? CATEGORY_COLORS[category] || '#6b7280' : undefined }}>
+                          <span
+                            style={{
+                              color: isSelected
+                                ? CATEGORY_COLORS[category] || '#6b7280'
+                                : undefined,
+                            }}
+                          >
                             {category}
                           </span>
-                          <span className="text-xs text-muted-foreground">
+                          <span className='text-xs text-muted-foreground'>
                             {formatCurrency(categoryTotal)}
                           </span>
                         </Label>
@@ -266,32 +278,23 @@ const CategoryTrendAnalysis = ({ selectedYear }: CategoryTrendAnalysisProps) => 
           </div>
 
           {/* Chart */}
-          <div className="lg:col-span-3">
-            <div className="h-[400px]">
+          <div className='lg:col-span-3'>
+            <div className='h-[400px]'>
               {selectedCategories.length > 0 ? (
-                <ResponsiveContainer width="100%" height="100%">
+                <ResponsiveContainer width='100%' height='100%'>
                   <LineChart
                     data={categoryTrendData}
                     margin={{ top: 5, right: 30, left: 20, bottom: 50 }}
                   >
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                    <XAxis
-                      dataKey="month"
-                      angle={-45}
-                      textAnchor="end"
-                      height={60}
-                      fontSize={12}
-                    />
-                    <YAxis
-                      tickFormatter={tickFormatter}
-                      fontSize={12}
-                    />
+                    <CartesianGrid strokeDasharray='3 3' stroke='#e5e7eb' />
+                    <XAxis dataKey='month' angle={-45} textAnchor='end' height={60} fontSize={12} />
+                    <YAxis tickFormatter={tickFormatter} fontSize={12} />
                     <Tooltip formatter={tooltipFormatter} />
                     <Legend />
                     {selectedCategories.map((category) => (
                       <Line
                         key={category}
-                        type="monotone"
+                        type='monotone'
                         dataKey={category}
                         stroke={CATEGORY_COLORS[category] || '#6b7280'}
                         strokeWidth={2}
@@ -303,10 +306,10 @@ const CategoryTrendAnalysis = ({ selectedYear }: CategoryTrendAnalysisProps) => 
                   </LineChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="flex items-center justify-center h-full text-gray-500">
-                  <div className="text-center">
-                    <p className="text-lg font-medium">No categories selected</p>
-                    <p className="text-sm">Select categories to view their spending trends</p>
+                <div className='flex items-center justify-center h-full text-gray-500'>
+                  <div className='text-center'>
+                    <p className='text-lg font-medium'>No categories selected</p>
+                    <p className='text-sm'>Select categories to view their spending trends</p>
                   </div>
                 </div>
               )}

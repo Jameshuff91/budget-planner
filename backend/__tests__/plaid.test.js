@@ -35,7 +35,7 @@ jest.mock('plaid', () => {
           institution: {
             name: 'Test Bank',
           },
-        }
+        },
       }),
       accountsGet: jest.fn().mockResolvedValue({
         data: {
@@ -47,11 +47,11 @@ jest.mock('plaid', () => {
               subtype: 'checking',
               balances: {
                 current: 1000,
-                available: 900
-              }
-            }
-          ]
-        }
+                available: 900,
+              },
+            },
+          ],
+        },
       }),
       transactionsGet: jest.fn().mockResolvedValue({
         data: {
@@ -59,21 +59,21 @@ jest.mock('plaid', () => {
             {
               transaction_id: 'test-txn-1',
               account_id: 'test-account-1',
-              amount: 25.50,
+              amount: 25.5,
               date: '2025-01-15',
               name: 'Test Transaction',
               merchant_name: 'Test Merchant',
               category: ['Food and Drink', 'Restaurants'],
-              pending: false
-            }
-          ]
-        }
-      })
+              pending: false,
+            },
+          ],
+        },
+      }),
     })),
     Configuration: jest.fn(),
     PlaidEnvironments: {
-      sandbox: 'https://sandbox.plaid.com'
-    }
+      sandbox: 'https://sandbox.plaid.com',
+    },
   };
 });
 
@@ -84,7 +84,7 @@ describe('Plaid Endpoints', () => {
   beforeAll(async () => {
     // Initialize database first
     await initializeDatabase();
-    
+
     // Create a test user in the database
     const { getDatabase } = require('../db/init');
     const db = getDatabase();
@@ -93,13 +93,11 @@ describe('Plaid Endpoints', () => {
       VALUES (?, ?, ?, datetime('now'), datetime('now'))
     `);
     stmt.run(userId, 'test@example.com', 'fake-hash');
-    
+
     // Create a valid auth token
-    authToken = jwt.sign(
-      { id: userId, email: 'test@example.com' },
-      process.env.JWT_SECRET,
-      { expiresIn: '1h' }
-    );
+    authToken = jwt.sign({ id: userId, email: 'test@example.com' }, process.env.JWT_SECRET, {
+      expiresIn: '1h',
+    });
   });
 
   afterEach(() => {
@@ -122,8 +120,7 @@ describe('Plaid Endpoints', () => {
     });
 
     it('should require authentication', async () => {
-      const res = await request(app)
-        .post('/api/plaid/link/token');
+      const res = await request(app).post('/api/plaid/link/token');
 
       expect(res.status).toBe(401);
     });
@@ -135,7 +132,7 @@ describe('Plaid Endpoints', () => {
         .post('/api/plaid/link/exchange')
         .set('Authorization', `Bearer ${authToken}`)
         .send({
-          public_token: 'test-public-token'
+          public_token: 'test-public-token',
         });
 
       expect(res.status).toBe(200);
@@ -174,7 +171,7 @@ describe('Plaid Endpoints', () => {
         .set('Authorization', `Bearer ${authToken}`)
         .send({
           start_date: '2025-01-01',
-          end_date: '2025-01-31'
+          end_date: '2025-01-31',
         });
 
       expect(res.status).toBe(200);

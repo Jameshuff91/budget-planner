@@ -135,7 +135,9 @@ export default function SmartCategorizationSettings() {
                 </div>
                 <p className='text-xs text-muted-foreground'>
                   {process.env.NEXT_PUBLIC_OPENAI_API_KEY ? (
-                    <span className='text-green-600'>✓ Using API key from environment variable</span>
+                    <span className='text-green-600'>
+                      ✓ Using API key from environment variable
+                    </span>
                   ) : (
                     <>
                       Get your API key from{' '}
@@ -160,13 +162,16 @@ export default function SmartCategorizationSettings() {
                   onChange={(e) => setModel(e.target.value)}
                   className='w-full px-3 py-2 border border-gray-300 rounded-md text-sm'
                 >
-                  <option value='gpt-4o-mini'>GPT-4o Mini (Fastest & Cheapest - Recommended)</option>
+                  <option value='gpt-4o-mini'>
+                    GPT-4o Mini (Fastest & Cheapest - Recommended)
+                  </option>
                   <option value='gpt-4o'>GPT-4o (Best Performance)</option>
                   <option value='gpt-4-turbo'>GPT-4 Turbo (Legacy)</option>
                   <option value='gpt-3.5-turbo'>GPT-3.5 Turbo (Legacy)</option>
                 </select>
                 <p className='text-xs text-muted-foreground'>
-                  GPT-4o Mini is recommended - 60% cheaper than GPT-3.5 Turbo with better performance
+                  GPT-4o Mini is recommended - 60% cheaper than GPT-3.5 Turbo with better
+                  performance
                 </p>
               </div>
 

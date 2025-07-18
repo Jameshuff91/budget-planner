@@ -53,15 +53,15 @@ vi.mock('@hooks/useAnalytics', () => {
 });
 
 // Import mock functions from mocked modules
-import { __mockToast } from '@components/ui/use-toast';
-import { __mockUseDBContext } from '@context/DatabaseContext';
-import { __mockUseAnalytics } from '@hooks/useAnalytics';
+import { useToast } from '@components/ui/use-toast';
+import { useDBContext } from '@context/DatabaseContext';
+import { useAnalytics } from '@hooks/useAnalytics';
 
 // Mock functions
 const mockUpdateCategoryBudget = vi.fn();
-const mockToast = __mockToast as ReturnType<typeof vi.fn>;
-const mockUseDBContext = __mockUseDBContext as ReturnType<typeof vi.fn>;
-const mockUseAnalytics = __mockUseAnalytics as ReturnType<typeof vi.fn>;
+const mockToast = useToast as ReturnType<typeof vi.fn>;
+const mockUseDBContext = useDBContext as ReturnType<typeof vi.fn>;
+const mockUseAnalytics = useAnalytics as ReturnType<typeof vi.fn>;
 
 // Mock data
 const mockCategorySpending = [

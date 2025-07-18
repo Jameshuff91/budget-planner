@@ -3,9 +3,10 @@
  * Manages queuing of operations when offline and syncing when back online
  */
 
-import { Transaction, Category, Asset, Liability } from '../types';
-import { generateUUID } from './helpers';
 import { logger } from '../services/logger';
+import { Transaction, Category, Asset, Liability } from '../types';
+
+import { generateUUID } from './helpers';
 
 export interface QueuedOperation {
   id: string;
@@ -276,12 +277,12 @@ class OfflineQueue {
 
     const transaction = this.db.transaction([this.storeName], 'readonly');
     const store = transaction.objectStore(this.storeName);
-    
+
     return new Promise<QueuedOperation[]>((resolve, reject) => {
       const request = store.getAll();
       request.onsuccess = () => {
         // Filter for unsynced operations after getting all
-        const pendingOps = request.result.filter(op => !op.synced);
+        const pendingOps = request.result.filter((op) => !op.synced);
         resolve(pendingOps);
       };
       request.onerror = () => reject(request.error);
@@ -382,13 +383,13 @@ class OfflineQueue {
     try {
       const transaction = this.db.transaction([this.storeName], 'readwrite');
       const store = transaction.objectStore(this.storeName);
-      
+
       // Check if the 'synced' index exists before using it
       if (!store.indexNames.contains('synced')) {
         logger.warn('Synced index not found, skipping clearSyncedOperations');
         return;
       }
-      
+
       const index = store.index('synced');
 
       return new Promise<void>((resolve, reject) => {

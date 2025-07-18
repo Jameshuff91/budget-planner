@@ -5,12 +5,14 @@
 
 'use client';
 
-import React, { useState } from 'react';
 import { WifiOff, Wifi, RefreshCw, Clock, CheckCircle, AlertCircle } from 'lucide-react';
-import { useOfflineStatus, useOfflineDetection } from '../src/hooks/useOfflineStatus';
-import { Button } from './ui/button';
-import { Badge } from './ui/badge';
+import React, { useState } from 'react';
+
 import { cn } from '../lib/utils';
+import { useOfflineStatus, useOfflineDetection } from '../src/hooks/useOfflineStatus';
+
+import { Badge } from './ui/badge';
+import { Button } from './ui/button';
 
 interface OfflineIndicatorProps {
   className?: string;

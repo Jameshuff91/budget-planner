@@ -6,13 +6,10 @@ module.exports = {
     '!jest.config.js',
     '!coverage/**',
     '!node_modules/**',
-    '!**/*.test.js'
+    '!**/*.test.js',
   ],
-  testMatch: [
-    '**/__tests__/**/*.js',
-    '**/*.test.js'
-  ],
+  testMatch: ['**/__tests__/**/*.js', '**/*.test.js'],
   verbose: true,
   testTimeout: 10000,
-  setupFilesAfterEnv: ['./tests/setup.js']
+  setupFilesAfterEnv: ['./tests/setup.js'],
 };

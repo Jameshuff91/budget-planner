@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 // Helper to upload sample data
-async function uploadSampleData(page) {
+async function uploadSampleData(page: any) {
   await page.goto('/');
 
   // On mobile, the file input might be different
@@ -14,7 +14,7 @@ async function uploadSampleData(page) {
 }
 
 // Helper to wait for mobile view to stabilize
-async function waitForMobileRender(page) {
+async function waitForMobileRender(page: any) {
   await page.waitForTimeout(1000);
   await page.evaluate(() => document.fonts.ready);
 }

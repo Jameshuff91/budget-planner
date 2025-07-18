@@ -15,17 +15,18 @@ import {
 } from 'recharts';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@components/ui/card';
-import { useAnalytics } from '@hooks/useAnalytics';
-import { formatCurrency } from '@utils/helpers';
 import { useDBContext } from '@context/DatabaseContext';
-import { ChartSkeleton } from './skeletons/ChartSkeleton';
-import { StatCardGridSkeleton } from './skeletons/StatCardSkeleton';
+import { useAnalytics } from '@hooks/useAnalytics';
 import {
   shallowCompareProps,
   getOptimizedAnimationProps,
   memoizeChartProps,
   optimizeChartData,
 } from '@utils/chartOptimization';
+import { formatCurrency } from '@utils/helpers';
+
+import { ChartSkeleton } from './skeletons/ChartSkeleton';
+import { StatCardGridSkeleton } from './skeletons/StatCardSkeleton';
 
 interface YearOverYearComparisonProps {
   selectedYear: number;
@@ -68,7 +69,6 @@ const YearOverYearComparison = ({ selectedYear }: YearOverYearComparisonProps) =
   const { loading } = useDBContext();
 
   const comparisonData = useMemo(() => {
-
     const currentYearData = spendingOverview.filter((d) => d.year === selectedYear);
     const previousYearData = spendingOverview.filter((d) => d.year === selectedYear - 1);
 

@@ -194,16 +194,16 @@ describe('ReportService', () => {
     it('should throw error when PDF generation fails', async () => {
       // Save the original generatePDFReport method
       const originalGeneratePDFReport = reportService.generatePDFReport;
-      
+
       // Mock the generatePDFReport to simulate an internal error
-      reportService.generatePDFReport = vi.fn().mockRejectedValue(
-        new Error('Failed to generate PDF report: PDF generation failed')
-      );
+      reportService.generatePDFReport = vi
+        .fn()
+        .mockRejectedValue(new Error('Failed to generate PDF report: PDF generation failed'));
 
       await expect(reportService.generatePDFReport(mockReportData, mockOptions)).rejects.toThrow(
         'Failed to generate PDF report',
       );
-      
+
       // Restore the original method
       reportService.generatePDFReport = originalGeneratePDFReport;
     });

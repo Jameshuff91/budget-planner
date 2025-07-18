@@ -161,11 +161,11 @@ class PDFService {
     // Check if OpenCV (cv) is loaded and available globally
     // In browser environment, cv would be on window. In test environment, it's on global.
     const cvLib = typeof window !== 'undefined' ? (window as any).cv : (global as any).cv;
-    
+
     if (!cvLib) {
       // Log error for test expectations
       logger.error('OpenCV (cv) is not loaded. Skipping advanced preprocessing.');
-      
+
       // Only log info once to avoid spam
       if (this.openCvAvailable === null) {
         logger.info(
@@ -173,13 +173,15 @@ class PDFService {
         );
         this.openCvAvailable = false;
       }
-      
+
       // Create a new ImageData to avoid modifying the input
       const newData = new Uint8ClampedArray(imageData.data);
-      
+
       // Fallback to basic preprocessing if OpenCV is not available
       for (let i = 0; i < newData.length; i += 4) {
-        const grayscale = Math.round(newData[i] * 0.3 + newData[i + 1] * 0.59 + newData[i + 2] * 0.11);
+        const grayscale = Math.round(
+          newData[i] * 0.3 + newData[i + 1] * 0.59 + newData[i + 2] * 0.11,
+        );
         newData[i] = grayscale;
         newData[i + 1] = grayscale;
         newData[i + 2] = grayscale;
@@ -190,7 +192,7 @@ class PDFService {
         newData[i + 1] = thresholdVal;
         newData[i + 2] = thresholdVal;
       }
-      
+
       return new ImageData(newData, imageData.width, imageData.height);
     }
 
@@ -224,7 +226,13 @@ class PDFService {
       // Find contours
       const contours = new cvLib.MatVector();
       const hierarchy = new cvLib.Mat();
-      cvLib.findContours(binary, contours, hierarchy, cvLib.RETR_EXTERNAL, cvLib.CHAIN_APPROX_SIMPLE);
+      cvLib.findContours(
+        binary,
+        contours,
+        hierarchy,
+        cvLib.RETR_EXTERNAL,
+        cvLib.CHAIN_APPROX_SIMPLE,
+      );
 
       const angles: number[] = [];
       for (let i = 0; i < contours.size(); ++i) {
@@ -618,20 +626,20 @@ class PDFService {
     cleaned = cleaned.replace(/\.{2,}$/g, ''); // remove ".." or "..." at end
     // Also remove single trailing dot if it's preceded by a space (isolated dot)
     cleaned = cleaned.replace(/\s+\.$/, '');
-    
+
     // Remove amounts - handle various formats
     cleaned = cleaned.replace(/\bAmount:\s*\$?[0-9,]+(?:\.\d{2})?\b/gi, '');
     cleaned = cleaned.replace(/\$[0-9,]+(?:\.\d{2})?(?=\s|$)/g, '');
     // Also remove plain numbers that look like amounts (e.g., "50.00")
     cleaned = cleaned.replace(/\b[0-9]+\.[0-9]{2}\b/g, '');
 
-    // 2. Standardize common abbreviations 
+    // 2. Standardize common abbreviations
     // First handle specific multi-word abbreviations with case preservation
     cleaned = cleaned.replace(/\bSVC CHG FOR ACCOUNT\b/gi, 'Service Charge FOR Account');
     cleaned = cleaned.replace(/\bSVC CHG\b/gi, 'Service Charge');
     cleaned = cleaned.replace(/\bP\.O\.S\./gi, 'POS');
     cleaned = cleaned.replace(/\bP O S\b/gi, 'POS');
-    
+
     const abbreviationMap: { [key: string]: string } = {
       PMT: 'Payment',
       DEPT: 'Department',
@@ -663,11 +671,11 @@ class PDFService {
     // Preserve patterns like #1234, dates like 01/22
     const preservePatterns = [
       { pattern: /#\d+/g, prefix: '__STORE_NUM_' },
-      { pattern: /\b\d{1,2}\/\d{1,2}\b/g, prefix: '__DATE_' }
+      { pattern: /\b\d{1,2}\/\d{1,2}\b/g, prefix: '__DATE_' },
     ];
-    
+
     const preserved: Map<string, string[]> = new Map();
-    
+
     for (const { pattern, prefix } of preservePatterns) {
       const matches: string[] = [];
       cleaned = cleaned.replace(pattern, (match) => {
@@ -701,7 +709,7 @@ class PDFService {
     cleaned = cleaned.replace(/\s+#\s+/g, ' ');
     cleaned = cleaned.replace(/\s+&\s+/g, ' ');
     cleaned = cleaned.replace(/\s+\/\s+/g, ' ');
-    
+
     // Remove leading special characters
     cleaned = cleaned.replace(/^[-&/.#]\s+/, '');
     // Remove trailing special characters

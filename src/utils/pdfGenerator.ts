@@ -1,10 +1,11 @@
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
 import { format } from 'date-fns';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 
-import { Transaction } from '../types/index';
-import { formatCurrency } from './helpers';
 import { logger } from '../services/logger';
+import { Transaction } from '../types/index';
+
+import { formatCurrency } from './helpers';
 
 export interface PDFOptions {
   orientation?: 'portrait' | 'landscape';

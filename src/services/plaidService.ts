@@ -1,5 +1,5 @@
-import { logger } from './logger';
 import { apiService } from './api';
+import { logger } from './logger';
 
 export interface PlaidConfig {
   clientId: string;
@@ -68,7 +68,7 @@ export class PlaidService {
   async createLinkToken(userId: string, products: string[] = ['transactions']): Promise<string> {
     try {
       const response = await apiService.createLinkToken();
-      
+
       if (response.error) {
         throw new Error(response.error);
       }
@@ -86,7 +86,7 @@ export class PlaidService {
   async exchangePublicToken(publicToken: string): Promise<string> {
     try {
       const response = await apiService.exchangePublicToken(publicToken);
-      
+
       if (response.error) {
         throw new Error(response.error);
       }

@@ -21,7 +21,7 @@ export function DateRangeProvider({ children }: { children: React.ReactNode }) {
     const today = new Date();
     const currentYear = today.getFullYear();
     const currentMonth = today.getMonth();
-    
+
     return {
       startDate: new Date(currentYear, currentMonth, 1),
       endDate: new Date(currentYear, currentMonth + 1, 0),

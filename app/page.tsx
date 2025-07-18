@@ -1,13 +1,13 @@
 'use client';
 
+import { Auth } from '@components/Auth';
 import Dashboard from '@components/Dashboard';
 import MonthSelector from '@components/MonthSelector';
 import PDFUpload from '@components/PDFUpload';
 import { Button } from '@components/ui/button';
 import { toast } from '@components/ui/use-toast';
-import { useDBContext } from '@context/DatabaseContext';
 import { useAuth } from '@context/AuthContext';
-import { Auth } from '@components/Auth';
+import { useDBContext } from '@context/DatabaseContext';
 import { pdfService } from '@services/pdfService';
 import {
   categorizeTransactionsBatchWithAI,
@@ -112,9 +112,7 @@ export default function Home() {
           Budget Planner Dashboard
         </p>
         <div className='fixed right-4 top-4 flex items-center gap-4'>
-          <span className='text-sm text-muted-foreground'>
-            {user?.email}
-          </span>
+          <span className='text-sm text-muted-foreground'>{user?.email}</span>
           <Button variant='outline' onClick={handleReset}>
             Reset Dashboard
           </Button>

@@ -3,5 +3,5 @@
 ```yaml
 - main: Loading...
 - region "Notifications (F8)":
-  - list
+    - list
 ```

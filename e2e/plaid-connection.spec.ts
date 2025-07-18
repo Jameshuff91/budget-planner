@@ -86,7 +86,6 @@ async function mockPlaidLinkSuccess(page: Page) {
 }
 
 test.describe('Plaid Bank Connection', () => {
-  test.use({ timeout: 60000 }); // Increase timeout for these tests
 
   test.beforeEach(async ({ page }) => {
     await page.goto('/');

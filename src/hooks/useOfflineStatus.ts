@@ -4,8 +4,9 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { offlineQueue, OfflineQueueStatus } from '../utils/offline-queue';
+
 import { logger } from '../services/logger';
+import { offlineQueue, OfflineQueueStatus } from '../utils/offline-queue';
 
 export interface OfflineStatusHook {
   isOnline: boolean;
@@ -82,11 +83,12 @@ export function useOfflineStatus(): OfflineStatusHook {
     let mounted = true;
 
     // Listen to offline queue status changes
-    const unsubscribeStatus = offlineQueue?.onStatusChange((newStatus) => {
-      if (mounted) {
-        setStatus(newStatus);
-      }
-    }) || (() => {});
+    const unsubscribeStatus =
+      offlineQueue?.onStatusChange((newStatus) => {
+        if (mounted) {
+          setStatus(newStatus);
+        }
+      }) || (() => {});
 
     // Enhanced network event listeners
     const handleOnline = async () => {

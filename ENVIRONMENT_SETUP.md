@@ -39,6 +39,6 @@ SYNC_SCHEDULE_INTERVAL=3600000
 ## Testing
 
 Run `npm run dev` and check that:
-- Smart categorization settings show "API key configured" 
-- Bank connection button is enabled (not grayed out)
 
+- Smart categorization settings show "API key configured"
+- Bank connection button is enabled (not grayed out)

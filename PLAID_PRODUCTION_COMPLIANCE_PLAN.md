@@ -9,6 +9,7 @@ Your budget planner is currently a **client-side only application** storing data
 ### Phase 1: Architecture Transformation (High Priority)
 
 #### 1. Cloud Infrastructure Setup
+
 - **Choose Cloud Provider**: AWS, Google Cloud, or Azure
 - **Required Services**:
   - Compute: EC2/Cloud Run/App Service
@@ -18,18 +19,21 @@ Your budget planner is currently a **client-side only application** storing data
   - Load Balancer with TLS termination
 
 #### 2. Backend API Development
+
 ```
 Current: Direct Plaid calls from browser ❌
 Required: Backend API proxy for Plaid ✅
 ```
 
 **Implementation**:
+
 - Create Node.js/Python backend API
 - Move all Plaid SDK calls to backend
 - Implement proper API authentication (JWT)
 - Store Plaid secrets server-side only
 
 #### 3. Authentication System
+
 - Implement user registration/login
 - Add MFA (TOTP/SMS) for all users
 - Session management with secure cookies
@@ -38,17 +42,21 @@ Required: Backend API proxy for Plaid ✅
 ### Phase 2: Security Controls (High Priority)
 
 #### 4. Encryption Implementation
+
 **Data in Transit**:
+
 - TLS 1.2+ on all endpoints
 - HTTPS-only with HSTS headers
 - Certificate pinning for mobile apps
 
 **Data at Rest**:
+
 - Database encryption (AWS RDS encryption)
 - Encrypt Plaid access tokens
 - Encrypt sensitive user data fields
 
 #### 5. Access Controls
+
 - Role-based access control (RBAC)
 - API rate limiting
 - IP allowlisting for admin functions
@@ -57,6 +65,7 @@ Required: Backend API proxy for Plaid ✅
 ### Phase 3: DevOps & Monitoring (Medium Priority)
 
 #### 6. CI/CD Pipeline
+
 ```yaml
 # Example GitHub Actions workflow
 name: Secure Deploy
@@ -78,6 +87,7 @@ jobs:
 ```
 
 #### 7. Monitoring & Logging
+
 - **Audit Logging**:
   - All Plaid API calls
   - User authentication events
@@ -93,7 +103,9 @@ jobs:
 ### Phase 4: Governance & Compliance (Medium Priority)
 
 #### 8. Security Documentation
+
 Create and maintain:
+
 - Information Security Policy
 - Incident Response Plan
 - Data Retention Policy
@@ -101,6 +113,7 @@ Create and maintain:
 - Employee Security Training Materials
 
 #### 9. Privacy Controls
+
 - Privacy Policy update
 - Cookie consent banner
 - Data deletion workflows
@@ -110,6 +123,7 @@ Create and maintain:
 ### Phase 5: Testing & Validation (Low Priority)
 
 #### 10. Security Testing
+
 - Hire penetration testing firm
 - Implement vulnerability scanning
 - Regular security audits
@@ -118,6 +132,7 @@ Create and maintain:
 ## Technical Implementation Guide
 
 ### Backend API Structure
+
 ```
 /api
   /auth
@@ -136,6 +151,7 @@ Create and maintain:
 ```
 
 ### Database Schema Changes
+
 ```sql
 -- Users table (new)
 CREATE TABLE users (
@@ -170,6 +186,7 @@ CREATE TABLE audit_logs (
 ```
 
 ### Environment Configuration
+
 ```env
 # Production environment variables
 NODE_ENV=production
@@ -186,6 +203,7 @@ SENTRY_DSN=xxx
 ## Compliance Checklist
 
 ### Part One - Hosting, Governance & Endpoint Security
+
 - [ ] Cloud hosting strategy documented
 - [ ] Information security policy created
 - [ ] Employee device management (MDM)
@@ -196,6 +214,7 @@ SENTRY_DSN=xxx
 - [ ] MFA on all systems
 
 ### Part Two - Change Management, Encryption, Monitoring
+
 - [ ] Change control process
 - [ ] Mandatory testing before deploy
 - [ ] Code review requirements
@@ -205,6 +224,7 @@ SENTRY_DSN=xxx
 - [ ] Real-time security alerts
 
 ### Part Three - Incident Management, Segmentation & Privacy
+
 - [ ] Incident response plan
 - [ ] Network segmentation
 - [ ] Security training program

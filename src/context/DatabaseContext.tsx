@@ -10,13 +10,13 @@ import {
   useMemo,
 } from 'react';
 
+import { useOfflineStatus } from '../hooks/useOfflineStatus';
 import { dbService, Asset, Liability } from '../services/db'; // Import Asset and Liability
 import { logger } from '../services/logger';
 import { pdfService } from '../services/pdfService'; // Fix import path
 import { Transaction, Category } from '../types';
 import { generateUUID } from '../utils/helpers';
 import { offlineQueue } from '../utils/offline-queue';
-import { useOfflineStatus } from '../hooks/useOfflineStatus';
 
 interface DatabaseContextType {
   transactions: Transaction[];
@@ -133,7 +133,7 @@ export function DatabaseProvider({ children }: { children: ReactNode }) {
   // Set up offline queue sync handler
   useEffect(() => {
     if (!offlineQueue) return;
-    
+
     const unsubscribe = offlineQueue.onSync(async (operation) => {
       try {
         switch (operation.type) {

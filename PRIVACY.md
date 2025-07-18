@@ -46,11 +46,13 @@ We use your information to:
 ## Data Sharing
 
 We do NOT:
+
 - Sell your personal information
 - Share data with advertisers
 - Use your financial data for marketing
 
 We MAY share data:
+
 - With your explicit consent
 - To comply with legal obligations
 - To protect our rights and prevent fraud
@@ -72,6 +74,7 @@ To exercise these rights, contact: privacy@budgetplanner.com
 ## Plaid Integration
 
 Our integration with Plaid is governed by:
+
 - Plaid's End User Privacy Policy: https://plaid.com/legal/#end-user-privacy-policy
 - You can revoke Plaid access at any time through our app
 - We only request necessary financial data (transactions, accounts)
@@ -91,6 +94,7 @@ We may update this policy periodically. We will notify you of material changes v
 ## Cookie Policy
 
 We use essential cookies for:
+
 - Authentication (session management)
 - Security (CSRF protection)
 - User preferences
@@ -100,6 +104,7 @@ We do not use tracking or advertising cookies.
 ## California Privacy Rights (CCPA)
 
 California residents have additional rights:
+
 - Right to know what personal information is collected
 - Right to know if information is sold or disclosed
 - Right to say no to the sale of personal information
@@ -115,6 +120,7 @@ Address: [Your Business Address]
 ## Data Breach Notification
 
 In the event of a data breach that may compromise your personal information, we will:
+
 1. Notify you within 72 hours of discovery
 2. Provide details about what information was affected
 3. Explain steps we're taking to address the breach

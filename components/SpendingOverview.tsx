@@ -15,17 +15,18 @@ import {
 
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
-import { useAnalytics } from '../src/hooks/useAnalytics';
-import { formatCurrency } from '../src/utils/helpers';
 import { useDBContext } from '../src/context/DatabaseContext';
-import { ChartSkeleton } from './skeletons/ChartSkeleton';
-import { ExpenseDetailsModal } from './ExpenseDetailsModal';
+import { useAnalytics } from '../src/hooks/useAnalytics';
 import {
   shallowCompareProps,
   getOptimizedAnimationProps,
   memoizeChartProps,
   optimizeChartData,
 } from '../src/utils/chartOptimization';
+import { formatCurrency } from '../src/utils/helpers';
+
+import { ExpenseDetailsModal } from './ExpenseDetailsModal';
+import { ChartSkeleton } from './skeletons/ChartSkeleton';
 
 interface SpendingOverviewProps {
   selectedYear?: number;

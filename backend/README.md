@@ -5,6 +5,7 @@ Secure backend API for Budget Planner with Plaid integration.
 ## Setup
 
 1. Copy environment variables:
+
 ```bash
 cp .env.example .env
 ```
@@ -12,11 +13,13 @@ cp .env.example .env
 2. Update `.env` with your Plaid credentials and JWT secret
 
 3. Install dependencies:
+
 ```bash
 npm install
 ```
 
 4. Run development server:
+
 ```bash
 npm run dev
 ```
@@ -35,12 +38,14 @@ npm run dev
 ## API Endpoints
 
 ### Authentication
+
 - `POST /api/auth/register` - Register new user
 - `POST /api/auth/login` - Login user
 - `POST /api/auth/refresh` - Refresh access token
 - `POST /api/auth/logout` - Logout user
 
 ### Plaid Integration
+
 - `POST /api/plaid/link/token` - Create Plaid Link token
 - `POST /api/plaid/link/exchange` - Exchange public token
 - `GET /api/plaid/accounts` - Get linked accounts
@@ -48,6 +53,7 @@ npm run dev
 - `DELETE /api/plaid/item/:itemId` - Remove bank connection
 
 ### Transactions
+
 - `GET /api/transactions` - Get transactions (with pagination)
 - `GET /api/transactions/:id` - Get single transaction
 - `POST /api/transactions` - Create manual transaction
@@ -58,6 +64,7 @@ npm run dev
 ## Database
 
 Uses SQLite for local development with the following tables:
+
 - `users` - User accounts
 - `plaid_items` - Plaid bank connections
 - `transactions` - Financial transactions
@@ -74,6 +81,7 @@ npm test
 ## Production Deployment
 
 For production, consider:
+
 1. Using PostgreSQL instead of SQLite
 2. Adding SSL certificates
 3. Setting up proper monitoring

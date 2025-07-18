@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { getPerformanceMonitor } from '@utils/performance';
+import React, { useEffect } from 'react';
+
 import { preloadCriticalComponents, preloadFunctions } from '@components/lazy/LazyComponents';
+import { getPerformanceMonitor } from '@utils/performance';
 
 interface PerformanceOptimizedLayoutProps {
   children: React.ReactNode;

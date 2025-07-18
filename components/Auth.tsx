@@ -1,13 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-import { apiService } from '@services/api';
+
+import { Alert, AlertDescription } from '@components/ui/alert';
 import { Button } from '@components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@components/ui/card';
 import { Input } from '@components/ui/input';
 import { Label } from '@components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@components/ui/card';
-import { Alert, AlertDescription } from '@components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@components/ui/tabs';
+import { apiService } from '@services/api';
 
 interface AuthProps {
   onSuccess?: () => void;
@@ -27,14 +28,14 @@ export function Auth({ onSuccess }: AuthProps) {
     const password = formData.get('password') as string;
 
     try {
-      const response = isLogin 
+      const response = isLogin
         ? await apiService.login(email, password)
         : await apiService.register(email, password);
 
       if (response.error) {
         setError(response.error);
         if (response.errors) {
-          const messages = response.errors.map(err => err.msg).join(', ');
+          const messages = response.errors.map((err) => err.msg).join(', ');
           setError(messages);
         }
       } else {
@@ -48,7 +49,7 @@ export function Auth({ onSuccess }: AuthProps) {
   };
 
   return (
-    <Card className="w-full max-w-md mx-auto">
+    <Card className='w-full max-w-md mx-auto'>
       <CardHeader>
         <CardTitle>Welcome to Budget Planner</CardTitle>
         <CardDescription>
@@ -56,78 +57,79 @@ export function Auth({ onSuccess }: AuthProps) {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <Tabs defaultValue="login" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="login">Login</TabsTrigger>
-            <TabsTrigger value="register">Register</TabsTrigger>
+        <Tabs defaultValue='login' className='w-full'>
+          <TabsList className='grid w-full grid-cols-2'>
+            <TabsTrigger value='login'>Login</TabsTrigger>
+            <TabsTrigger value='register'>Register</TabsTrigger>
           </TabsList>
-          
-          <TabsContent value="login">
-            <form onSubmit={(e) => handleSubmit(e, true)} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="login-email">Email</Label>
+
+          <TabsContent value='login'>
+            <form onSubmit={(e) => handleSubmit(e, true)} className='space-y-4'>
+              <div className='space-y-2'>
+                <Label htmlFor='login-email'>Email</Label>
                 <Input
-                  id="login-email"
-                  name="email"
-                  type="email"
-                  placeholder="you@example.com"
+                  id='login-email'
+                  name='email'
+                  type='email'
+                  placeholder='you@example.com'
                   required
                   disabled={isLoading}
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="login-password">Password</Label>
+              <div className='space-y-2'>
+                <Label htmlFor='login-password'>Password</Label>
                 <Input
-                  id="login-password"
-                  name="password"
-                  type="password"
+                  id='login-password'
+                  name='password'
+                  type='password'
                   required
                   disabled={isLoading}
                 />
               </div>
               {error && (
-                <Alert variant="destructive">
+                <Alert variant='destructive'>
                   <AlertDescription>{error}</AlertDescription>
                 </Alert>
               )}
-              <Button type="submit" className="w-full" disabled={isLoading}>
+              <Button type='submit' className='w-full' disabled={isLoading}>
                 {isLoading ? 'Signing in...' : 'Sign In'}
               </Button>
             </form>
           </TabsContent>
-          
-          <TabsContent value="register">
-            <form onSubmit={(e) => handleSubmit(e, false)} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="register-email">Email</Label>
+
+          <TabsContent value='register'>
+            <form onSubmit={(e) => handleSubmit(e, false)} className='space-y-4'>
+              <div className='space-y-2'>
+                <Label htmlFor='register-email'>Email</Label>
                 <Input
-                  id="register-email"
-                  name="email"
-                  type="email"
-                  placeholder="you@example.com"
+                  id='register-email'
+                  name='email'
+                  type='email'
+                  placeholder='you@example.com'
                   required
                   disabled={isLoading}
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="register-password">Password</Label>
+              <div className='space-y-2'>
+                <Label htmlFor='register-password'>Password</Label>
                 <Input
-                  id="register-password"
-                  name="password"
-                  type="password"
+                  id='register-password'
+                  name='password'
+                  type='password'
                   required
                   disabled={isLoading}
                 />
-                <p className="text-sm text-muted-foreground">
-                  Password must be at least 8 characters with uppercase, lowercase, number, and special character
+                <p className='text-sm text-muted-foreground'>
+                  Password must be at least 8 characters with uppercase, lowercase, number, and
+                  special character
                 </p>
               </div>
               {error && (
-                <Alert variant="destructive">
+                <Alert variant='destructive'>
                   <AlertDescription>{error}</AlertDescription>
                 </Alert>
               )}
-              <Button type="submit" className="w-full" disabled={isLoading}>
+              <Button type='submit' className='w-full' disabled={isLoading}>
                 {isLoading ? 'Creating account...' : 'Create Account'}
               </Button>
             </form>

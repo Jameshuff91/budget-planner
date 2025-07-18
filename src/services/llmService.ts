@@ -49,11 +49,11 @@ export class LLMService {
     this.model = config.model || 'gpt-4o-mini';
     this.temperature = config.temperature || 0.3;
     this.maxTokens = config.maxTokens || 150;
-    
-    logger.info('LLM Service initialized', { 
+
+    logger.info('LLM Service initialized', {
       model: this.model,
       hasApiKey: !!this.apiKey,
-      temperature: this.temperature 
+      temperature: this.temperature,
     });
   }
 
@@ -71,7 +71,7 @@ export class LLMService {
 
       logger.info('Sending categorization request to OpenAI', {
         model: this.model,
-        transactionDescription: transaction.description.substring(0, 50) + '...'
+        transactionDescription: transaction.description.substring(0, 50) + '...',
       });
 
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -107,11 +107,11 @@ export class LLMService {
         } catch (e) {
           // Ignore text parsing errors
         }
-        
+
         logger.error('OpenAI API error', {
           status: response.status,
           statusText: response.statusText,
-          errorBody: errorBody ? errorBody.substring(0, 200) : 'No error body available'
+          errorBody: errorBody ? errorBody.substring(0, 200) : 'No error body available',
         });
         throw new Error(`OpenAI API error: ${response.status} ${response.statusText}`);
       }
@@ -147,7 +147,7 @@ export class LLMService {
       logger.info('Sending batch categorization request to OpenAI', {
         model: this.model,
         transactionCount: transactions.length,
-        batchSize: transactions.length
+        batchSize: transactions.length,
       });
 
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -183,11 +183,11 @@ export class LLMService {
         } catch (e) {
           // Ignore text parsing errors
         }
-        
+
         logger.error('OpenAI API error', {
           status: response.status,
           statusText: response.statusText,
-          errorBody: errorBody ? errorBody.substring(0, 200) : 'No error body available'
+          errorBody: errorBody ? errorBody.substring(0, 200) : 'No error body available',
         });
         throw new Error(`OpenAI API error: ${response.status} ${response.statusText}`);
       }
@@ -246,11 +246,11 @@ Suggest up to 5 new categories that would better organize these transactions. Re
         } catch (e) {
           // Ignore text parsing errors
         }
-        
+
         logger.error('OpenAI API error', {
           status: response.status,
           statusText: response.statusText,
-          errorBody: errorBody ? errorBody.substring(0, 200) : 'No error body available'
+          errorBody: errorBody ? errorBody.substring(0, 200) : 'No error body available',
         });
         throw new Error(`OpenAI API error: ${response.status} ${response.statusText}`);
       }
@@ -353,8 +353,11 @@ Respond with a JSON array where each object has:
 // Factory function to create LLM service instance
 export function createLLMService(apiKey?: string, model?: string): LLMService | null {
   // Priority: provided apiKey > environment variable > localStorage
-  const key = apiKey || process.env.NEXT_PUBLIC_OPENAI_API_KEY || 
-    (typeof window !== 'undefined' ? localStorage.getItem('smartCategorization.apiKey') : null) || '';
+  const key =
+    apiKey ||
+    process.env.NEXT_PUBLIC_OPENAI_API_KEY ||
+    (typeof window !== 'undefined' ? localStorage.getItem('smartCategorization.apiKey') : null) ||
+    '';
 
   if (!key) {
     logger.warn('OpenAI API key not configured');
@@ -362,12 +365,13 @@ export function createLLMService(apiKey?: string, model?: string): LLMService | 
   }
 
   // Get model from parameter, environment, or localStorage
-  const selectedModel = model || 
+  const selectedModel =
+    model ||
     (typeof window !== 'undefined' ? localStorage.getItem('smartCategorization.model') : null) ||
     'gpt-4o-mini';
 
-  return new LLMService({ 
+  return new LLMService({
     apiKey: key,
-    model: selectedModel 
+    model: selectedModel,
   });
 }

@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@components/ui/card';
 import { useDBContext } from '@context/DatabaseContext';
 import { logger } from '@services/logger'; // Optional for debugging
 import { formatCurrency } from '@utils/helpers';
+
 import { StatCardSkeleton } from './skeletons/StatCardSkeleton';
 
 export default function NetWorthSummary() {

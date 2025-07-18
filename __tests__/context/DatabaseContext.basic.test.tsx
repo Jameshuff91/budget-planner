@@ -167,7 +167,7 @@ describe('DatabaseContext Basic Tests', () => {
         'getTransactionsByMonth',
       ];
 
-      const allMethodsPresent = methods.every((method) => typeof context[method] === 'function');
+      const allMethodsPresent = methods.every((method) => typeof (context as any)[method] === 'function');
 
       return <div data-testid='methods-check'>{allMethodsPresent.toString()}</div>;
     };

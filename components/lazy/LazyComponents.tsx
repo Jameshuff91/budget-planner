@@ -2,6 +2,7 @@
 
 import dynamic from 'next/dynamic';
 import React, { Suspense } from 'react';
+
 import { ChartSkeleton } from '@components/skeletons/ChartSkeleton';
 import { useRenderPerformance } from '@utils/performance';
 

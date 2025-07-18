@@ -3,16 +3,20 @@
 import { DollarSign, TrendingUp, PiggyBank, Download } from 'lucide-react';
 import { useState, useMemo } from 'react';
 
+import { Button } from '@components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@components/ui/tabs';
-import { Button } from '@components/ui/button';
 
 import { useDatabase } from '../src/hooks/useDatabase';
 
 import BudgetGoal from './BudgetGoal';
 import CategoryRules from './CategoryRules';
+import CategoryTrendAnalysis from './CategoryTrendAnalysis';
 import ChartDiagnostics from './ChartDiagnostics';
 import ChartErrorBoundary from './ChartErrorBoundary';
+import DateRangeSelector from './DateRangeSelector';
+import { ExportDialog } from './ExportDialog';
+import IncomeExpensesForecast from './IncomeExpensesForecast';
 import MobileNav from './MobileNav';
 import PlaidConnection from './PlaidConnection';
 import SmartCategorizationSettings from './SmartCategorizationSettings';
@@ -20,13 +24,9 @@ import SpendingAlerts from './SpendingAlerts';
 import SpendingByCategory from './SpendingByCategory';
 import SpendingOverview from './SpendingOverview';
 import SpendingTrend from './SpendingTrend';
+import SpendingVelocity from './SpendingVelocity';
 import TransactionList from './TransactionList';
 import YearOverYearComparison from './YearOverYearComparison';
-import SpendingVelocity from './SpendingVelocity';
-import CategoryTrendAnalysis from './CategoryTrendAnalysis';
-import IncomeExpensesForecast from './IncomeExpensesForecast';
-import DateRangeSelector from './DateRangeSelector';
-import { ExportDialog } from './ExportDialog';
 
 // Default values for empty state
 const DEFAULT_INCOME = 0;
@@ -197,7 +197,9 @@ export default function Dashboard() {
         </Card>
         <Card className='bg-gradient-to-br from-purple-500 to-purple-600 text-white shadow-lg'>
           <CardHeader className='flex flex-row items-center justify-between pb-2'>
-            <CardTitle className='text-lg font-medium'>Total Spending ({dateRange.label})</CardTitle>
+            <CardTitle className='text-lg font-medium'>
+              Total Spending ({dateRange.label})
+            </CardTitle>
             <TrendingUp className='h-6 w-6 opacity-75' />
           </CardHeader>
           <CardContent>

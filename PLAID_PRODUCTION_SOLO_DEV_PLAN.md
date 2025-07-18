@@ -1,11 +1,13 @@
 # Plaid Production Compliance - Solo Developer Plan
 
 ## Overview
+
 This plan focuses on achievable security improvements that a solo developer can implement without expensive cloud infrastructure, while still meeting essential Plaid production requirements.
 
 ## What We CAN Achieve Locally
 
 ### 1. Backend API Server (Required)
+
 **Why**: Plaid requires server-side API calls to protect secrets
 
 ```bash
@@ -15,12 +17,14 @@ npm install --save-dev @types/express @types/cors nodemon
 ```
 
 Create a simple Express backend:
+
 - Runs locally on port 3001
 - Proxies all Plaid API calls
 - Stores secrets in environment variables
 - Can be deployed to free/cheap hosting later (Render, Railway)
 
 ### 2. Local Database (SQLite or PostgreSQL)
+
 **Why**: Move from browser storage to proper database
 
 ```bash
@@ -33,12 +37,14 @@ npm install pg
 ```
 
 Benefits:
+
 - Proper data relationships
 - Better query capabilities
 - Audit trail support
 - Can migrate to cloud DB later
 
 ### 3. Authentication System
+
 **Why**: Required for multi-user support and security
 
 ```javascript
@@ -50,6 +56,7 @@ Benefits:
 ```
 
 ### 4. HTTPS (Self-Signed for Development)
+
 **Why**: Encrypted data transmission
 
 ```bash
@@ -58,6 +65,7 @@ openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 365 -node
 ```
 
 ### 5. Basic Security Headers
+
 ```javascript
 app.use(helmet()); // Sets security headers
 app.use(cors({ origin: 'http://localhost:3000' }));
@@ -67,6 +75,7 @@ app.use(express.json({ limit: '10mb' }));
 ## Implementation Steps
 
 ### Step 1: Create Backend API Structure
+
 ```
 backend/
 ├── server.js
@@ -85,6 +94,7 @@ backend/
 ```
 
 ### Step 2: Move Plaid Integration
+
 ```javascript
 // backend/routes/plaid.js
 const plaid = require('plaid');
@@ -98,7 +108,7 @@ const client = new plaid.PlaidApi(
         'PLAID-SECRET': process.env.PLAID_SECRET,
       },
     },
-  })
+  }),
 );
 
 // Create link token (backend only)
@@ -110,13 +120,14 @@ router.post('/link/token', authenticate, async (req, res) => {
     country_codes: ['US'],
     language: 'en',
   };
-  
+
   const response = await client.linkTokenCreate(configs);
   res.json(response.data);
 });
 ```
 
 ### Step 3: Database Schema
+
 ```sql
 -- SQLite schema
 CREATE TABLE users (
@@ -155,21 +166,25 @@ CREATE TABLE audit_logs (
 ```
 
 ### Step 4: Security Documentation
+
 Create these documents (templates available online):
+
 - `SECURITY.md` - Basic security policy
 - `PRIVACY.md` - Privacy policy
 - `DATA_RETENTION.md` - Data handling procedures
 - `INCIDENT_RESPONSE.md` - What to do if breached
 
 ### Step 5: Audit Logging
+
 ```javascript
 // middleware/logging.js
 const auditLog = (action, resource) => {
   return async (req, res, next) => {
-    await db.run(
-      'INSERT INTO audit_logs (user_id, action, resource) VALUES (?, ?, ?)',
-      [req.user?.id, action, resource]
-    );
+    await db.run('INSERT INTO audit_logs (user_id, action, resource) VALUES (?, ?, ?)', [
+      req.user?.id,
+      action,
+      resource,
+    ]);
     next();
   };
 };
@@ -179,6 +194,7 @@ router.get('/transactions', authenticate, auditLog('READ', 'transactions'), hand
 ```
 
 ### Step 6: Environment Configuration
+
 ```env
 # .env.local
 NODE_ENV=development
@@ -193,6 +209,7 @@ PLAID_ENV=sandbox
 ## Free/Low-Cost Security Tools
 
 ### 1. Code Security
+
 ```json
 // package.json
 "scripts": {
@@ -203,16 +220,19 @@ PLAID_ENV=sandbox
 ```
 
 ### 2. Dependency Scanning
+
 - GitHub Dependabot (free)
 - npm audit (built-in)
 - Snyk (free tier)
 
 ### 3. Secret Management
+
 - Git-crypt for encrypting secrets
 - .env files with .gitignore
 - GitHub Secrets for CI/CD
 
 ### 4. Testing
+
 ```javascript
 // tests/security.test.js
 describe('Security Tests', () => {
@@ -220,7 +240,7 @@ describe('Security Tests', () => {
     const res = await request(app).get('/api/transactions');
     expect(res.status).toBe(401);
   });
-  
+
   test('Passwords are hashed', async () => {
     // Test bcrypt implementation
   });
@@ -230,12 +250,14 @@ describe('Security Tests', () => {
 ## Deployment Options (When Ready)
 
 ### Free/Cheap Hosting
+
 1. **Railway** - $5/month, includes PostgreSQL
 2. **Render** - Free tier available
 3. **Fly.io** - Generous free tier
 4. **Vercel** - For Next.js frontend
 
 ### Local Development with Tunneling
+
 ```bash
 # For testing webhooks locally
 npx ngrok http 3001
@@ -244,6 +266,7 @@ npx ngrok http 3001
 ## Compliance Checklist (Solo Dev Version)
 
 ### Can Do Now ✅
+
 - [x] Backend API for Plaid calls
 - [x] Database for data storage
 - [x] Basic authentication
@@ -256,6 +279,7 @@ npx ngrok http 3001
 - [x] Code reviews (self-review checklist)
 
 ### Can Add Later 📅
+
 - [ ] MFA (use Auth0 free tier)
 - [ ] Professional penetration test
 - [ ] SOC 2 compliance

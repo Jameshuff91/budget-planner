@@ -18,6 +18,7 @@ import {
 import React, { useState, useRef, useCallback } from 'react';
 
 import { useDBContext } from '@context/DatabaseContext';
+
 import {
   BackupService,
   BackupOptions,
@@ -28,6 +29,8 @@ import {
 } from '../src/services/backupService';
 import { estimatePasswordStrength, generateSecurePassword } from '../src/utils/dataEncryption';
 
+import { Alert, AlertDescription } from './ui/alert';
+import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import {
@@ -44,8 +47,6 @@ import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 import { Switch } from './ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { toast } from './ui/use-toast';
-import { Badge } from './ui/badge';
-import { Alert, AlertDescription } from './ui/alert';
 
 interface BackupRestoreProps {
   isOpen: boolean;

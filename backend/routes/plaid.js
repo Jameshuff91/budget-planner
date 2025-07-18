@@ -19,7 +19,8 @@ const configuration = new Configuration({
 const plaidClient = new PlaidApi(configuration);
 
 // Create link token
-router.post('/link/token', 
+router.post(
+  '/link/token',
   authenticate,
   auditLog('CREATE_LINK_TOKEN', 'plaid'),
   async (req, res) => {
@@ -38,23 +39,24 @@ router.post('/link/token',
       };
 
       const createTokenResponse = await plaidClient.linkTokenCreate(configs);
-      
+
       res.json({
         link_token: createTokenResponse.data.link_token,
         expiration: createTokenResponse.data.expiration,
       });
     } catch (error) {
       console.error('Error creating link token:', error);
-      res.status(500).json({ 
+      res.status(500).json({
         error: 'Failed to create link token',
-        details: process.env.NODE_ENV === 'development' ? error.message : undefined
+        details: process.env.NODE_ENV === 'development' ? error.message : undefined,
       });
     }
-  }
+  },
 );
 
 // Exchange public token for access token
-router.post('/link/exchange',
+router.post(
+  '/link/exchange',
   authenticate,
   auditLog('EXCHANGE_TOKEN', 'plaid'),
   async (req, res) => {
@@ -91,7 +93,7 @@ router.post('/link/exchange',
         access_token,
         item_id,
         institution,
-        itemResponse.data.institution?.name || 'Unknown'
+        itemResponse.data.institution?.name || 'Unknown',
       );
 
       res.json({
@@ -101,68 +103,64 @@ router.post('/link/exchange',
       });
     } catch (error) {
       console.error('Error exchanging token:', error);
-      res.status(500).json({ 
+      res.status(500).json({
         error: 'Failed to exchange token',
-        details: process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test' ? error.message : undefined
+        details:
+          process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test'
+            ? error.message
+            : undefined,
       });
     }
-  }
+  },
 );
 
 // Get accounts
-router.get('/accounts',
-  authenticate,
-  auditLog('GET_ACCOUNTS', 'plaid'),
-  async (req, res) => {
-    try {
-      const db = getDatabase();
-      const items = db.prepare(
-        'SELECT * FROM plaid_items WHERE user_id = ?'
-      ).all(req.user.id);
+router.get('/accounts', authenticate, auditLog('GET_ACCOUNTS', 'plaid'), async (req, res) => {
+  try {
+    const db = getDatabase();
+    const items = db.prepare('SELECT * FROM plaid_items WHERE user_id = ?').all(req.user.id);
 
-      const accounts = [];
+    const accounts = [];
 
-      for (const item of items) {
-        try {
-          const accountsResponse = await plaidClient.accountsGet({
-            access_token: item.access_token,
-          });
+    for (const item of items) {
+      try {
+        const accountsResponse = await plaidClient.accountsGet({
+          access_token: item.access_token,
+        });
 
-          accounts.push({
-            item_id: item.item_id,
-            institution_name: item.institution_name,
-            accounts: accountsResponse.data.accounts,
-          });
-        } catch (error) {
-          console.error(`Error fetching accounts for item ${item.item_id}:`, error);
-          // Continue with other items even if one fails
-        }
+        accounts.push({
+          item_id: item.item_id,
+          institution_name: item.institution_name,
+          accounts: accountsResponse.data.accounts,
+        });
+      } catch (error) {
+        console.error(`Error fetching accounts for item ${item.item_id}:`, error);
+        // Continue with other items even if one fails
       }
-
-      res.json({ accounts });
-    } catch (error) {
-      console.error('Error getting accounts:', error);
-      res.status(500).json({ 
-        error: 'Failed to get accounts',
-        details: process.env.NODE_ENV === 'development' ? error.message : undefined
-      });
     }
+
+    res.json({ accounts });
+  } catch (error) {
+    console.error('Error getting accounts:', error);
+    res.status(500).json({
+      error: 'Failed to get accounts',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined,
+    });
   }
-);
+});
 
 // Get transactions
-router.post('/transactions/sync',
+router.post(
+  '/transactions/sync',
   authenticate,
   auditLog('SYNC_TRANSACTIONS', 'plaid'),
   async (req, res) => {
     try {
       const { start_date, end_date } = req.body;
       const db = getDatabase();
-      
+
       // Get all plaid items for user
-      const items = db.prepare(
-        'SELECT * FROM plaid_items WHERE user_id = ?'
-      ).all(req.user.id);
+      const items = db.prepare('SELECT * FROM plaid_items WHERE user_id = ?').all(req.user.id);
 
       const allTransactions = [];
       const errors = [];
@@ -200,7 +198,7 @@ router.post('/transactions/sync',
                 txn.category?.[0] || 'Other',
                 txn.category?.[1] || null,
                 txn.transaction_type,
-                txn.pending ? 1 : 0
+                txn.pending ? 1 : 0,
               );
             }
           });
@@ -228,54 +226,50 @@ router.post('/transactions/sync',
       });
     } catch (error) {
       console.error('Error syncing transactions:', error);
-      res.status(500).json({ 
+      res.status(500).json({
         error: 'Failed to sync transactions',
-        details: process.env.NODE_ENV === 'development' ? error.message : undefined
+        details: process.env.NODE_ENV === 'development' ? error.message : undefined,
       });
     }
-  }
+  },
 );
 
 // Remove bank connection
-router.delete('/item/:itemId',
-  authenticate,
-  auditLog('REMOVE_ITEM', 'plaid'),
-  async (req, res) => {
-    try {
-      const { itemId } = req.params;
-      const db = getDatabase();
+router.delete('/item/:itemId', authenticate, auditLog('REMOVE_ITEM', 'plaid'), async (req, res) => {
+  try {
+    const { itemId } = req.params;
+    const db = getDatabase();
 
-      // Get item to ensure it belongs to user
-      const item = db.prepare(
-        'SELECT * FROM plaid_items WHERE item_id = ? AND user_id = ?'
-      ).get(itemId, req.user.id);
+    // Get item to ensure it belongs to user
+    const item = db
+      .prepare('SELECT * FROM plaid_items WHERE item_id = ? AND user_id = ?')
+      .get(itemId, req.user.id);
 
-      if (!item) {
-        return res.status(404).json({ error: 'Item not found' });
-      }
-
-      // Remove from Plaid
-      try {
-        await plaidClient.itemRemove({
-          access_token: item.access_token,
-        });
-      } catch (error) {
-        console.error('Error removing item from Plaid:', error);
-        // Continue even if Plaid removal fails
-      }
-
-      // Remove from database
-      db.prepare('DELETE FROM plaid_items WHERE id = ?').run(item.id);
-
-      res.json({ success: true, message: 'Bank connection removed' });
-    } catch (error) {
-      console.error('Error removing item:', error);
-      res.status(500).json({ 
-        error: 'Failed to remove bank connection',
-        details: process.env.NODE_ENV === 'development' ? error.message : undefined
-      });
+    if (!item) {
+      return res.status(404).json({ error: 'Item not found' });
     }
+
+    // Remove from Plaid
+    try {
+      await plaidClient.itemRemove({
+        access_token: item.access_token,
+      });
+    } catch (error) {
+      console.error('Error removing item from Plaid:', error);
+      // Continue even if Plaid removal fails
+    }
+
+    // Remove from database
+    db.prepare('DELETE FROM plaid_items WHERE id = ?').run(item.id);
+
+    res.json({ success: true, message: 'Bank connection removed' });
+  } catch (error) {
+    console.error('Error removing item:', error);
+    res.status(500).json({
+      error: 'Failed to remove bank connection',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined,
+    });
   }
-);
+});
 
 module.exports = router;

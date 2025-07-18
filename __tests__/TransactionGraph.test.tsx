@@ -30,7 +30,7 @@ vi.mock('../src/context/DatabaseContext', () => ({
 describe('SpendingTrend Component', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    
+
     // Set default mock values
     mockUseDBContext.mockReturnValue({
       transactions: [],
@@ -65,7 +65,7 @@ describe('SpendingTrend Component', () => {
     mockUseAnalytics.mockReturnValue({
       spendingOverview: [],
     });
-    
+
     render(<SpendingTrend />);
     expect(screen.getByText('No trend data available')).toBeInTheDocument();
   });
@@ -76,7 +76,7 @@ describe('SpendingTrend Component', () => {
       categories: [],
       loading: true,
     });
-    
+
     mockUseAnalytics.mockReturnValue({
       spendingOverview: [],
     });

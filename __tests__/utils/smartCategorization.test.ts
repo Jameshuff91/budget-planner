@@ -23,8 +23,6 @@ vi.mock('@services/llmService', () => ({
   createLLMService: vi.fn(),
 }));
 
-
-
 // Mock localStorage
 const localStorageMock = (() => {
   let store: Record<string, string> = {};
@@ -48,7 +46,7 @@ Object.defineProperty(window, 'localStorage', {
 
 describe('Smart Categorization - getSmartCategorizationSettings', () => {
   const originalEnv = process.env;
-  
+
   beforeEach(() => {
     vi.clearAllMocks();
     localStorageMock.clear();
@@ -56,7 +54,7 @@ describe('Smart Categorization - getSmartCategorizationSettings', () => {
     process.env = { ...originalEnv };
     delete process.env.NEXT_PUBLIC_OPENAI_API_KEY;
   });
-  
+
   afterEach(() => {
     process.env = originalEnv;
   });
@@ -826,7 +824,7 @@ describe('Smart Categorization - categorizeTransactionsBatchWithAI', () => {
         Array.from({ length: 10 }, () => ({ category: 'BatchResult', confidence: 0.8 })),
       );
 
-      mockLLMService.categorizeTransactionsBatch.mockImplementation((batch) =>
+      mockLLMService.categorizeTransactionsBatch.mockImplementation((batch: any) =>
         Promise.resolve(mockBatchResults[Math.floor(mockBatchResults.length * Math.random())]),
       );
 

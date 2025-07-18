@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 // Helper to upload sample data
-async function uploadSampleData(page) {
+async function uploadSampleData(page: any) {
   await page.goto('/');
 
   // Upload the sample CSV file
@@ -14,7 +14,7 @@ async function uploadSampleData(page) {
 }
 
 // Helper to wait for dashboard to fully render
-async function waitForDashboardRender(page) {
+async function waitForDashboardRender(page: any) {
   // Wait for key dashboard elements
   await page.waitForSelector('[data-testid="month-selector"]', { timeout: 10000 });
   await page.waitForSelector('.recharts-responsive-container', { timeout: 10000 });
@@ -152,7 +152,7 @@ test.describe('Dashboard Visual Regression Tests', () => {
       return new Promise((resolve) => {
         setTimeout(() => {
           route.continue();
-          resolve();
+          resolve(undefined);
         }, 3000);
       });
     });

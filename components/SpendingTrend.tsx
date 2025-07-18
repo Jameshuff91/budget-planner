@@ -13,10 +13,9 @@ import {
 } from 'recharts';
 
 import { useDBContext } from '@context/DatabaseContext';
+
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { useAnalytics } from '../src/hooks/useAnalytics';
-import { formatCurrency } from '../src/utils/helpers';
-import { ChartSkeleton } from './skeletons/ChartSkeleton';
 import {
   shallowCompareProps,
   getOptimizedAnimationProps,
@@ -24,6 +23,9 @@ import {
   createPerformanceMarker,
   optimizeChartData,
 } from '../src/utils/chartOptimization';
+import { formatCurrency } from '../src/utils/helpers';
+
+import { ChartSkeleton } from './skeletons/ChartSkeleton';
 
 type SpendingTrendData = {
   name: string; // Month name e.g., "Jan"
@@ -35,7 +37,9 @@ type SpendingTrendData = {
 };
 
 // Helper function to calculate linear regression
-const calculateTrendLine = (data: { x: number; y: number }[]): { slope: number; intercept: number } => {
+const calculateTrendLine = (
+  data: { x: number; y: number }[],
+): { slope: number; intercept: number } => {
   const n = data.length;
   if (n < 2) return { slope: 0, intercept: 0 };
 
@@ -58,7 +62,20 @@ const calculateTrendLine = (data: { x: number; y: number }[]): { slope: number; 
 };
 
 // Month abbreviations
-const monthsAbbrev = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const monthsAbbrev = [
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec',
+];
 
 interface SpendingTrendProps {
   selectedYear?: number;

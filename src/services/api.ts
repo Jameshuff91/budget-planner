@@ -22,7 +22,7 @@ class ApiService {
 
   private async request<T = any>(
     endpoint: string,
-    options: RequestInit = {}
+    options: RequestInit = {},
   ): Promise<ApiResponse<T>> {
     try {
       const headers = {
@@ -32,7 +32,7 @@ class ApiService {
 
       // Add auth header if token exists
       if (this.accessToken) {
-        headers['Authorization'] = `Bearer ${this.accessToken}`;
+        (headers as any)['Authorization'] = `Bearer ${this.accessToken}`;
       }
 
       const response = await fetch(`${API_BASE_URL}${endpoint}`, {
@@ -259,7 +259,7 @@ class ApiService {
       merchant_name: string;
       category: string;
       subcategory: string;
-    }>
+    }>,
   ) {
     return this.request(`/transactions/${id}`, {
       method: 'PUT',

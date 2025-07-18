@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 // Helper to wait for charts to render
-async function waitForChartRender(page) {
+async function waitForChartRender(page: any) {
   // Wait for Recharts containers
   await page.waitForSelector('.recharts-responsive-container', { timeout: 10000 });
   // Wait for animations to complete
@@ -11,7 +11,7 @@ async function waitForChartRender(page) {
 }
 
 // Helper to upload sample data
-async function uploadSampleData(page) {
+async function uploadSampleData(page: any) {
   await page.goto('/');
 
   // Upload the sample CSV file
@@ -147,7 +147,7 @@ test.describe('Chart Visual Regression Tests', () => {
       return new Promise((resolve) => {
         setTimeout(() => {
           route.continue();
-          resolve();
+          resolve(undefined);
         }, 2000);
       });
     });

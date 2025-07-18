@@ -5,6 +5,8 @@ import React, { useState, useEffect } from 'react';
 
 import { useDBContext } from '@context/DatabaseContext';
 
+import { Transaction } from '../src/types';
+
 import { Button } from './ui/button';
 import {
   Dialog,
@@ -18,8 +20,6 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { toast } from './ui/use-toast';
-
-import { Transaction } from '../src/types';
 
 interface TransactionEditModalProps {
   transaction: Transaction | null;

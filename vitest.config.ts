@@ -14,13 +14,13 @@ export default defineConfig({
       '**/cypress/**',
       '**/.{idea,git,cache,output,temp}/**',
       '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build}.config.*',
-      '**/e2e/**/*.spec.ts',  // Exclude Playwright e2e tests
+      '**/e2e/**/*.spec.ts', // Exclude Playwright e2e tests
       '**/e2e/**/*.spec.tsx', // Exclude Playwright e2e tests (tsx)
       '**/playwright-report/**',
       '**/playwright/**',
-      '**/*.spec.ts',  // Exclude all .spec.ts files (Playwright tests)
+      '**/*.spec.ts', // Exclude all .spec.ts files (Playwright tests)
       '**/*.spec.tsx', // Exclude all .spec.tsx files if any
-      '**/backend/**',  // Exclude backend tests (they use Jest)
+      '**/backend/**', // Exclude backend tests (they use Jest)
     ],
     maxConcurrency: 1,
     pool: 'forks',

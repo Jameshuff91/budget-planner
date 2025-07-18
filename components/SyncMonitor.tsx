@@ -1,18 +1,17 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import { RefreshCw, AlertCircle, CheckCircle, Clock, Activity } from 'lucide-react';
+import { useState, useEffect } from 'react';
 
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Progress } from '@/components/ui/progress';
-import { useToast } from '@/hooks/use-toast';
-
-import { syncService, SyncStatus } from '@/src/services/syncService';
-import { scheduledSyncService } from '@/src/services/scheduledSyncService';
-import { logger } from '@/src/services/logger';
+import { Alert, AlertDescription } from '@components/ui/alert';
+import { Badge } from '@components/ui/badge';
+import { Button } from '@components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@components/ui/card';
+// import { Progress } from '@components/ui/progress';
+import { useToast } from '@components/ui/use-toast';
+import { logger } from '@services/logger';
+import { scheduledSyncService } from '@services/scheduledSyncService';
+import { syncService, SyncStatus } from '@services/syncService';
 
 export default function SyncMonitor() {
   const [syncStatuses, setSyncStatuses] = useState<SyncStatus[]>([]);
@@ -25,10 +24,13 @@ export default function SyncMonitor() {
 
   // Load sync statuses
   const loadSyncStatuses = () => {
-    const statuses = syncService.getAllSyncStatuses();
+    const statuses = syncService?.getAllSyncStatuses() || [];
     setSyncStatuses(statuses);
 
-    const scheduledStatus = scheduledSyncService.getStatus();
+    const scheduledStatus = scheduledSyncService?.getStatus() || {
+      isRunning: false,
+      intervalMs: 3600000,
+    };
     setScheduledSyncStatus(scheduledStatus);
   };
 
@@ -36,7 +38,7 @@ export default function SyncMonitor() {
   const handleManualSync = async () => {
     setIsManualSyncing(true);
     try {
-      await scheduledSyncService.runSyncNow();
+      await scheduledSyncService?.runSyncNow();
       toast({
         title: 'Sync Completed',
         description: 'All accounts have been synchronized successfully.',
@@ -113,7 +115,7 @@ export default function SyncMonitor() {
     return () => clearInterval(interval);
   }, []);
 
-  const stats = syncService.getSyncStats();
+  const stats = syncService?.getSyncStats() || { totalAccounts: 0, errorCount: 0 };
   const hasErrors = syncStatuses.some((status) => status.status === 'error');
   const activeSyncs = syncStatuses.filter((status) => status.status === 'syncing').length;
 
@@ -210,7 +212,12 @@ export default function SyncMonitor() {
                   {/* Progress Bar for Active Syncs */}
                   {status.status === 'syncing' && (
                     <div className='mb-2'>
-                      <Progress value={getSyncProgress(status)} className='h-2' />
+                      <div className='w-full bg-gray-200 rounded-full h-2'>
+                        <div
+                          className='bg-blue-600 h-2 rounded-full transition-all duration-300'
+                          style={{ width: `${getSyncProgress(status)}%` }}
+                        />
+                      </div>
                     </div>
                   )}
 

@@ -50,7 +50,8 @@ vi.mock('../src/utils/userErrors', () => ({
   showUserError: vi.fn((error, toast, context) => {
     toast({
       title: 'Error',
-      description: 'Unable to read this PDF file. It may be corrupted or password-protected. Try opening the file in a PDF reader first to verify it\'s valid.',
+      description:
+        "Unable to read this PDF file. It may be corrupted or password-protected. Try opening the file in a PDF reader first to verify it's valid.",
       variant: 'destructive',
     });
   }),

@@ -1,9 +1,11 @@
 // pdfServiceOptimized.ts - Optimized version with dynamic imports
 
+import { getPerformanceMonitor } from '@utils/performance';
+
 import { applyCategoryRules, loadCategoryRules } from '../utils/categoryRules';
+
 import { dbService } from './db';
 import { logger } from './logger';
-import { getPerformanceMonitor } from '@utils/performance';
 
 // Type declarations
 export interface PDFDocument {

@@ -4,6 +4,8 @@ import { Calendar, Download } from 'lucide-react';
 import React, { useState } from 'react';
 
 import { useDBContext } from '@context/DatabaseContext';
+
+import { Transaction } from '../src/types';
 import { exportTransactionsToCSV, exportCategorySummaryToCSV } from '../src/utils/csvExport';
 
 import { Button } from './ui/button';
@@ -19,8 +21,6 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 import { toast } from './ui/use-toast';
-
-import { Transaction } from '../src/types';
 
 interface ExportDialogProps {
   isOpen: boolean;

@@ -11,14 +11,15 @@ import { ScrollArea } from '@components/ui/scroll-area';
 import { useToast } from '@components/ui/use-toast';
 import { useDBContext } from '@context/DatabaseContext';
 import { useAnalytics } from '@hooks/useAnalytics';
-import { formatCurrency } from '@utils/helpers';
-import { ChartSkeleton } from './skeletons/ChartSkeleton';
 import {
   shallowCompareProps,
   getOptimizedAnimationProps,
   getOptimizedColor,
   memoizeChartProps,
 } from '@utils/chartOptimization';
+import { formatCurrency } from '@utils/helpers';
+
+import { ChartSkeleton } from './skeletons/ChartSkeleton';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#FF6B6B'];
 

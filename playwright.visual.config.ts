@@ -38,7 +38,7 @@ export default defineConfig({
       args: ['--force-prefers-reduced-motion'],
     },
     // Wait for fonts to load
-    waitForLoadState: 'networkidle',
+    // waitForLoadState: 'networkidle',
   },
 
   projects: [

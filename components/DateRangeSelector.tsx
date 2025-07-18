@@ -1,8 +1,10 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
 import { Calendar, ChevronDown } from 'lucide-react';
+import React, { useState, useCallback } from 'react';
+
 import { Button } from './ui/button';
+import { Card, CardContent } from './ui/card';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,7 +12,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from './ui/dropdown-menu';
-import { Card, CardContent } from './ui/card';
 import { Label } from './ui/label';
 
 interface DateRange {
@@ -177,27 +178,23 @@ export default function DateRangeSelector({ onDateRangeChange, defaultRange = 'm
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="outline" className="w-[280px] justify-between">
-            <span className="flex items-center gap-2">
-              <Calendar className="h-4 w-4" />
+          <Button variant='outline' className='w-[280px] justify-between'>
+            <span className='flex items-center gap-2'>
+              <Calendar className='h-4 w-4' />
               {selectedRange.label}: {formatDateRange(selectedRange)}
             </span>
-            <ChevronDown className="h-4 w-4" />
+            <ChevronDown className='h-4 w-4' />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent className="w-[280px]" align="start">
+        <DropdownMenuContent className='w-[280px]' align='start'>
           <DropdownMenuItem onClick={() => handlePresetSelect('month')}>
             This Month
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => handlePresetSelect('quarter')}>
             This Quarter
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => handlePresetSelect('year')}>
-            This Year
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => handlePresetSelect('all')}>
-            All Time
-          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => handlePresetSelect('year')}>This Year</DropdownMenuItem>
+          <DropdownMenuItem onClick={() => handlePresetSelect('all')}>All Time</DropdownMenuItem>
           <DropdownMenuSeparator />
           {getQuickRanges().map((quickRange) => (
             <DropdownMenuItem
@@ -211,49 +208,44 @@ export default function DateRangeSelector({ onDateRangeChange, defaultRange = 'm
             </DropdownMenuItem>
           ))}
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => setIsCustomOpen(true)}>
-            Custom Range...
-          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setIsCustomOpen(true)}>Custom Range...</DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
 
       {isCustomOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <Card className="w-96">
-            <CardContent className="p-6">
-              <h3 className="text-lg font-semibold mb-4">Select Custom Date Range</h3>
-              <div className="space-y-4">
+        <div className='fixed inset-0 bg-black/50 flex items-center justify-center z-50'>
+          <Card className='w-96'>
+            <CardContent className='p-6'>
+              <h3 className='text-lg font-semibold mb-4'>Select Custom Date Range</h3>
+              <div className='space-y-4'>
                 <div>
-                  <Label htmlFor="start-date">Start Date</Label>
+                  <Label htmlFor='start-date'>Start Date</Label>
                   <input
-                    id="start-date"
-                    type="date"
+                    id='start-date'
+                    type='date'
                     value={customStart}
                     onChange={(e) => setCustomStart(e.target.value)}
-                    className="w-full mt-1 px-3 py-2 border rounded-md"
+                    className='w-full mt-1 px-3 py-2 border rounded-md'
                     max={customEnd || new Date().toISOString().split('T')[0]}
                   />
                 </div>
                 <div>
-                  <Label htmlFor="end-date">End Date</Label>
+                  <Label htmlFor='end-date'>End Date</Label>
                   <input
-                    id="end-date"
-                    type="date"
+                    id='end-date'
+                    type='date'
                     value={customEnd}
                     onChange={(e) => setCustomEnd(e.target.value)}
-                    className="w-full mt-1 px-3 py-2 border rounded-md"
+                    className='w-full mt-1 px-3 py-2 border rounded-md'
                     min={customStart}
                     max={new Date().toISOString().split('T')[0]}
                   />
                 </div>
-                <div className="flex gap-2 justify-end mt-6">
-                  <Button variant="outline" onClick={() => setIsCustomOpen(false)}>
+                <div className='flex gap-2 justify-end mt-6'>
+                  <Button variant='outline' onClick={() => setIsCustomOpen(false)}>
                     Cancel
                   </Button>
-                  <Button
-                    onClick={handleCustomRange}
-                    disabled={!customStart || !customEnd}
-                  >
+                  <Button onClick={handleCustomRange} disabled={!customStart || !customEnd}>
                     Apply
                   </Button>
                 </div>

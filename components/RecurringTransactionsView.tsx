@@ -13,6 +13,7 @@ import { useDBContext } from '@context/DatabaseContext'; // Import useDBContext
 import { useAnalytics } from '@hooks/useAnalytics';
 import { logger } from '@services/logger'; // Optional for debugging
 import { formatCurrency } from '@utils/helpers';
+
 import { TransactionListSkeleton } from './skeletons/TransactionListSkeleton';
 
 export default function RecurringTransactionsView() {

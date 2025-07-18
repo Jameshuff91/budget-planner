@@ -1,10 +1,7 @@
 'use client';
 
-import React, { useMemo, useCallback } from 'react';
 import { Gauge, TrendingUp, TrendingDown, AlertTriangle, Activity } from 'lucide-react';
-
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@components/ui/card';
-import { useDBContext } from '@context/DatabaseContext';
+import React, { useMemo, useCallback } from 'react';
 import {
   Area,
   AreaChart,
@@ -15,9 +12,8 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 
-import { formatCurrency } from '@utils/helpers';
-import { ChartSkeleton } from './skeletons/ChartSkeleton';
-import { StatCardGridSkeleton } from './skeletons/StatCardSkeleton';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@components/ui/card';
+import { useDBContext } from '@context/DatabaseContext';
 import {
   shallowCompareProps,
   getOptimizedAnimationProps,
@@ -25,6 +21,10 @@ import {
   createPerformanceMarker,
   optimizeChartData,
 } from '@utils/chartOptimization';
+import { formatCurrency } from '@utils/helpers';
+
+import { ChartSkeleton } from './skeletons/ChartSkeleton';
+import { StatCardGridSkeleton } from './skeletons/StatCardSkeleton';
 
 interface SpendingVelocityProps {
   selectedYear: number;

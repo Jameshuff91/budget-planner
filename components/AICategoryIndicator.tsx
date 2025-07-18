@@ -2,6 +2,7 @@
 
 import { Brain } from 'lucide-react';
 import { useEffect, useState } from 'react';
+
 import { Badge } from './ui/badge';
 
 export function AICategoryIndicator() {

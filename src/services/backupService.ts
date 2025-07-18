@@ -1,5 +1,3 @@
-import { dbService } from './db';
-import { logger } from './logger';
 import { DataEncryption, EncryptionResult } from '../utils/dataEncryption';
 import {
   DataMigration,
@@ -10,6 +8,9 @@ import {
   createBackupSummary,
 } from '../utils/dataMigration';
 import { generateUUID } from '../utils/helpers';
+
+import { dbService } from './db';
+import { logger } from './logger';
 
 export interface BackupOptions {
   includeTransactions: boolean;
@@ -355,7 +356,7 @@ export class BackupService {
         // Clear other stores
         const stores = ['categories', 'assets', 'liabilities', 'recurringPreferences'];
         for (const storeName of stores) {
-          const tx = db.transaction(storeName, 'readwrite');
+          const tx = db.transaction(storeName as any, 'readwrite');
           await tx.store.clear();
           await tx.done;
         }
@@ -448,7 +449,7 @@ export class BackupService {
           await dbService.setRecurringPreference(candidateId, status);
         } catch (error) {
           // Continue on error for preferences
-          logger.warn('Failed to import recurring preference:', candidateId, error);
+          logger.warn('Failed to import recurring preference:', `${candidateId} - ${error}`);
         }
       }
     } catch (error) {

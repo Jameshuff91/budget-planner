@@ -10,24 +10,26 @@ vi.mock('@context/DatabaseContext', () => {
   const mockUseDBContext = vi.fn();
   return {
     useDBContext: mockUseDBContext,
-    __mockUseDBContext: mockUseDBContext,
+    mockUseDBContext: mockUseDBContext,
   };
 });
 
 // Mock the chart components
 vi.mock('recharts', () => ({
-  ResponsiveContainer: ({ children }: any) => <div data-testid="responsive-container">{children}</div>,
-  LineChart: ({ children }: any) => <div data-testid="line-chart">{children}</div>,
+  ResponsiveContainer: ({ children }: any) => (
+    <div data-testid='responsive-container'>{children}</div>
+  ),
+  LineChart: ({ children }: any) => <div data-testid='line-chart'>{children}</div>,
   Line: ({ dataKey }: any) => <div data-testid={`line-${dataKey}`} />,
-  XAxis: () => <div data-testid="x-axis" />,
-  YAxis: () => <div data-testid="y-axis" />,
-  CartesianGrid: () => <div data-testid="cartesian-grid" />,
-  Tooltip: () => <div data-testid="tooltip" />,
-  Legend: () => <div data-testid="legend" />,
+  XAxis: () => <div data-testid='x-axis' />,
+  YAxis: () => <div data-testid='y-axis' />,
+  CartesianGrid: () => <div data-testid='cartesian-grid' />,
+  Tooltip: () => <div data-testid='tooltip' />,
+  Legend: () => <div data-testid='legend' />,
 }));
 
 // Import the mock function
-import { __mockUseDBContext } from '@context/DatabaseContext';
+import { useDBContext } from '@context/DatabaseContext';
 
 // Mock transactions data with recent dates
 const currentDate = new Date();
@@ -91,11 +93,11 @@ const mockContextValue = {
 };
 
 describe('CategoryTrendAnalysis', () => {
-  const mockUseDBContext = __mockUseDBContext as ReturnType<typeof vi.fn>;
+  const mockUseDBContext = useDBContext as ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
     vi.clearAllMocks();
-    
+
     // Set up default mock context values
     mockUseDBContext.mockReturnValue({
       transactions: mockTransactions,
@@ -107,13 +109,13 @@ describe('CategoryTrendAnalysis', () => {
 
   it('renders without crashing', () => {
     render(<CategoryTrendAnalysis />);
-    
+
     expect(screen.getByText('Category Spending Trends')).toBeInTheDocument();
   });
 
   it('displays available categories in the selection list', () => {
     render(<CategoryTrendAnalysis />);
-    
+
     expect(screen.getByText('Food')).toBeInTheDocument();
     expect(screen.getByText('Transportation')).toBeInTheDocument();
     expect(screen.getByText('Utilities')).toBeInTheDocument();
@@ -121,18 +123,18 @@ describe('CategoryTrendAnalysis', () => {
 
   it('allows toggling category selection', async () => {
     render(<CategoryTrendAnalysis />);
-    
+
     const foodCheckbox = screen.getByRole('checkbox', { name: /Food/i });
-    
+
     // Food should be selected by default (top 3 categories)
     expect(foodCheckbox).toBeChecked();
-    
+
     // Uncheck Food
     fireEvent.click(foodCheckbox);
     await waitFor(() => {
       expect(foodCheckbox).not.toBeChecked();
     });
-    
+
     // Check it again
     fireEvent.click(foodCheckbox);
     await waitFor(() => {
@@ -142,46 +144,46 @@ describe('CategoryTrendAnalysis', () => {
 
   it('handles Top 5 button click', async () => {
     render(<CategoryTrendAnalysis />);
-    
+
     const top5Button = screen.getByRole('button', { name: /Top 5/i });
     fireEvent.click(top5Button);
-    
+
     // Since we only have 3 categories, all should be selected
     await waitFor(() => {
       const checkboxes = screen.getAllByRole('checkbox');
-      checkboxes.forEach(checkbox => {
+      checkboxes.forEach((checkbox) => {
         expect(checkbox).toBeChecked();
       });
     });
   });
 
   it('handles Select All / Clear All button', async () => {
-    __mockUseDBContext.mockReturnValue(mockContextValue);
-    
+    mockUseDBContext.mockReturnValue(mockContextValue);
+
     render(<CategoryTrendAnalysis />);
-    
+
     const selectAllButton = screen.getByRole('button', { name: /Select All/i });
-    
+
     // Click Select All
     await userEvent.click(selectAllButton);
     await waitFor(() => {
       const checkboxes = screen.getAllByRole('checkbox');
-      checkboxes.forEach(checkbox => {
+      checkboxes.forEach((checkbox) => {
         expect(checkbox).toBeChecked();
       });
     });
-    
+
     // Wait for button text to update to "Clear All"
     await waitFor(() => {
       expect(screen.getByRole('button', { name: /Clear All/i })).toBeInTheDocument();
     });
-    
+
     const clearAllButton = screen.getByRole('button', { name: /Clear All/i });
     await userEvent.click(clearAllButton);
-    
+
     await waitFor(() => {
       const checkboxes = screen.getAllByRole('checkbox');
-      checkboxes.forEach(checkbox => {
+      checkboxes.forEach((checkbox) => {
         expect(checkbox).not.toBeChecked();
       });
     });
@@ -192,19 +194,19 @@ describe('CategoryTrendAnalysis', () => {
       ...mockContextValue,
       transactions: [],
     };
-    
-    __mockUseDBContext.mockReturnValue(emptyContext);
-    
+
+    mockUseDBContext.mockReturnValue(emptyContext);
+
     render(<CategoryTrendAnalysis />);
-    
+
     expect(screen.getByText('No categories selected')).toBeInTheDocument();
   });
 
   it('respects selectedYear prop', () => {
-    __mockUseDBContext.mockReturnValue(mockContextValue);
-    
+    mockUseDBContext.mockReturnValue(mockContextValue);
+
     render(<CategoryTrendAnalysis selectedYear={2023} />);
-    
+
     // Component should render without errors
     expect(screen.getByText('Category Spending Trends')).toBeInTheDocument();
   });

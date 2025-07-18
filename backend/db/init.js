@@ -7,13 +7,13 @@ let db;
 
 function getDatabase() {
   if (!db) {
-    db = new Database(dbPath, { 
-      verbose: process.env.NODE_ENV === 'development' ? console.log : null 
+    db = new Database(dbPath, {
+      verbose: process.env.NODE_ENV === 'development' ? console.log : null,
     });
-    
+
     // Enable foreign keys
     db.pragma('foreign_keys = ON');
-    
+
     // Optimize for performance
     db.pragma('journal_mode = WAL');
     db.pragma('synchronous = NORMAL');
@@ -23,7 +23,7 @@ function getDatabase() {
 
 async function initializeDatabase() {
   const db = getDatabase();
-  
+
   // Create users table
   db.exec(`
     CREATE TABLE IF NOT EXISTS users (
@@ -179,7 +179,7 @@ const dbHelpers = {
       data.ipAddress || null,
       data.userAgent || null,
       data.success !== false ? 1 : 0,
-      data.errorMessage || null
+      data.errorMessage || null,
     );
   },
 
@@ -215,11 +215,11 @@ const dbHelpers = {
     const db = getDatabase();
     const stmt = db.prepare("DELETE FROM sessions WHERE expires_at <= datetime('now')");
     return stmt.run();
-  }
+  },
 };
 
 module.exports = {
   initializeDatabase,
   getDatabase,
-  ...dbHelpers
+  ...dbHelpers,
 };

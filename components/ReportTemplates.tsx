@@ -1,12 +1,12 @@
 'use client';
 
-import { useState } from 'react';
 import { format, startOfMonth, endOfMonth, startOfYear, endOfYear, subMonths } from 'date-fns';
 import { FileText, TrendingUp, PieChart, BarChart3, Calendar, Download } from 'lucide-react';
+import { useState } from 'react';
 
+import { Badge } from '@components/ui/badge';
 import { Button } from '@components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@components/ui/card';
-import { Badge } from '@components/ui/badge';
 import {
   Dialog,
   DialogContent,
@@ -23,10 +23,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@components/ui/tabs';
 import { useToast } from '@components/ui/use-toast';
 import { useDBContext } from '@context/DatabaseContext';
 import { useAnalytics } from '@hooks/useAnalytics';
+import { logger } from '@services/logger';
+import { formatCurrency } from '@utils/helpers';
+
 import { reportService, ReportOptions, ReportData } from '../src/services/reportService';
 import { PDFGenerator, createFinancialReport } from '../src/utils/pdfGenerator';
-import { formatCurrency } from '@utils/helpers';
-import { logger } from '@services/logger';
 
 export interface ReportTemplate {
   id: string;

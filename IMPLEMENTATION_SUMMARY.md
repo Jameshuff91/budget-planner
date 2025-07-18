@@ -297,6 +297,7 @@ This document provides a comprehensive summary of all features implemented in th
 ### Recent Feature Additions (NEW)
 
 #### Category Trend Analysis
+
 - `/components/CategoryTrendAnalysis.tsx` - Interactive line chart for tracking category spending trends over time
 - Allows users to select multiple categories for comparison
 - Shows monthly trends for the past 12 months
@@ -304,6 +305,7 @@ This document provides a comprehensive summary of all features implemented in th
 - Displays total spending per category in the selection interface
 
 #### Income vs Expenses Forecast
+
 - `/components/IncomeExpensesForecast.tsx` - Advanced forecasting component using linear regression
 - Predicts future income and expenses based on historical trends
 - Supports 3, 6, and 12-month forecast periods
@@ -313,6 +315,7 @@ This document provides a comprehensive summary of all features implemented in th
 - `/components/__tests__/IncomeExpensesForecast.test.tsx` - Comprehensive unit tests
 
 #### Custom Date Range Selection
+
 - `/components/DateRangeSelector.tsx` - Flexible date range picker component
 - Preset ranges: This Month, This Quarter, This Year, All Time
 - Quick ranges: Last 7/30/90 days, Last Month/Quarter/Year, Year to Date

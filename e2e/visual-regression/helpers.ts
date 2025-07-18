@@ -87,11 +87,11 @@ export async function setConsistentDate(page: Page, date: Date = new Date('2024-
     const OriginalDate = Date;
     // @ts-ignore
     window.Date = class extends OriginalDate {
-      constructor(...args) {
+      constructor(...args: any[]) {
         if (args.length === 0) {
           super(constantDate.getTime());
         } else {
-          super(...args);
+          super(...(args as [number, number, number, number, number, number, number]));
         }
       }
 
@@ -101,6 +101,7 @@ export async function setConsistentDate(page: Page, date: Date = new Date('2024-
     };
 
     // Override Date prototype methods
+    // @ts-ignore
     window.Date.prototype = OriginalDate.prototype;
     window.Date.UTC = OriginalDate.UTC;
     window.Date.parse = OriginalDate.parse;

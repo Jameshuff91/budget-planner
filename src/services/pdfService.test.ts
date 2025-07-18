@@ -1020,9 +1020,9 @@ describe('PDFService', () => {
     it('should call OpenCV functions if cv is available', () => {
       // Reset the openCvAvailable flag to ensure OpenCV is used
       (pdfService as any).openCvAvailable = null;
-      
+
       const imageData = new ImageData(new Uint8ClampedArray(100 * 100 * 4), 100, 100);
-      
+
       // Mock the Mat constructor to return a Mat-like object with channels method
       const mockMat = {
         delete: vi.fn(),
@@ -1032,52 +1032,52 @@ describe('PDFService', () => {
         channels: vi.fn(() => 1),
         data: new Uint8ClampedArray(100 * 100 * 4),
       };
-      
+
       // Create special mock for source Mat with clone method
       const srcMat = {
         ...mockMat,
-        clone: vi.fn(() => ({ ...mockMat }))
+        clone: vi.fn(() => ({ ...mockMat })),
       };
-      
+
       // Mock matFromImageData to return the source Mat
       mockCv.matFromImageData = vi.fn(() => srcMat);
-      
+
       // Override the Mat constructor to return our mock
       mockCv.Mat = vi.fn(() => mockMat);
-      
+
       // Mock MatVector constructor
       mockCv.MatVector = vi.fn(() => ({
         size: vi.fn(() => 0),
         get: vi.fn(),
-        delete: vi.fn()
+        delete: vi.fn(),
       }));
-      
+
       // Mock constructors for Point, Size, Scalar
       mockCv.Point = vi.fn((x, y) => ({ x, y }));
       mockCv.Size = vi.fn((width, height) => ({ width, height }));
       mockCv.Scalar = vi.fn(() => ({ values: [0, 0, 0, 0] }));
-      
+
       // Mock adaptiveThreshold to create a grayscale Mat (1 channel)
       mockCv.adaptiveThreshold = vi.fn((src, dst) => {
         // dst is already a mock Mat, just ensure it has 1 channel
         dst.channels = vi.fn(() => 1);
       });
-      
+
       // Call preprocessImage which should use OpenCV
       const result = pdfService['preprocessImage'](imageData);
-      
+
       // If the result is the original imageData, it means an error occurred
       if (result === imageData) {
         console.log('preprocessImage returned original imageData - likely an error occurred');
       }
-      
+
       // Verify it returned something
       expect(result).toBeDefined();
       // Should have properties like an ImageData
       expect(result).toHaveProperty('data');
       expect(result).toHaveProperty('width');
       expect(result).toHaveProperty('height');
-      
+
       // Check that at least matFromImageData was called - this proves OpenCV path was taken
       expect(mockCv.matFromImageData).toHaveBeenCalledWith(imageData);
       // If we reach the basic OpenCV calls, that's good enough for this test
@@ -1087,11 +1087,11 @@ describe('PDFService', () => {
     it('should handle deskewing logic branches correctly', () => {
       // Reset the openCvAvailable flag to ensure OpenCV is used
       (pdfService as any).openCvAvailable = null;
-      
+
       const imageData = new ImageData(new Uint8ClampedArray(100 * 100 * 4), 100, 100);
 
       // We'll run three different scenarios, so we need to reset mocks between each
-      
+
       // Scenario 1: No contours found (no deskewing)
       {
         // Set up fresh mocks for this scenario
@@ -1103,25 +1103,25 @@ describe('PDFService', () => {
           channels: vi.fn(() => 1),
           data: new Uint8ClampedArray(100 * 100 * 4),
         };
-        
+
         const srcMat = {
           ...mockMat,
-          clone: vi.fn(() => ({ ...mockMat }))
+          clone: vi.fn(() => ({ ...mockMat })),
         };
-        
+
         mockCv.matFromImageData = vi.fn(() => srcMat);
         mockCv.Mat = vi.fn(() => mockMat);
         mockCv.MatVector = vi.fn(() => ({
           size: vi.fn(() => 0),
           get: vi.fn(),
-          delete: vi.fn()
+          delete: vi.fn(),
         }));
         mockCv.Point = vi.fn((x, y) => ({ x, y }));
         mockCv.Size = vi.fn((width, height) => ({ width, height }));
         mockCv.Scalar = vi.fn(() => ({ values: [0, 0, 0, 0] }));
         mockCv.findContours = vi.fn(() => ({ size: () => 0, delete: vi.fn(), get: vi.fn() }));
         mockCv.warpAffine.mockClear();
-        
+
         const result1 = pdfService['preprocessImage'](imageData);
         expect(result1).toBeDefined();
         expect(mockCv.warpAffine).not.toHaveBeenCalled();
@@ -1130,7 +1130,7 @@ describe('PDFService', () => {
       // Scenario 2: Contours found, but angle not significant (no deskewing)
       {
         (pdfService as any).openCvAvailable = null; // Reset flag
-        
+
         const mockMat = {
           delete: vi.fn(),
           copyTo: vi.fn(),
@@ -1139,20 +1139,20 @@ describe('PDFService', () => {
           channels: vi.fn(() => 1),
           data: new Uint8ClampedArray(100 * 100 * 4),
         };
-        
+
         const srcMat = {
           ...mockMat,
-          clone: vi.fn(() => ({ ...mockMat }))
+          clone: vi.fn(() => ({ ...mockMat })),
         };
-        
+
         const mockContour = { delete: vi.fn() };
-        
+
         mockCv.matFromImageData = vi.fn(() => srcMat);
         mockCv.Mat = vi.fn(() => mockMat);
         mockCv.MatVector = vi.fn(() => ({
           size: vi.fn(() => 0),
           get: vi.fn(),
-          delete: vi.fn()
+          delete: vi.fn(),
         }));
         mockCv.findContours = vi.fn(() => ({
           size: () => 1,
@@ -1161,7 +1161,7 @@ describe('PDFService', () => {
         }));
         mockCv.minAreaRect = vi.fn(() => ({ angle: 0.1, size: { width: 150, height: 20 } }));
         mockCv.warpAffine.mockClear();
-        
+
         const result2 = pdfService['preprocessImage'](imageData);
         expect(result2).toBeDefined();
         expect(mockCv.warpAffine).not.toHaveBeenCalled();
@@ -1170,7 +1170,7 @@ describe('PDFService', () => {
       // Scenario 3: Contours found, significant angle (should deskew)
       {
         (pdfService as any).openCvAvailable = null; // Reset flag
-        
+
         const mockMat = {
           delete: vi.fn(),
           copyTo: vi.fn(),
@@ -1179,20 +1179,20 @@ describe('PDFService', () => {
           channels: vi.fn(() => 1),
           data: new Uint8ClampedArray(100 * 100 * 4),
         };
-        
+
         const srcMat = {
           ...mockMat,
-          clone: vi.fn(() => ({ ...mockMat }))
+          clone: vi.fn(() => ({ ...mockMat })),
         };
-        
+
         const mockContour = { delete: vi.fn() };
-        
+
         mockCv.matFromImageData = vi.fn(() => srcMat);
         mockCv.Mat = vi.fn(() => mockMat);
         mockCv.MatVector = vi.fn(() => ({
           size: vi.fn(() => 0),
           get: vi.fn(),
-          delete: vi.fn()
+          delete: vi.fn(),
         }));
         mockCv.findContours = vi.fn(() => ({
           size: () => 1,
@@ -1202,7 +1202,7 @@ describe('PDFService', () => {
         mockCv.minAreaRect = vi.fn(() => ({ angle: 10, size: { width: 150, height: 20 } }));
         mockCv.getRotationMatrix2D = vi.fn(() => ({ delete: vi.fn() }));
         mockCv.warpAffine.mockClear();
-        
+
         const result3 = pdfService['preprocessImage'](imageData);
         expect(result3).toBeDefined();
         // The test passes if it gets here without throwing - the deskewing logic branch has been reached

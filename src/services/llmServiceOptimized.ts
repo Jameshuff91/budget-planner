@@ -1,5 +1,6 @@
-import { logger } from './logger';
 import { getPerformanceMonitor } from '@utils/performance';
+
+import { logger } from './logger';
 
 export interface TransactionForCategorization {
   description: string;

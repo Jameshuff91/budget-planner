@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useRef } from 'react';
 import { format, subMonths, startOfYear, endOfYear, startOfMonth, endOfMonth } from 'date-fns';
 import { Download, FileText, Calendar, Settings, ChartBar } from 'lucide-react';
+import { useState, useRef } from 'react';
 
 import { Button } from '@components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@components/ui/card';
@@ -20,10 +20,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@components/ui/tabs';
 import { useToast } from '@components/ui/use-toast';
 import { useDBContext } from '@context/DatabaseContext';
 import { useAnalytics } from '@hooks/useAnalytics';
+import { logger } from '@services/logger';
+import { formatCurrency } from '@utils/helpers';
+
 import { reportService, ReportOptions, ReportData, ChartData } from '../src/services/reportService';
 import { PDFGenerator, createFinancialReport, captureCharts } from '../src/utils/pdfGenerator';
-import { formatCurrency } from '@utils/helpers';
-import { logger } from '@services/logger';
 
 interface ReportGeneratorProps {
   className?: string;

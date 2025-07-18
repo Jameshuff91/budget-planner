@@ -12,11 +12,11 @@ import {
 import Papa from 'papaparse';
 import { useState, useEffect } from 'react';
 
-import { showUserError } from '@utils/userErrors';
 import {
   categorizeTransactionsBatchWithAI,
   getSmartCategorizationSettings,
 } from '@utils/smartCategorization';
+import { showUserError } from '@utils/userErrors';
 
 import { useDBContext } from '../src/context/DatabaseContext';
 import { csvService } from '../src/services/csvService';
@@ -24,11 +24,11 @@ import { logger } from '../src/services/logger';
 import { pdfService } from '../src/services/pdfService';
 import type { PDFDocument } from '../src/services/pdfService';
 
+import { AICategoryIndicator } from './AICategoryIndicator';
 import { Button } from './ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible';
 import { Input } from './ui/input';
 import { useToast } from './ui/use-toast';
-import { AICategoryIndicator } from './AICategoryIndicator';
 
 interface CSVTransaction {
   date: Date;

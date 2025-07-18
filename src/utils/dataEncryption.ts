@@ -81,8 +81,8 @@ export class DataEncryption {
 
       // Convert to base64 for storage
       return {
-        data: this.arrayBufferToBase64(encryptedData),
-        salt: this.arrayBufferToBase64(salt),
+        data: this.arrayBufferToBase64(encryptedData as ArrayBuffer),
+        salt: this.arrayBufferToBase64(salt as ArrayBuffer),
         iv: this.arrayBufferToBase64(iv),
       };
     } catch (error) {

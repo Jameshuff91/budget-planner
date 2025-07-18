@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
+
 import { apiService } from '@services/api';
 
 interface User {
@@ -35,7 +36,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = async (email: string, password: string) => {
     try {
       const response = await apiService.login(email, password);
-      
+
       if (response.error) {
         return { success: false, error: response.error };
       }
@@ -54,7 +55,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const register = async (email: string, password: string) => {
     try {
       const response = await apiService.register(email, password);
-      
+
       if (response.error) {
         return { success: false, error: response.error };
       }

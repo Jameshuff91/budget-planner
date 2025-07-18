@@ -1,10 +1,11 @@
 'use client';
 
 import { Suspense } from 'react';
+
 import ErrorBoundary from '@components/ErrorBoundary';
 import { Toaster } from '@components/ui/toaster';
-import { DatabaseProvider } from '@context/DatabaseContext';
 import { AuthProvider } from '@context/AuthContext';
+import { DatabaseProvider } from '@context/DatabaseContext';
 import { getPerformanceMonitor } from '@utils/performance';
 
 // Lazy load heavy providers

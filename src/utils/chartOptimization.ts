@@ -5,6 +5,7 @@
  */
 
 import React, { useCallback, useMemo, useRef, useEffect, useState } from 'react';
+
 import { logger } from '../services/logger';
 
 // Performance measurement utilities

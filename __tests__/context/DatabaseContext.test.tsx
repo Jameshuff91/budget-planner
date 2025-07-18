@@ -127,11 +127,11 @@ describe('DatabaseContext', () => {
     test('should throw error when used outside provider', () => {
       // Suppress console.error for this test since we expect an error
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-      
+
       expect(() => {
         renderHook(() => useDBContext());
       }).toThrow('useDBContext must be used within a DatabaseProvider');
-      
+
       // Restore console.error
       consoleSpy.mockRestore();
     });

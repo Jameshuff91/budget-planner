@@ -1,8 +1,10 @@
-import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import React from 'react';
 import { vi } from 'vitest';
-import IncomeExpensesForecast from '../IncomeExpensesForecast';
+
 import { useDatabase } from '@hooks/useDatabase';
+
+import IncomeExpensesForecast from '../IncomeExpensesForecast';
 
 vi.mock('@hooks/useDatabase');
 
@@ -42,7 +44,9 @@ describe('IncomeExpensesForecast', () => {
     render(<IncomeExpensesForecast />);
     expect(screen.getByText('Income vs Expenses Forecast')).toBeInTheDocument();
     expect(
-      screen.getByText('No transaction data available for forecasting. Add some transactions to see projections.'),
+      screen.getByText(
+        'No transaction data available for forecasting. Add some transactions to see projections.',
+      ),
     ).toBeInTheDocument();
   });
 

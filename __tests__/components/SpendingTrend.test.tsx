@@ -129,7 +129,7 @@ describe('SpendingTrend Component', () => {
     // Clear and setup fresh mocks
     mockUseAnalytics.mockClear();
     mockUseDBContext.mockClear();
-    
+
     mockUseAnalytics.mockReturnValue({
       spendingOverview: mockSpendingOverview,
     });
@@ -147,7 +147,7 @@ describe('SpendingTrend Component', () => {
     // Clear and setup fresh mocks
     mockUseAnalytics.mockClear();
     mockUseDBContext.mockClear();
-    
+
     mockUseAnalytics.mockReturnValue({
       spendingOverview: [],
     });
@@ -179,7 +179,7 @@ describe('SpendingTrend Component', () => {
     // Clear and setup fresh mocks
     mockUseAnalytics.mockClear();
     mockUseDBContext.mockClear();
-    
+
     mockUseAnalytics.mockReturnValue({
       spendingOverview: mixedYearData,
     });
@@ -198,7 +198,7 @@ describe('SpendingTrend Component', () => {
     // Clear and setup fresh mocks
     mockUseAnalytics.mockClear();
     mockUseDBContext.mockClear();
-    
+
     mockUseAnalytics.mockReturnValue({
       spendingOverview: [{ month: 'Jan', year: 2024, totalSpending: 1500, totalIncome: 2500 }],
     });

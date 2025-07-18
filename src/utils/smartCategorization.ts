@@ -9,9 +9,11 @@ export interface SmartCategorizationSettings {
 
 export function getSmartCategorizationSettings(): SmartCategorizationSettings {
   // Check environment variable first, then localStorage
-  const apiKey = process.env.NEXT_PUBLIC_OPENAI_API_KEY || 
-    localStorage.getItem('smartCategorization.apiKey') || '';
-  
+  const apiKey =
+    process.env.NEXT_PUBLIC_OPENAI_API_KEY ||
+    localStorage.getItem('smartCategorization.apiKey') ||
+    '';
+
   return {
     enabled: localStorage.getItem('smartCategorization.enabled') === 'true',
     apiKey: apiKey,

@@ -188,11 +188,11 @@ describe('Categorization Pipeline Integration Tests', () => {
       process.env = { ...originalEnv };
       delete process.env.NEXT_PUBLIC_OPENAI_API_KEY;
     });
-    
+
     afterEach(() => {
       process.env = originalEnv;
     });
-    
+
     test('should categorize with AI when enabled and confidence is high', async () => {
       // Setup AI categorization settings
       localStorageMock.setItem('smartCategorization.enabled', 'true');

@@ -1,6 +1,7 @@
+import crypto from 'crypto';
+
 import { NextRequest, NextResponse } from 'next/server';
 import { Configuration, PlaidApi, PlaidEnvironments } from 'plaid';
-import crypto from 'crypto';
 
 import { logger } from '@services/logger';
 import { getSyncService } from '@services/syncService';

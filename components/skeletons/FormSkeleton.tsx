@@ -1,5 +1,5 @@
-import { Skeleton } from '../ui/skeleton';
 import { Card, CardContent, CardHeader } from '../ui/card';
+import { Skeleton } from '../ui/skeleton';
 
 export function FormSkeleton({ rows = 5 }: { rows?: number }) {
   return (

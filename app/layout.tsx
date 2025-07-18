@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
-import localFont from 'next/font/local';
 import dynamic from 'next/dynamic';
+import localFont from 'next/font/local';
 
 import './globals.css';
 import { Providers } from './providers';

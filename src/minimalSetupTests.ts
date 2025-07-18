@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom';
-import { vi } from 'vitest';
 import { cleanup } from '@testing-library/react';
+import { vi } from 'vitest';
 import { afterEach } from 'vitest';
 
 // Cleanup after each test
@@ -18,7 +18,7 @@ if (typeof window !== 'undefined') {
   if (!document.createRange) {
     document.createRange = () => {
       const range = new Range();
-      
+
       range.setStart = vi.fn();
       range.setEnd = vi.fn();
       range.commonAncestorContainer = {
@@ -60,7 +60,7 @@ if (typeof window !== 'undefined') {
       range.cloneRange = vi.fn();
       range.toString = vi.fn(() => '');
       range.surroundContents = vi.fn();
-      
+
       return range as any;
     };
   }
