@@ -105,20 +105,15 @@ export const compareTimeRangeProps = (
 // Data transformation utilities with memoization helpers
 export const createDataTransformer = <TInput, TOutput>(
   transformer: (data: TInput) => TOutput,
-  dependencyExtractor?: (data: TInput) => unknown[],
+  _dependencyExtractor?: (data: TInput) => unknown[],
 ) => {
   return (data: TInput): TOutput => {
-    const dependencyList = useMemo(() => {
-      return dependencyExtractor ? dependencyExtractor(data) : [data];
-    }, [data, dependencyExtractor]);
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     return useMemo(() => {
       const marker = createPerformanceMarker('dataTransformation');
       const result = transformer(data);
       marker.end();
       return result;
-    }, dependencyList);
+    }, [data]);
   };
 };
 

@@ -1,11 +1,12 @@
 'use client';
 
 import { format, subMonths, startOfMonth } from 'date-fns';
-import { Loader2, ChevronDown, ChevronUp } from 'lucide-react';
+import { Loader2, ChevronDown, ChevronUp, Trash2 } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
 
 import { Button } from '@components/ui/button';
 import { useDBContext } from '@context/DatabaseContext';
+import { toast } from '@components/ui/use-toast';
 
 import { Transaction } from '../src/types';
 import { formatCurrency } from '../src/utils/helpers';
@@ -22,7 +23,7 @@ export default function MonthSelector() {
     };
   }>({});
   const [isLoading, setIsLoading] = useState(true);
-  const { getTransactionsByMonth, transactions } = useDBContext();
+  const { getTransactionsByMonth, transactions, deleteTransaction } = useDBContext();
 
   // Generate months based on available transaction data
   const months = useMemo(() => {
@@ -135,6 +136,56 @@ export default function MonthSelector() {
     }));
   };
 
+  const handleDelete = async (transactionId: string) => {
+    if (confirm('Are you sure you want to delete this transaction?')) {
+      try {
+        await deleteTransaction(transactionId);
+        toast({
+          title: 'Success',
+          description: 'Transaction deleted successfully',
+        });
+        // Reload monthly data to reflect the deletion
+        const monthlyStats: {
+          [key: string]: {
+            income: number;
+            expenses: number;
+            summaryTransactions: Transaction[];
+            individualTransactions: Transaction[];
+          };
+        } = { ...monthlyData };
+        
+        for (const month of months) {
+          const transactions = await getTransactionsByMonth(month);
+          const monthKey = format(month, 'MMM yyyy');
+          
+          const summaryTransactions = transactions.filter((t) => t.isMonthSummary);
+          const individualTransactions = transactions.filter((t) => !t.isMonthSummary);
+          
+          monthlyStats[monthKey] = {
+            income: transactions.reduce(
+              (sum, t) => (t.type === 'income' ? sum + t.amount : sum),
+              0,
+            ),
+            expenses: transactions.reduce(
+              (sum, t) => (t.type === 'expense' ? sum + t.amount : sum),
+              0,
+            ),
+            summaryTransactions,
+            individualTransactions,
+          };
+        }
+        
+        setMonthlyData(monthlyStats);
+      } catch {
+        toast({
+          title: 'Error',
+          description: 'Failed to delete transaction',
+          variant: 'destructive',
+        });
+      }
+    }
+  };
+
   if (isLoading) {
     return (
       <div className='w-full mb-6 flex items-center justify-center py-4'>
@@ -197,7 +248,7 @@ export default function MonthSelector() {
                     (transaction, index) => (
                       <div key={index} className='p-3 rounded-md bg-gray-50'>
                         <div className='flex justify-between items-start'>
-                          <div>
+                          <div className='flex-1'>
                             <p className='font-medium'>{transaction.description}</p>
                             <p className='text-sm text-gray-500'>
                               {format(new Date(transaction.date), 'MMM d, yyyy')}
@@ -205,12 +256,23 @@ export default function MonthSelector() {
                                 ` • Account: ${transaction.accountNumber}`}
                             </p>
                           </div>
-                          <p
-                            className={`font-semibold ${transaction.type === 'expense' ? 'text-red-500' : 'text-green-500'}`}
-                          >
-                            {transaction.type === 'expense' ? '-' : '+'}
-                            {formatCurrency(transaction.amount)}
-                          </p>
+                          <div className='flex items-center gap-2'>
+                            <p
+                              className={`font-semibold ${transaction.type === 'expense' ? 'text-red-500' : 'text-green-500'}`}
+                            >
+                              {transaction.type === 'expense' ? '-' : '+'}
+                              {formatCurrency(transaction.amount)}
+                            </p>
+                            <Button
+                              variant='ghost'
+                              size='sm'
+                              onClick={() => handleDelete(transaction.id)}
+                              className='text-red-600 hover:text-red-700 hover:bg-red-50'
+                              title='Delete transaction'
+                            >
+                              <Trash2 className='h-4 w-4' />
+                            </Button>
+                          </div>
                         </div>
                       </div>
                     ),
@@ -240,7 +302,7 @@ export default function MonthSelector() {
                     (transaction, index) => (
                       <div key={index} className='p-3 rounded-md bg-gray-50'>
                         <div className='flex justify-between items-start'>
-                          <div>
+                          <div className='flex-1'>
                             <p className='font-medium'>{transaction.description}</p>
                             <p className='text-sm text-gray-500'>
                               {format(new Date(transaction.date), 'MMM d, yyyy')}
@@ -248,12 +310,23 @@ export default function MonthSelector() {
                                 ` • Account: ${transaction.accountNumber}`}
                             </p>
                           </div>
-                          <p
-                            className={`font-semibold ${transaction.type === 'expense' ? 'text-red-500' : 'text-green-500'}`}
-                          >
-                            {transaction.type === 'expense' ? '-' : '+'}
-                            {formatCurrency(transaction.amount)}
-                          </p>
+                          <div className='flex items-center gap-2'>
+                            <p
+                              className={`font-semibold ${transaction.type === 'expense' ? 'text-red-500' : 'text-green-500'}`}
+                            >
+                              {transaction.type === 'expense' ? '-' : '+'}
+                              {formatCurrency(transaction.amount)}
+                            </p>
+                            <Button
+                              variant='ghost'
+                              size='sm'
+                              onClick={() => handleDelete(transaction.id)}
+                              className='text-red-600 hover:text-red-700 hover:bg-red-50'
+                              title='Delete transaction'
+                            >
+                              <Trash2 className='h-4 w-4' />
+                            </Button>
+                          </div>
                         </div>
                       </div>
                     ),

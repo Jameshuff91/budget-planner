@@ -274,17 +274,3 @@ export function PerformanceInsights() {
   );
 }
 
-function getWebVitalSuggestion(metricName: string): string {
-  switch (metricName) {
-    case 'LCP':
-      return 'Optimize images and critical resources loading';
-    case 'FID':
-      return 'Reduce JavaScript execution time and use code splitting';
-    case 'CLS':
-      return 'Reserve space for dynamic content and avoid layout shifts';
-    case 'TTFB':
-      return 'Optimize server response time and use CDN';
-    default:
-      return 'Check performance optimization guides';
-  }
-}

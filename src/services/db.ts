@@ -238,6 +238,11 @@ class DatabaseService {
     return index.getAll(IDBKeyRange.bound(startDate, endDate));
   }
 
+  async deleteTransaction(id: string): Promise<void> {
+    if (!this.db) await this.initialize();
+    await this.db!.delete('transactions', id);
+  }
+
   async addCategory(category: BudgetDB['categories']['value']): Promise<string> {
     if (!this.db) await this.initialize();
     const tx = await this.db!.add('categories', category);
