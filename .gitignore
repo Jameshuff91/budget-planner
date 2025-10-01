@@ -58,4 +58,10 @@ node_modules/
 # OS specific
 # Task files
 tasks.json
-tasks/ .playwright-mcp/
+tasks/
+.playwright-mcp/
+.taskmaster/
+
+# Test results
+test-results/
+playwright-report/
