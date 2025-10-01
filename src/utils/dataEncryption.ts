@@ -81,9 +81,9 @@ export class DataEncryption {
 
       // Convert to base64 for storage
       return {
-        data: this.arrayBufferToBase64(encryptedData as ArrayBuffer),
-        salt: this.arrayBufferToBase64(salt as ArrayBuffer),
-        iv: this.arrayBufferToBase64(iv),
+        data: this.arrayBufferToBase64(encryptedData),
+        salt: this.arrayBufferToBase64(salt.buffer),
+        iv: this.arrayBufferToBase64(iv.buffer),
       };
     } catch (error) {
       logger.error('Error encrypting data:', error);
@@ -127,15 +127,16 @@ export class DataEncryption {
    */
   static validateEncryptedData(encryptedData: unknown): boolean {
     try {
-      return (
-        encryptedData &&
-        typeof encryptedData === 'object' &&
-        typeof encryptedData.data === 'string' &&
-        typeof encryptedData.salt === 'string' &&
-        typeof encryptedData.iv === 'string' &&
-        encryptedData.data.length > 0 &&
-        encryptedData.salt.length > 0 &&
-        encryptedData.iv.length > 0
+      const data = encryptedData as any;
+      return !!(
+        data &&
+        typeof data === 'object' &&
+        typeof data.data === 'string' &&
+        typeof data.salt === 'string' &&
+        typeof data.iv === 'string' &&
+        data.data.length > 0 &&
+        data.salt.length > 0 &&
+        data.iv.length > 0
       );
     } catch (error) {
       logger.error('Error validating encrypted data:', error);

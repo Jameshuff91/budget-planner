@@ -285,7 +285,7 @@ describe('PDFService', () => {
 
   describe('determineExpenseCategory', () => {
     const testCategory = (description: string, expectedCategory: string) => {
-      // @ts-expect-error - Accessing private method for testing
+      // Accessing private method for testing
       expect(pdfService['determineExpenseCategory'](description)).toBe(expectedCategory);
     };
 
@@ -712,7 +712,7 @@ describe('PDFService', () => {
 
   describe('cleanDescription', () => {
     const testClean = (input: string, expected: string) => {
-      // @ts-expect-error - Accessing private method for testing
+      // Accessing private method for testing
       expect(pdfService['cleanDescription'](input)).toBe(expected);
     };
 
@@ -933,7 +933,7 @@ describe('PDFService', () => {
     let originalCv: unknown; // To store the original global.cv
 
     beforeEach(() => {
-      originalCv = global.cv; // Store original cv
+      originalCv = (global as any).cv; // Store original cv
       // Reset the global cv mock for each test
       mockCv = {
         matFromImageData: vi.fn(() => ({
@@ -994,15 +994,15 @@ describe('PDFService', () => {
         THRESH_BINARY: 8,
         COLOR_GRAY2RGBA: 9,
       };
-      global.cv = mockCv; // Set the mock for the test
+      (global as any).cv = mockCv; // Set the mock for the test
     });
 
     afterEach(() => {
-      global.cv = originalCv; // Restore original cv after each test
+      (global as any).cv = originalCv; // Restore original cv after each test
     });
 
     it('should fallback to basic processing if cv is undefined', () => {
-      global.cv = undefined as unknown; // Simulate cv not being loaded for this specific test
+      (global as any).cv = undefined as unknown; // Simulate cv not being loaded for this specific test
 
       const imageData = new ImageData(new Uint8ClampedArray([100, 150, 200, 255]), 1, 1);
       const processedData = pdfService['preprocessImage'](imageData);
@@ -1120,7 +1120,7 @@ describe('PDFService', () => {
         mockCv.Size = vi.fn((width, height) => ({ width, height }));
         mockCv.Scalar = vi.fn(() => ({ values: [0, 0, 0, 0] }));
         mockCv.findContours = vi.fn(() => ({ size: () => 0, delete: vi.fn(), get: vi.fn() }));
-        mockCv.warpAffine.mockClear();
+        (mockCv.warpAffine as any).mockClear();
 
         const result1 = pdfService['preprocessImage'](imageData);
         expect(result1).toBeDefined();
@@ -1160,7 +1160,7 @@ describe('PDFService', () => {
           delete: vi.fn(),
         }));
         mockCv.minAreaRect = vi.fn(() => ({ angle: 0.1, size: { width: 150, height: 20 } }));
-        mockCv.warpAffine.mockClear();
+        (mockCv.warpAffine as any).mockClear();
 
         const result2 = pdfService['preprocessImage'](imageData);
         expect(result2).toBeDefined();
@@ -1201,7 +1201,7 @@ describe('PDFService', () => {
         }));
         mockCv.minAreaRect = vi.fn(() => ({ angle: 10, size: { width: 150, height: 20 } }));
         mockCv.getRotationMatrix2D = vi.fn(() => ({ delete: vi.fn() }));
-        mockCv.warpAffine.mockClear();
+        (mockCv.warpAffine as any).mockClear();
 
         const result3 = pdfService['preprocessImage'](imageData);
         expect(result3).toBeDefined();

@@ -53,21 +53,23 @@ export class DataMigration {
         return { success: false, errors, warnings, migratedData: null };
       }
 
+      const dataObj = data as any;
+
       // Check version
-      if (typeof data.version !== 'number') {
+      if (typeof dataObj.version !== 'number') {
         errors.push('Backup version is missing or invalid');
         return { success: false, errors, warnings, migratedData: null };
       }
 
-      if (!this.SUPPORTED_VERSIONS.includes(data.version)) {
+      if (!this.SUPPORTED_VERSIONS.includes(dataObj.version)) {
         errors.push(
-          `Unsupported backup version: ${data.version}. Supported versions: ${this.SUPPORTED_VERSIONS.join(', ')}`,
+          `Unsupported backup version: ${dataObj.version}. Supported versions: ${this.SUPPORTED_VERSIONS.join(', ')}`,
         );
         return { success: false, errors, warnings, migratedData: null };
       }
 
       // Check required structure
-      if (!data.data || typeof data.data !== 'object') {
+      if (!dataObj.data || typeof dataObj.data !== 'object') {
         errors.push('Backup data structure is invalid - missing data object');
         return { success: false, errors, warnings, migratedData: null };
       }
@@ -75,18 +77,18 @@ export class DataMigration {
       // Validate required arrays
       const requiredArrays = ['transactions', 'categories', 'assets', 'liabilities'];
       for (const arrayName of requiredArrays) {
-        if (!Array.isArray(data.data[arrayName])) {
+        if (!Array.isArray(dataObj.data[arrayName])) {
           errors.push(`Invalid or missing ${arrayName} array in backup data`);
         }
       }
 
       // Validate recurring preferences (can be missing in older versions)
-      if (data.data.recurringPreferences && typeof data.data.recurringPreferences !== 'object') {
+      if (dataObj.data.recurringPreferences && typeof dataObj.data.recurringPreferences !== 'object') {
         errors.push('Invalid recurringPreferences object in backup data');
       }
 
       // Check metadata
-      if (!data.metadata || typeof data.metadata !== 'object') {
+      if (!dataObj.metadata || typeof dataObj.metadata !== 'object') {
         warnings.push('Backup metadata is missing or invalid');
       }
 
@@ -94,7 +96,7 @@ export class DataMigration {
         return { success: false, errors, warnings, migratedData: null };
       }
 
-      return { success: true, errors, warnings, migratedData: data as BackupData };
+      return { success: true, errors, warnings, migratedData: dataObj as BackupData };
     } catch (error) {
       logger.error('Error validating backup data:', error);
       errors.push('Failed to validate backup data structure');

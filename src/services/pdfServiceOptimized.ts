@@ -78,16 +78,15 @@ async function initializeTesseract() {
   tesseractWorker = await monitor.measureAsync('tesseract_load', async () => {
     const { createWorker } = await import('tesseract.js');
 
-    const worker = await createWorker({
-      logger: (m: { status: string; progress: number }) => {
-        if (m.status === 'recognizing text') {
-          logger.debug('OCR Progress:', Math.round(m.progress * 100) + '%');
-        }
-      },
-    });
+    const worker = await createWorker();
+    (worker as any).logger = (m: { status: string; progress: number }) => {
+      if (m.status === 'recognizing text') {
+        logger.debug('OCR Progress:', Math.round(m.progress * 100) + '%');
+      }
+    };
 
-    await worker.loadLanguage('eng');
-    await worker.initialize('eng');
+    await (worker as any).loadLanguage('eng');
+    await (worker as any).initialize('eng');
 
     logger.info('Tesseract.js worker initialized');
     return worker;
@@ -100,7 +99,7 @@ async function initializeTesseract() {
  * Initialize OpenCV.js on demand
  */
 async function initializeOpenCV(): Promise<boolean> {
-  if (openCvModule !== null) return openCvModule;
+  if (openCvModule !== null) return openCvModule as boolean;
 
   const monitor = getPerformanceMonitor();
 
@@ -217,14 +216,14 @@ class PDFServiceOptimized {
     const monitor = getPerformanceMonitor();
 
     return monitor.measureAsync('pdf_process_total', async () => {
-      logger.info('Processing PDF:', file.name, 'Size:', file.size);
+      logger.info('Processing PDF:', { name: file.name, size: file.size });
 
       // Calculate content hash
       const arrayBuffer = await file.arrayBuffer();
       const contentHash = await this.calculateHash(arrayBuffer);
 
       // Check for duplicate
-      const existingPdf = await dbService.checkDuplicatePDF(contentHash);
+      const existingPdf = await (dbService as any).checkDuplicatePDF(contentHash);
       if (existingPdf) {
         throw new Error(`This PDF has already been uploaded: ${existingPdf.name}`);
       }
@@ -246,7 +245,7 @@ class PDFServiceOptimized {
 
       try {
         // Save PDF document
-        await dbService.savePDF(pdfDocument);
+        await (dbService as any).savePDF(pdfDocument);
 
         // Load PDF.js dynamically
         const pdfjsLib = await initializePdfJs();
@@ -263,7 +262,7 @@ class PDFServiceOptimized {
           for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
             const page = await pdf.getPage(pageNum);
             const textContent = await page.getTextContent();
-            const text = textContent.items.map((item: { str: string }) => item.str).join(' ');
+            const text = textContent.items.map((item: any) => item.str).join(' ');
 
             // Extract transactions from text
             const pageTransactions = await this.extractTransactionsFromText(
@@ -293,7 +292,7 @@ class PDFServiceOptimized {
         pdfDocument.processed = true;
         pdfDocument.status = 'completed';
         pdfDocument.transactionCount = transactions.length;
-        await dbService.updatePDF(pdfDocument);
+        await (dbService as any).updatePDF(pdfDocument);
 
         logger.info(`Extracted ${transactions.length} transactions from ${file.name}`);
         return { document: pdfDocument, transactions };
@@ -301,7 +300,7 @@ class PDFServiceOptimized {
         // Update PDF document with error
         pdfDocument.status = 'error';
         pdfDocument.error = error instanceof Error ? error.message : 'Unknown error';
-        await dbService.updatePDF(pdfDocument);
+        await (dbService as any).updatePDF(pdfDocument);
         throw error;
       }
     });
@@ -323,8 +322,8 @@ class PDFServiceOptimized {
     // Apply categorization
     if (options.enableSmartCategorization) {
       const llm = await initializeLLMService();
-      if (llm && llm.isConfigured()) {
-        return llm.categorizeTransactions(transactions);
+      if (llm && (llm as any).isConfigured()) {
+        return (llm as any).categorizeTransactions(transactions);
       }
     }
 
@@ -332,15 +331,15 @@ class PDFServiceOptimized {
     const rules = await loadCategoryRules();
     return transactions.map((transaction) => ({
       ...transaction,
-      category: applyCategoryRules(transaction, rules),
-    }));
+      category: applyCategoryRules(transaction.description, rules),
+    })) as ExtractedData[];
   }
 
   /**
    * Perform OCR on a PDF page
    */
   private async performOCR(
-    page: unknown,
+    page: any,
     documentDate: Date | null,
     options: { enableOpenCV?: boolean; enableSmartCategorization?: boolean },
   ): Promise<ExtractedData[]> {
@@ -373,7 +372,7 @@ class PDFServiceOptimized {
       const worker = await initializeTesseract();
       const {
         data: { text },
-      } = await worker.recognize(imageData);
+      } = await (worker as any).recognize(imageData);
 
       // Extract transactions from OCR text
       return this.extractTransactionsFromText(text, documentDate, options);
@@ -394,7 +393,7 @@ class PDFServiceOptimized {
    */
   async cleanup() {
     if (tesseractWorker) {
-      await tesseractWorker.terminate();
+      await (tesseractWorker as any).terminate();
       tesseractWorker = null;
     }
     logger.info('PDF service resources cleaned up');
