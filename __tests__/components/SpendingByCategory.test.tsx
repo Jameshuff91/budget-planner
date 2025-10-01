@@ -26,14 +26,11 @@ vi.mock('@utils/chartOptimization', () => ({
   }),
 }));
 
-// Mock modules with factory functions
-vi.mock('@components/ui/use-toast', () => {
-  const mockToast = vi.fn();
-  return {
-    useToast: () => ({ toast: mockToast }),
-    __mockToast: mockToast,
-  };
-});
+// Mock toast
+const mockToastFn = vi.fn();
+vi.mock('@components/ui/use-toast', () => ({
+  useToast: () => ({ toast: mockToastFn }),
+}));
 
 vi.mock('@context/DatabaseContext', () => {
   const mockUseDBContext = vi.fn();
@@ -53,13 +50,12 @@ vi.mock('@hooks/useAnalytics', () => {
 });
 
 // Import mock functions from mocked modules
-import { useToast } from '@components/ui/use-toast';
 import { useDBContext } from '@context/DatabaseContext';
 import { useAnalytics } from '@hooks/useAnalytics';
 
 // Mock functions
 const mockUpdateCategoryBudget = vi.fn();
-const mockToast = useToast as ReturnType<typeof vi.fn>;
+const mockToast = mockToastFn;
 const mockUseDBContext = useDBContext as ReturnType<typeof vi.fn>;
 const mockUseAnalytics = useAnalytics as ReturnType<typeof vi.fn>;
 

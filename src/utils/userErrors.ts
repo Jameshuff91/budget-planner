@@ -177,9 +177,11 @@ export function toUserError(error: unknown, context?: string): UserError {
  */
 export function showUserError(
   error: unknown,
-  toast:
-    | { title: string; description: string; variant?: 'destructive' | 'default' }
-    | ((args: { title: string; description: string; variant?: 'destructive' | 'default' }) => void),
+  toast: (args: {
+    title: string;
+    description: string;
+    variant?: 'destructive' | 'default';
+  }) => void,
   context?: string,
 ) {
   const userError = toUserError(error, context);

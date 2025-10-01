@@ -358,7 +358,10 @@ export class PDFGenerator {
         header: 'Description',
         accessor: 'description',
         width: 70,
-        formatter: (value) => (value.length > 40 ? value.substring(0, 37) + '...' : value),
+        formatter: (value: unknown) => {
+          const str = String(value);
+          return str.length > 40 ? str.substring(0, 37) + '...' : str;
+        },
       },
       {
         header: 'Category',
@@ -370,9 +373,9 @@ export class PDFGenerator {
         accessor: 'amount',
         width: 25,
         align: 'right' as const,
-        formatter: (value: number) => {
+        formatter: (value: unknown) => {
           // Note: row data not available in this context
-          return formatCurrency(Math.abs(value));
+          return formatCurrency(Math.abs(Number(value)));
         },
       },
     ];
@@ -401,9 +404,9 @@ export class PDFGenerator {
    * Add footer to all pages
    */
   public addFooters(footerText?: string): PDFGenerator {
-    const pageCount = (this.pdf as { getNumberOfPages?: () => number }).getNumberOfPages
-      ? (this.pdf as { getNumberOfPages: () => number }).getNumberOfPages()
-      : this.pdf.internal.pages?.length || 1;
+    const pageCount = (
+      this.pdf as unknown as { getNumberOfPages: () => number }
+    ).getNumberOfPages();
 
     for (let i = 1; i <= pageCount; i++) {
       this.pdf.setPage(i);

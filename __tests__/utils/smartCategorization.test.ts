@@ -139,9 +139,10 @@ describe('Smart Categorization - categorizeTransactionWithAI', () => {
     // Mock LLM service
     mockLLMService = {
       categorizeTransaction: vi.fn(),
-    };
+      categorizeTransactionsBatch: vi.fn(),
+    } as any;
 
-    vi.mocked(createLLMService).mockReturnValue(mockLLMService);
+    vi.mocked(createLLMService).mockReturnValue(mockLLMService as any);
   });
 
   describe('Settings Validation', () => {
@@ -546,10 +547,11 @@ describe('Smart Categorization - categorizeTransactionsBatchWithAI', () => {
     localStorageMock.clear();
 
     mockLLMService = {
+      categorizeTransaction: vi.fn(),
       categorizeTransactionsBatch: vi.fn(),
-    };
+    } as any;
 
-    vi.mocked(createLLMService).mockReturnValue(mockLLMService);
+    vi.mocked(createLLMService).mockReturnValue(mockLLMService as any);
   });
 
   describe('Settings Validation', () => {
@@ -910,9 +912,9 @@ describe('Smart Categorization - Integration Tests', () => {
     mockLLMService = {
       categorizeTransaction: vi.fn(),
       categorizeTransactionsBatch: vi.fn(),
-    };
+    } as any;
 
-    vi.mocked(createLLMService).mockReturnValue(mockLLMService);
+    vi.mocked(createLLMService).mockReturnValue(mockLLMService as any);
   });
 
   test('should demonstrate complete AI categorization workflow', async () => {

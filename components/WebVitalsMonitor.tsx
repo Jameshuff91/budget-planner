@@ -273,4 +273,3 @@ export function PerformanceInsights() {
     </div>
   );
 }
-

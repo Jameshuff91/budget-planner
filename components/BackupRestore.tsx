@@ -72,7 +72,8 @@ export function BackupRestore({ isOpen, onClose }: BackupRestoreProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState<{
     score: number;
-    feedback: string[];
+    level: 'weak' | 'fair' | 'good' | 'strong' | 'very-strong';
+    suggestions: string[];
   } | null>(null);
 
   // Restore state
@@ -84,9 +85,29 @@ export function BackupRestore({ isOpen, onClose }: BackupRestoreProps) {
   });
   const [restoreProgress, setRestoreProgress] = useState<RestoreProgress | null>(null);
   const [validationResult, setValidationResult] = useState<{
-    isValid: boolean;
+    valid: boolean;
     errors: string[];
-    summary: Record<string, number>;
+    warnings: string[];
+    summary?: {
+      version: number;
+      timestamp: string;
+      counts: {
+        transactions: number;
+        categories: number;
+        assets: number;
+        liabilities: number;
+        recurringPreferences: number;
+      };
+      dateRange: {
+        earliest: string | null;
+        latest: string | null;
+      };
+      totalValue: {
+        assets: number;
+        liabilities: number;
+        netWorth: number;
+      };
+    };
   } | null>(null);
 
   // Schedule state
@@ -178,7 +199,7 @@ export function BackupRestore({ isOpen, onClose }: BackupRestoreProps) {
     try {
       setIsProcessing(true);
       const result = await BackupService.validateBackupFile(restoreFile, restorePassword);
-      setValidationResult(result);
+      setValidationResult(result as any);
 
       if (result.valid) {
         toast({
@@ -222,9 +243,11 @@ export function BackupRestore({ isOpen, onClose }: BackupRestoreProps) {
 
       if (result.success) {
         await refreshData();
+        const counts = result.summary as { counts?: { transactions?: number } };
+        const transactionCount = counts?.counts?.transactions ?? 0;
         toast({
           title: 'Restore Completed',
-          description: `Successfully restored ${result.summary.counts.transactions} transactions and other data.`,
+          description: `Successfully restored ${transactionCount} transactions and other data.`,
         });
 
         if (result.warnings.length > 0) {
@@ -820,8 +843,7 @@ function BackupHistoryList() {
                   <Calendar className='h-3 w-3 inline mr-1' />
                   {new Date(backup.timestamp).toLocaleString()}
                 </span>
-                <span>Size: {formatFileSize(backup.size)}</span>
-                {backup.summary && <span>{backup.summary.counts.transactions} transactions</span>}
+                <span>Size: {formatFileSize(backup.size ?? 0)}</span>
               </div>
             </div>
           </div>

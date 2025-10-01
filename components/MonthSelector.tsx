@@ -153,14 +153,14 @@ export default function MonthSelector() {
             individualTransactions: Transaction[];
           };
         } = { ...monthlyData };
-        
+
         for (const month of months) {
           const transactions = await getTransactionsByMonth(month);
           const monthKey = format(month, 'MMM yyyy');
-          
+
           const summaryTransactions = transactions.filter((t) => t.isMonthSummary);
           const individualTransactions = transactions.filter((t) => !t.isMonthSummary);
-          
+
           monthlyStats[monthKey] = {
             income: transactions.reduce(
               (sum, t) => (t.type === 'income' ? sum + t.amount : sum),
@@ -174,7 +174,7 @@ export default function MonthSelector() {
             individualTransactions,
           };
         }
-        
+
         setMonthlyData(monthlyStats);
       } catch {
         toast({
