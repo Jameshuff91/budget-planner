@@ -158,7 +158,7 @@ class PDFService {
     const cvLib =
       typeof window !== 'undefined'
         ? window.cv
-        : (globalThis as typeof window & { cv?: typeof cv }).cv;
+        : (globalThis as any).cv;
 
     if (!cvLib) {
       // Log error for test expectations
@@ -337,8 +337,8 @@ class PDFService {
       // Clean up OpenCV Mats
       if (src) src.delete();
       if (gray) gray.delete();
-      if (edges) edges.delete();
-      if (lines) lines.delete(); // lines from HoughLinesP if used
+      if (edges) (edges as any).delete();
+      if (lines) (lines as any).delete(); // lines from HoughLinesP if used
       if (deskewed) deskewed.delete();
       if (blurred) blurred.delete();
       if (adaptThresh) adaptThresh.delete();

@@ -78,7 +78,7 @@ export const compareArrayProps = (
     const nextItem = nextArray[i];
 
     if (compareKey) {
-      if (prevItem[compareKey] !== nextItem[compareKey]) {
+      if ((prevItem as any)[compareKey] !== (nextItem as any)[compareKey]) {
         return false;
       }
     } else if (prevItem !== nextItem) {
@@ -278,7 +278,7 @@ export const getCachedData = <T>(key: string, computeFn: () => T): T => {
   const cached = DATA_CACHE.get(key);
 
   if (cached && now - cached.timestamp < CACHE_TTL) {
-    return cached.data;
+    return cached.data as T;
   }
 
   const data = computeFn();

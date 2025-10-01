@@ -222,7 +222,7 @@ function PerformanceDebugPanel({ monitor }: PerformanceDebugPanelProps) {
       </div>
 
       <div className='max-h-60 overflow-y-auto text-xs'>
-        {metrics?.webVitals && Array.isArray(metrics.webVitals) && metrics.webVitals.length > 0 && (
+        {(metrics?.webVitals && Array.isArray(metrics.webVitals) && metrics.webVitals.length > 0 && (
           <div className='mb-2'>
             <strong>Web Vitals:</strong>
             {(metrics.webVitals as Array<{ name: string; value: number; rating: string }>).map(
@@ -233,9 +233,9 @@ function PerformanceDebugPanel({ monitor }: PerformanceDebugPanelProps) {
               ) as React.ReactNode,
             )}
           </div>
-        )}
+        )) as React.ReactNode}
 
-        {metrics?.custom && Array.isArray(metrics.custom) && metrics.custom.length > 0 && (
+        {(metrics?.custom && Array.isArray(metrics.custom) && metrics.custom.length > 0 && (
           <div>
             <strong>Custom Metrics:</strong>
             {(metrics.custom as Array<{ name: string; value: number; unit?: string }>).map(
@@ -246,7 +246,7 @@ function PerformanceDebugPanel({ monitor }: PerformanceDebugPanelProps) {
               ) as React.ReactNode,
             )}
           </div>
-        )}
+        )) as React.ReactNode}
       </div>
 
       <div className='mt-2 flex space-x-2'>

@@ -268,7 +268,7 @@ export class PDFGenerator {
         logging: false,
         useCORS: true,
         allowTaint: true,
-      });
+      } as any);
 
       const imgWidth = chartElement.width || 170;
       const imgHeight = chartElement.height || (canvas.height * imgWidth) / canvas.width;
@@ -352,7 +352,7 @@ export class PDFGenerator {
         header: 'Date',
         accessor: 'date',
         width: 25,
-        formatter: (value) => format(new Date(value), 'MM/dd/yy'),
+        formatter: (value: any) => format(new Date(value), 'MM/dd/yy'),
       },
       {
         header: 'Description',

@@ -245,7 +245,7 @@ const SpendingOverview = ({ selectedYear: propSelectedYear }: SpendingOverviewPr
                   tickFormatter={tickFormatter}
                   width={60}
                 />
-                <Tooltip {...chartTooltipProps} />
+                <Tooltip {...(chartTooltipProps as any)} />
                 <Legend />
                 <CartesianGrid strokeDasharray='3 3' className='grid grid-gray-100' />
                 <Bar

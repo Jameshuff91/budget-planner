@@ -243,19 +243,19 @@ export class SyncService {
 
       // Process added transactions
       if (added.length > 0) {
-        const transactions = added.map((tx) => plaidService.convertToTransaction(tx));
+        const transactions = added.map((tx) => plaidService.convertToTransaction(tx as any));
         await this.addTransactionsBatch(transactions);
       }
 
       // Process modified transactions
       if (modified.length > 0) {
-        const transactions = modified.map((tx) => plaidService.convertToTransaction(tx));
+        const transactions = modified.map((tx) => plaidService.convertToTransaction(tx as any));
         await this.updateTransactionsBatch(transactions);
       }
 
       // Process removed transactions
       if (removed.length > 0) {
-        await this.removeTransactionsBatch(removed);
+        await this.removeTransactionsBatch(removed as any);
       }
     } catch (error) {
       logger.error('Error processing transaction updates:', error);

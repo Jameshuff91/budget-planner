@@ -304,7 +304,7 @@ export default function ReportTemplates({ onTemplateSelect, className }: ReportT
       setIsGenerating(true);
 
       const dateRange = getDateRange(template);
-      const reportData = prepareReportData(dateRange.startDate, dateRange.endDate, analytics);
+      const reportData = prepareReportData(dateRange.startDate, dateRange.endDate, analytics as any);
 
       const options: ReportOptions = {
         ...template.defaultOptions,
@@ -484,7 +484,7 @@ export default function ReportTemplates({ onTemplateSelect, className }: ReportT
               {/* Show preview data */}
               {(() => {
                 const range = getDateRange(selectedTemplate);
-                const previewData = prepareReportData(range.startDate, range.endDate, analytics);
+                const previewData = prepareReportData(range.startDate, range.endDate, analytics as any);
                 return (
                   <div className='bg-gray-50 p-3 rounded'>
                     <div className='text-sm space-y-1'>

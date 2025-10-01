@@ -193,7 +193,7 @@ export class BackupService {
         encrypted: options.encrypt,
         size: finalData.length,
         summary: createBackupSummary(backupData),
-      });
+      } as any);
 
       onProgress?.({
         stage: 'complete',
@@ -263,9 +263,9 @@ export class BackupService {
           });
 
           const decryptedData = await DataEncryption.decrypt({
-            data: parsedData.data,
-            salt: parsedData.salt,
-            iv: parsedData.iv,
+            data: parsedData.data as string,
+            salt: parsedData.salt as string,
+            iv: parsedData.iv as string,
             password: options.password,
           });
 

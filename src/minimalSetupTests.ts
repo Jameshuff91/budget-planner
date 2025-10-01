@@ -21,10 +21,13 @@ if (typeof window !== 'undefined') {
 
       range.setStart = vi.fn();
       range.setEnd = vi.fn();
-      range.commonAncestorContainer = {
-        nodeName: 'BODY',
-        ownerDocument: document,
-      } as Node;
+      Object.defineProperty(range, 'commonAncestorContainer', {
+        value: {
+          nodeName: 'BODY',
+          ownerDocument: document,
+        } as Node,
+        writable: true,
+      });
       range.selectNode = vi.fn();
       range.selectNodeContents = vi.fn();
       range.collapse = vi.fn();
@@ -91,7 +94,7 @@ if (typeof window !== 'undefined') {
       focusOffset: 0,
       isCollapsed: true,
       type: 'None',
-    })) as Selection;
+    })) as any as () => Selection | null;
   }
 
   // Mock Element.prototype.scrollIntoView if not available
@@ -169,7 +172,7 @@ if (typeof window !== 'undefined' && !window.CSS) {
   window.CSS = {
     supports: () => false,
     escape: (str: string) => str,
-  } as CSS;
+  } as any;
 }
 
 // Mock window.matchMedia
