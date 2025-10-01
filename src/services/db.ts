@@ -40,6 +40,11 @@ interface BudgetDB extends DBSchema {
       name: string;
       type: 'income' | 'expense';
       budget?: number;
+      parentId?: string;
+      icon?: string;
+      color?: string;
+      isTaxDeductible?: boolean;
+      tags?: string[];
     };
   };
   pdfs: {
@@ -83,6 +88,29 @@ interface BudgetDB extends DBSchema {
     // Added liabilities store definition
     key: string; // Corresponds to Liability['id']
     value: Liability;
+  };
+  merchantLearning: {
+    key: string;
+    value: {
+      id: string;
+      merchantName: string;
+      categoryId: string;
+      confidence: number;
+      lastUsed: string;
+      useCount: number;
+    };
+    indexes: { 'by-merchant': string };
+  };
+  budgetAlerts: {
+    key: string;
+    value: {
+      id: string;
+      categoryId: string;
+      threshold: number;
+      enabled: boolean;
+      notificationsSent: number;
+    };
+    indexes: { 'by-category': string };
   };
 }
 
@@ -142,7 +170,7 @@ const DEFAULT_TRANSACTIONS: BudgetDB['transactions']['value'][] = [
 class DatabaseService {
   private db: IDBPDatabase<BudgetDB> | null = null;
   private readonly DB_NAME = 'budget-planner';
-  private readonly VERSION = 5;
+  private readonly VERSION = 6;
 
   async initialize(): Promise<void> {
     try {
@@ -213,6 +241,20 @@ class DatabaseService {
     if (!db.objectStoreNames.contains('liabilities')) {
       db.createObjectStore('liabilities', { keyPath: 'id' });
       console.log('Created liabilities object store');
+    }
+
+    // Add merchantLearning object store
+    if (!db.objectStoreNames.contains('merchantLearning')) {
+      const merchantStore = db.createObjectStore('merchantLearning', { keyPath: 'id' });
+      merchantStore.createIndex('by-merchant', 'merchantName');
+      console.log('Created merchantLearning object store');
+    }
+
+    // Add budgetAlerts object store
+    if (!db.objectStoreNames.contains('budgetAlerts')) {
+      const alertsStore = db.createObjectStore('budgetAlerts', { keyPath: 'id' });
+      alertsStore.createIndex('by-category', 'categoryId');
+      console.log('Created budgetAlerts object store');
     }
 
     console.log('Database upgrade completed. Final stores:', Array.from(db.objectStoreNames));
@@ -464,6 +506,187 @@ class DatabaseService {
       return liabilities;
     } catch (error) {
       console.error('Error getting all liabilities:', error);
+      throw error;
+    }
+  }
+
+  // --- Merchant Learning CRUD Methods ---
+  async addMerchantLearning(merchantName: string, categoryId: string): Promise<void> {
+    try {
+      const db = await this.getDB();
+      const tx = db.transaction('merchantLearning', 'readwrite');
+      const store = tx.objectStore('merchantLearning');
+      const index = store.index('by-merchant');
+
+      const existing = await index.get(merchantName.toLowerCase());
+
+      if (existing) {
+        // Update existing entry
+        existing.categoryId = categoryId;
+        existing.useCount += 1;
+        existing.lastUsed = new Date().toISOString();
+        existing.confidence = Math.min(1.0, existing.confidence + 0.1);
+        await store.put(existing);
+      } else {
+        // Create new entry
+        await store.add({
+          id: generateUUID(),
+          merchantName: merchantName.toLowerCase(),
+          categoryId,
+          confidence: 0.7,
+          lastUsed: new Date().toISOString(),
+          useCount: 1,
+        });
+      }
+
+      await tx.done;
+      console.info(`Merchant learning updated for ${merchantName}`);
+    } catch (error) {
+      console.error(`Error adding merchant learning for ${merchantName}:`, error);
+      throw error;
+    }
+  }
+
+  async getMerchantCategory(merchantName: string): Promise<string | null> {
+    try {
+      const db = await this.getDB();
+      const tx = db.transaction('merchantLearning', 'readonly');
+      const store = tx.objectStore('merchantLearning');
+      const index = store.index('by-merchant');
+
+      const learning = await index.get(merchantName.toLowerCase());
+      await tx.done;
+
+      if (learning && learning.confidence >= 0.6) {
+        return learning.categoryId;
+      }
+      return null;
+    } catch (error) {
+      console.error(`Error getting merchant category for ${merchantName}:`, error);
+      return null;
+    }
+  }
+
+  async getAllMerchantLearnings(): Promise<BudgetDB['merchantLearning']['value'][]> {
+    try {
+      const db = await this.getDB();
+      const tx = db.transaction('merchantLearning', 'readonly');
+      const store = tx.objectStore('merchantLearning');
+      const learnings = await store.getAll();
+      await tx.done;
+      return learnings;
+    } catch (error) {
+      console.error('Error getting all merchant learnings:', error);
+      return [];
+    }
+  }
+
+  // --- Budget Alerts CRUD Methods ---
+  async addBudgetAlert(categoryId: string, threshold: number): Promise<string> {
+    try {
+      const db = await this.getDB();
+      const tx = db.transaction('budgetAlerts', 'readwrite');
+      const store = tx.objectStore('budgetAlerts');
+
+      const newAlert: BudgetDB['budgetAlerts']['value'] = {
+        id: generateUUID(),
+        categoryId,
+        threshold,
+        enabled: true,
+        notificationsSent: 0,
+      };
+
+      await store.add(newAlert);
+      await tx.done;
+      console.info(`Budget alert created for category ${categoryId}`);
+      return newAlert.id;
+    } catch (error) {
+      console.error(`Error adding budget alert:`, error);
+      throw error;
+    }
+  }
+
+  async updateBudgetAlert(alert: BudgetDB['budgetAlerts']['value']): Promise<void> {
+    try {
+      const db = await this.getDB();
+      const tx = db.transaction('budgetAlerts', 'readwrite');
+      const store = tx.objectStore('budgetAlerts');
+      await store.put(alert);
+      await tx.done;
+      console.info(`Budget alert updated: ${alert.id}`);
+    } catch (error) {
+      console.error(`Error updating budget alert:`, error);
+      throw error;
+    }
+  }
+
+  async deleteBudgetAlert(alertId: string): Promise<void> {
+    try {
+      const db = await this.getDB();
+      const tx = db.transaction('budgetAlerts', 'readwrite');
+      const store = tx.objectStore('budgetAlerts');
+      await store.delete(alertId);
+      await tx.done;
+      console.info(`Budget alert deleted: ${alertId}`);
+    } catch (error) {
+      console.error(`Error deleting budget alert:`, error);
+      throw error;
+    }
+  }
+
+  async getBudgetAlertsByCategory(categoryId: string): Promise<BudgetDB['budgetAlerts']['value'][]> {
+    try {
+      const db = await this.getDB();
+      const tx = db.transaction('budgetAlerts', 'readonly');
+      const store = tx.objectStore('budgetAlerts');
+      const index = store.index('by-category');
+      const alerts = await index.getAll(categoryId);
+      await tx.done;
+      return alerts;
+    } catch (error) {
+      console.error(`Error getting budget alerts for category ${categoryId}:`, error);
+      return [];
+    }
+  }
+
+  async getAllBudgetAlerts(): Promise<BudgetDB['budgetAlerts']['value'][]> {
+    try {
+      const db = await this.getDB();
+      const tx = db.transaction('budgetAlerts', 'readonly');
+      const store = tx.objectStore('budgetAlerts');
+      const alerts = await store.getAll();
+      await tx.done;
+      return alerts;
+    } catch (error) {
+      console.error('Error getting all budget alerts:', error);
+      return [];
+    }
+  }
+
+  async deleteCategory(categoryId: string): Promise<void> {
+    try {
+      const db = await this.getDB();
+      const tx = db.transaction('categories', 'readwrite');
+      const store = tx.objectStore('categories');
+      await store.delete(categoryId);
+      await tx.done;
+      console.info(`Category deleted: ${categoryId}`);
+    } catch (error) {
+      console.error(`Error deleting category ${categoryId}:`, error);
+      throw error;
+    }
+  }
+
+  async updateCategory(category: BudgetDB['categories']['value']): Promise<void> {
+    try {
+      const db = await this.getDB();
+      const tx = db.transaction('categories', 'readwrite');
+      const store = tx.objectStore('categories');
+      await store.put(category);
+      await tx.done;
+      console.info(`Category updated: ${category.id}`);
+    } catch (error) {
+      console.error(`Error updating category ${category.id}:`, error);
       throw error;
     }
   }
