@@ -222,7 +222,7 @@ function PerformanceDebugPanel({ monitor }: PerformanceDebugPanelProps) {
       </div>
 
       <div className='max-h-60 overflow-y-auto text-xs'>
-        {metrics?.webVitals?.length > 0 && (
+        {metrics?.webVitals && Array.isArray(metrics.webVitals) && metrics.webVitals.length > 0 && (
           <div className='mb-2'>
             <strong>Web Vitals:</strong>
             {(metrics.webVitals as Array<{ name: string; value: number; rating: string }>).map(
@@ -235,13 +235,13 @@ function PerformanceDebugPanel({ monitor }: PerformanceDebugPanelProps) {
           </div>
         )}
 
-        {metrics?.custom?.length > 0 && (
+        {metrics?.custom && Array.isArray(metrics.custom) && metrics.custom.length > 0 && (
           <div>
             <strong>Custom Metrics:</strong>
             {(metrics.custom as Array<{ name: string; value: number; unit?: string }>).map(
               (metric, index: number) => (
                 <div key={index} className='ml-2'>
-                  {metric.name}: {metric.duration?.toFixed(2)}ms
+                  {metric.name}: {metric.value.toFixed(2)}{metric.unit || 'ms'}
                 </div>
               ),
             )}

@@ -83,7 +83,7 @@ const SpendingOverview = ({ selectedYear: propSelectedYear }: SpendingOverviewPr
   // Filter data for selected year with performance optimization
   const yearData = useMemo(() => {
     const filtered = spendingOverview.filter((item) => item.year === selectedYear);
-    const optimized = optimizeChartData(filtered, 50); // Limit for performance
+    const optimized = optimizeChartData(filtered as any, 50); // Limit for performance
     return optimized;
   }, [spendingOverview, selectedYear]);
 
@@ -131,7 +131,7 @@ const SpendingOverview = ({ selectedYear: propSelectedYear }: SpendingOverviewPr
               return (
                 <div className='bg-white p-4 rounded-lg shadow-lg border'>
                   <p className='text-sm text-gray-600'>
-                    {payload[0].payload.name} {payload[0].payload.year}
+                    {(payload[0].payload as any).month} {payload[0].payload.year}
                   </p>
                   <p className='font-semibold text-red-600'>
                     Spending: {formatCurrency(payload[0].payload.totalSpending)}
