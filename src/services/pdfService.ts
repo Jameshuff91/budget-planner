@@ -162,8 +162,8 @@ class PDFService {
     // In browser environment, cv would be on window. In test environment, it's on global.
     const cvLib =
       typeof window !== 'undefined'
-        ? (window as { cv: unknown }).cv
-        : (global as { cv: unknown }).cv;
+        ? (window as typeof globalThis & { cv?: typeof cv }).cv
+        : (globalThis as typeof globalThis & { cv?: typeof cv }).cv;
 
     if (!cvLib) {
       // Log error for test expectations
