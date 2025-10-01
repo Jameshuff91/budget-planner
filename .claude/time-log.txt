@@ -1,0 +1,15 @@
+# Claude Code Session Time Log
+# This file tracks timestamps of commits to help estimate actual time spent on tasks
+# Format: [YYYY-MM-DD HH:MM:SS] Commit message
+#   ⏱️  Time since last commit: X minutes
+
+[2025-09-30 19:31:00] fix: resolve test failures and improve type safety
+  ⏱️  Session started
+
+[2025-09-30 19:34:00] fix: resolve CSV upload and component type errors
+  ⏱️  Time since last commit: 3 minutes
+
+[2025-09-30 19:36:00] chore: add playwright-mcp to gitignore
+  ⏱️  Time since last commit: 2 minutes
+
+# Total session time: ~5 minutes (actual elapsed)
