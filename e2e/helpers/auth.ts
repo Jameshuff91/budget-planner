@@ -10,8 +10,10 @@ export async function loginAsTestUser(page: Page) {
   // Wait for the auth form to load
   await page.waitForSelector('text=Welcome to Budget Planner', { timeout: 10000 });
 
-  // Generate a unique email for this test session
-  const testEmail = `test-${Date.now()}@example.com`;
+  // Generate a unique email for this test session with extra randomness to avoid conflicts
+  const timestamp = Date.now();
+  const random = Math.random().toString(36).substring(2, 8);
+  const testEmail = `test-${timestamp}-${random}@example.com`;
   const testPassword = 'TestPass123!';
 
   // Click on Register tab
