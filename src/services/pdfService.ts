@@ -158,7 +158,7 @@ class PDFService {
     const cvLib =
       typeof window !== 'undefined'
         ? window.cv
-        : ((globalThis as unknown) as typeof window).cv;
+        : (globalThis as typeof window & { cv?: typeof cv }).cv;
 
     if (!cvLib) {
       // Log error for test expectations
@@ -211,10 +211,10 @@ class PDFService {
 
       src = cvLib.matFromImageData(imageData);
       gray = new cvLib.Mat();
-      deskewed = src.clone(); // Initialize deskewed with src, apply operations if skew is detected
+      deskewed = src!.clone(); // Initialize deskewed with src, apply operations if skew is detected
 
       // 1. Grayscaling
-      cvLib.cvtColor(src, gray, cvLib.COLOR_RGBA2GRAY);
+      cvLib.cvtColor(src!, gray!, cvLib.COLOR_RGBA2GRAY);
 
       // 2. Deskewing
       // Create a binary image for contour detection for deskewing
@@ -267,25 +267,25 @@ class PDFService {
           // Avoid extreme rotations
           logger.info(`Deskewing image by ${medianAngle.toFixed(2)} degrees.`);
           const M = cvLib.getRotationMatrix2D(
-            new cvLib.Point(gray.cols / 2, gray.rows / 2),
+            new cvLib.Point(gray!.cols / 2, gray!.rows / 2),
             medianAngle,
             1,
           );
           cvLib.warpAffine(
-            gray,
-            deskewed,
+            gray!,
+            deskewed!,
             M,
-            new cvLib.Size(gray.cols, gray.rows),
+            new cvLib.Size(gray!.cols, gray!.rows),
             cvLib.INTER_LINEAR,
             cvLib.BORDER_CONSTANT,
             new cvLib.Scalar(),
           );
           M.delete();
         } else {
-          gray.copyTo(deskewed); // No significant skew or unable to determine reliably
+          gray!.copyTo(deskewed!); // No significant skew or unable to determine reliably
         }
       } else {
-        gray.copyTo(deskewed); // No contours found to determine skew
+        gray!.copyTo(deskewed!); // No contours found to determine skew
       }
 
       binary.delete();
@@ -315,10 +315,10 @@ class PDFService {
       // Convert the final processed Mat back to ImageData
       // Ensure the output is RGBA for putImageData
       let finalMat = new cvLib.Mat();
-      if (adaptThresh.channels() === 1) {
-        cvLib.cvtColor(adaptThresh, finalMat, cvLib.COLOR_GRAY2RGBA);
+      if (adaptThresh!.channels() === 1) {
+        cvLib.cvtColor(adaptThresh!, finalMat, cvLib.COLOR_GRAY2RGBA);
       } else {
-        finalMat = adaptThresh.clone(); // Should already be RGBA if adaptThresh was not GRAY
+        finalMat = adaptThresh!.clone(); // Should already be RGBA if adaptThresh was not GRAY
       }
 
       const outputImageData = new ImageData(
@@ -1552,20 +1552,15 @@ class PDFService {
 
       // Initialize Tesseract worker with optimized settings
       const worker = await createWorker();
-      (worker as { logger: (m: { status: string; progress: number }) => void }).logger = (m: {
-        status: string;
-        progress: number;
-      }) => {
+      (worker as any).logger = (m: { status: string; progress: number }) => {
         logger.info(`Tesseract.js: ${m.status} ${Math.round(m.progress * 100)}%`);
       };
 
-      // Start the Tesseract worker with proper typing
-      await (worker as { load: () => Promise<void> }).load();
-      await (worker as { loadLanguage: (lang: string) => Promise<void> }).loadLanguage('eng');
-      await (worker as { initialize: (lang: string) => Promise<void> }).initialize('eng');
-      await (
-        worker as { setParameters: (params: Record<string, unknown>) => Promise<void> }
-      ).setParameters({
+      // Start the Tesseract worker
+      await (worker as any).load();
+      await (worker as any).loadLanguage('eng');
+      await (worker as any).initialize('eng');
+      await (worker as any).setParameters({
         tessedit_char_whitelist:
           '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ.,/- ',
       });
