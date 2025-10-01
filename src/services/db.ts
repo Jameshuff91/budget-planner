@@ -277,11 +277,6 @@ class DatabaseService {
     await this.db!.put('transactions', transaction);
   }
 
-  async deleteTransaction(id: string): Promise<void> {
-    if (!this.db) await this.initialize();
-    await this.db!.delete('transactions', id);
-  }
-
   async clearTransactions(): Promise<void> {
     const db = await this.getDB();
     const tx = db.transaction('transactions', 'readwrite');

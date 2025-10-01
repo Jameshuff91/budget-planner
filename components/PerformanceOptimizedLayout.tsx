@@ -230,7 +230,7 @@ function PerformanceDebugPanel({ monitor }: PerformanceDebugPanelProps) {
                 <div key={index} className='ml-2'>
                   {metric.name}: {metric.value.toFixed(2)} ({metric.rating})
                 </div>
-              ),
+              ) as React.ReactNode,
             )}
           </div>
         )}
@@ -243,7 +243,7 @@ function PerformanceDebugPanel({ monitor }: PerformanceDebugPanelProps) {
                 <div key={index} className='ml-2'>
                   {metric.name}: {metric.value.toFixed(2)}{metric.unit || 'ms'}
                 </div>
-              ),
+              ) as React.ReactNode,
             )}
           </div>
         )}

@@ -138,38 +138,53 @@ export function DatabaseProvider({ children }: { children: ReactNode }) {
       try {
         switch (operation.type) {
           case 'ADD_TRANSACTION':
-            await dbService.addTransaction({
-              ...operation.payload,
-              id: generateUUID(),
-              date: new Date(operation.payload.date),
-            });
+            {
+              const payload = operation.payload as Omit<Transaction, 'id'>;
+              await dbService.addTransaction({
+                ...payload,
+                id: generateUUID(),
+                date: new Date(payload.date),
+              });
+            }
             break;
           case 'UPDATE_TRANSACTION':
-            await dbService.updateTransaction({
-              ...operation.payload,
-              date: new Date(operation.payload.date),
-            });
+            {
+              const payload = operation.payload as Transaction;
+              await dbService.updateTransaction({
+                ...payload,
+                date: new Date(payload.date),
+              });
+            }
             break;
           case 'DELETE_TRANSACTION':
-            await dbService.deleteTransaction(operation.payload.id);
+            {
+              const payload = operation.payload as { id: string };
+              await dbService.deleteTransaction(payload.id);
+            }
             break;
           case 'ADD_ASSET':
-            await dbService.addAsset(operation.payload);
+            await dbService.addAsset(operation.payload as Omit<Asset, 'id'>);
             break;
           case 'UPDATE_ASSET':
-            await dbService.updateAsset(operation.payload);
+            await dbService.updateAsset(operation.payload as Asset);
             break;
           case 'DELETE_ASSET':
-            await dbService.deleteAsset(operation.payload.id);
+            {
+              const payload = operation.payload as { id: string };
+              await dbService.deleteAsset(payload.id);
+            }
             break;
           case 'ADD_LIABILITY':
-            await dbService.addLiability(operation.payload);
+            await dbService.addLiability(operation.payload as Omit<Liability, 'id'>);
             break;
           case 'UPDATE_LIABILITY':
-            await dbService.updateLiability(operation.payload);
+            await dbService.updateLiability(operation.payload as Liability);
             break;
           case 'DELETE_LIABILITY':
-            await dbService.deleteLiability(operation.payload.id);
+            {
+              const payload = operation.payload as { id: string };
+              await dbService.deleteLiability(payload.id);
+            }
             break;
         }
         await loadData();
