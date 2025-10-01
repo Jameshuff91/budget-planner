@@ -43,7 +43,7 @@ class Logger {
       `%c${logEntry.timestamp} [${level.toUpperCase()}] ${message}`,
       this.getLogStyle(level),
     ];
-    if (data) consoleArgs.push(data);
+    if (data) consoleArgs.push(data as string);
 
     switch (level) {
       case 'debug':

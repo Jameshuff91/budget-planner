@@ -25,7 +25,7 @@ const indexedDBMock = {
 
 // Mock browser APIs
 global.indexedDB = indexedDBMock as unknown as IDBFactory;
-global.IDBKeyRange = { bound: vi.fn() } as unknown as IDBKeyRange;
+global.IDBKeyRange = { bound: vi.fn() } as any;
 
 // Mock window.URL.createObjectURL
 global.URL.createObjectURL = vi.fn(() => 'mock-object-url');

@@ -120,7 +120,7 @@ class OfflineQueue {
   private async handleServiceWorkerSync(transaction: Record<string, unknown>): Promise<void> {
     // Handle transaction sync from service worker
     try {
-      await this.markOperationSynced(transaction.id);
+      await this.markOperationSynced(transaction.id as string);
       logger.info('Operation synced from service worker:', transaction.id);
     } catch (error) {
       logger.error('Failed to handle service worker sync:', error);

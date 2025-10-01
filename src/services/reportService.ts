@@ -290,11 +290,11 @@ export class ReportService {
 
       try {
         const canvas = await html2canvas(chart.element, {
-          background: '#ffffff',
+          backgroundColor: '#ffffff',
           scale: 2,
           logging: false,
           useCORS: true,
-        });
+        } as any);
 
         const imgWidth = 170;
         const imgHeight = (canvas.height * imgWidth) / canvas.width;
@@ -485,12 +485,12 @@ export class ReportService {
       }
 
       pdf.setFont(undefined, 'bold');
-      pdf.text(`${recurring.merchantName} - ${formatCurrency(recurring.amount)}`, 25, y);
+      pdf.text(`${recurring.merchantName} - ${formatCurrency(recurring.amount as number)}`, 25, y);
       y += 6;
 
       pdf.setFont(undefined, 'normal');
       pdf.text(
-        `Frequency: ${recurring.frequency} (${recurring.transactions.length} occurrences)`,
+        `Frequency: ${recurring.frequency} (${(recurring.transactions as any[]).length} occurrences)`,
         30,
         y,
       );
@@ -498,7 +498,7 @@ export class ReportService {
 
       if (recurring.nextEstimatedDate) {
         pdf.text(
-          `Next expected: ${format(new Date(recurring.nextEstimatedDate), 'MMM dd, yyyy')}`,
+          `Next expected: ${format(recurring.nextEstimatedDate as Date, 'MMM dd, yyyy')}`,
           30,
           y,
         );
@@ -515,9 +515,9 @@ export class ReportService {
    * Add footer to all pages
    */
   private addFooter(pdf: jsPDF): void {
-    const pageCount = (pdf as unknown as { getNumberOfPages?: () => number }).getNumberOfPages
-      ? (pdf as unknown as { getNumberOfPages?: () => number }).getNumberOfPages()
-      : (pdf as unknown as { internal: { pages: unknown[] } }).internal.pages?.length || 1;
+    const pageCount = (pdf as any).getNumberOfPages
+      ? (pdf as any).getNumberOfPages()
+      : (pdf as any).internal.pages?.length || 1;
 
     for (let i = 1; i <= pageCount; i++) {
       pdf.setPage(i);
