@@ -1,7 +1,7 @@
 'use client';
 
 import { Auth } from '@components/Auth';
-import Dashboard from '@components/Dashboard';
+import EnhancedDashboard from '@components/EnhancedDashboard';
 import MonthSelector from '@components/MonthSelector';
 import PDFUpload from '@components/PDFUpload';
 import { Button } from '@components/ui/button';
@@ -9,6 +9,8 @@ import { toast } from '@components/ui/use-toast';
 import { useAuth } from '@context/AuthContext';
 import { useDBContext } from '@context/DatabaseContext';
 import { pdfService } from '@services/pdfService';
+import { Settings } from 'lucide-react';
+import Link from 'next/link';
 import {
   categorizeTransactionsBatchWithAI,
   getSmartCategorizationSettings,
@@ -106,30 +108,45 @@ export default function Home() {
   }
 
   return (
-    <main className='flex min-h-screen flex-col items-center justify-between p-24'>
-      <div className='z-10 max-w-5xl w-full items-center justify-between font-mono text-sm lg:flex'>
-        <p className='fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30'>
-          Budget Planner Dashboard
-        </p>
-        <div className='fixed right-4 top-4 flex items-center gap-4'>
-          <span className='text-sm text-muted-foreground'>{user?.email}</span>
-          <Button variant='outline' onClick={handleReset}>
-            Reset Dashboard
-          </Button>
-          <Button variant='outline' onClick={logout}>
-            Logout
-          </Button>
+    <main className='flex min-h-screen flex-col'>
+      {/* Header */}
+      <div className='border-b border-gray-300 bg-gradient-to-b from-zinc-200 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30'>
+        <div className='container mx-auto px-4 py-4'>
+          <div className='flex items-center justify-between'>
+            <h1 className='text-xl font-bold'>Budget Planner Dashboard</h1>
+            <div className='flex items-center gap-3'>
+              <span className='text-sm text-muted-foreground'>{user?.email}</span>
+              <Link href='/settings'>
+                <Button variant='outline' size='sm'>
+                  <Settings className='w-4 h-4 mr-2' />
+                  Settings
+                </Button>
+              </Link>
+              <Button variant='outline' size='sm' onClick={handleReset}>
+                Reset
+              </Button>
+              <Button variant='outline' size='sm' onClick={logout}>
+                Logout
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
-      <div className='container mx-auto py-8 px-4'>
-        <PDFUpload />
 
-        <div className='mb-4'>
+      {/* Main Content */}
+      <div className='container mx-auto py-8 px-4'>
+        {/* Upload Section */}
+        <div className='mb-6'>
+          <PDFUpload />
+        </div>
+
+        {/* Month Selector */}
+        <div className='mb-6'>
           <MonthSelector />
         </div>
 
-        <div className='text-2xl font-bold mb-6 text-blue-600'>Financial Dashboard</div>
-        <Dashboard />
+        {/* Enhanced Dashboard with Tabs */}
+        <EnhancedDashboard />
       </div>
     </main>
   );
