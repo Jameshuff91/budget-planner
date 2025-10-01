@@ -9,11 +9,6 @@ import { dbService } from './db';
 import { createLLMService } from './llmService';
 import { logger } from './logger';
 
-// Type declaration for OpenCV global variable
-declare global {
-  const cv: unknown;
-}
-
 // Set worker path before any PDF operations
 if (typeof window !== 'undefined') {
   // Use local worker file to avoid CORS issues
@@ -162,8 +157,8 @@ class PDFService {
     // In browser environment, cv would be on window. In test environment, it's on global.
     const cvLib =
       typeof window !== 'undefined'
-        ? (window as typeof globalThis & { cv?: typeof cv }).cv
-        : (globalThis as typeof globalThis & { cv?: typeof cv }).cv;
+        ? window.cv
+        : ((globalThis as unknown) as typeof window).cv;
 
     if (!cvLib) {
       // Log error for test expectations
@@ -199,13 +194,13 @@ class PDFService {
       return new ImageData(newData, imageData.width, imageData.height);
     }
 
-    let src: unknown = null;
-    let gray: unknown = null;
-    const edges: unknown = null;
-    const lines: unknown = null;
-    let deskewed: unknown = null;
-    let blurred: unknown = null;
-    let adaptThresh: unknown = null;
+    let src: Mat | null = null;
+    let gray: Mat | null = null;
+    let edges: Mat | null = null;
+    let lines: Mat | null = null;
+    let deskewed: Mat | null = null;
+    let blurred: Mat | null = null;
+    let adaptThresh: Mat | null = null;
 
     try {
       // Mark OpenCV as available on first successful use

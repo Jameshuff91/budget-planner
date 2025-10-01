@@ -73,6 +73,7 @@ declare global {
     rows: number;
     cols: number;
     data: Uint8Array;
+    channels(): number;
     delete(): void;
     size(): Size;
     clone(): Mat;
