@@ -1,4 +1,5 @@
 import { Page } from '@playwright/test';
+import { loginAsTestUser } from '../helpers/auth';
 
 /**
  * Wait for all charts on the page to render completely
@@ -27,7 +28,7 @@ export async function waitForChartsToRender(page: Page) {
  * Upload sample transaction data
  */
 export async function uploadSampleTransactions(page: Page) {
-  await page.goto('/');
+  await loginAsTestUser(page);
 
   // Wait for the upload area to be visible
   await page.waitForSelector('input[type="file"]', { timeout: 10000 });

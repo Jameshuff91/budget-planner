@@ -1,9 +1,10 @@
 import { test, expect } from '@playwright/test';
+import { loginAsTestUser } from './helpers/auth';
 
 test.describe('Spending Alerts Configuration', () => {
   test.beforeEach(async ({ page }) => {
-    // Navigate to the application
-    await page.goto('/');
+    // Navigate to the application and login
+    await loginAsTestUser(page);
 
     // Upload sample transaction data to trigger alerts
     const csvContent = `date,description,amount,category,type

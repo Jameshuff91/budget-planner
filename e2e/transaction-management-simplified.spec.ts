@@ -1,9 +1,10 @@
 import { test, expect } from '@playwright/test';
+import { loginAsTestUser } from './helpers/auth';
 
 test.describe('Transaction Management Simplified', () => {
   test('should display transactions after upload and clicking tab', async ({ page }) => {
-    // Go to the app
-    await page.goto('/');
+    // Login first
+    await loginAsTestUser(page);
 
     // Upload simple CSV data
     const csvContent = `date,description,amount,category,type

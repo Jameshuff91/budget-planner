@@ -1,8 +1,9 @@
 import { test, expect } from '@playwright/test';
+import { loginAsTestUser } from './helpers/auth';
 
 test.describe('Budget Planner Application', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/');
+    await loginAsTestUser(page);
   });
 
   test('should display the main application title', async ({ page }) => {
@@ -95,7 +96,7 @@ test.describe('Budget Planner Application', () => {
 
 test.describe('Budget Planner Error Handling', () => {
   test('should handle invalid file formats gracefully', async ({ page }) => {
-    await page.goto('/');
+    await loginAsTestUser(page);
 
     // Try uploading a text file
     const fileInput = page.locator('#file-upload');

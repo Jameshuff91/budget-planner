@@ -1,8 +1,9 @@
 import { test, expect } from '@playwright/test';
+import { loginAsTestUser } from '../helpers/auth';
 
 // Helper to upload sample data
 async function uploadSampleData(page: any) {
-  await page.goto('/');
+  await loginAsTestUser(page);
 
   // Upload the sample CSV file
   const fileInput = await page.locator('input[type="file"]').first();
@@ -27,13 +28,14 @@ async function waitForDashboardRender(page: any) {
 test.describe('Dashboard Visual Regression Tests', () => {
   test.beforeEach(async ({ page }) => {
     // Clear any existing data
-    await page.goto('/');
+    await loginAsTestUser(page);
     await page.evaluate(() => {
       if ('indexedDB' in window) {
         indexedDB.deleteDatabase('BudgetPlannerDB');
       }
     });
     await page.reload();
+    await page.waitForSelector('text=Budget Planner Dashboard', { timeout: 10000 });
   });
 
   test('Dashboard - full layout with data', async ({ page }) => {

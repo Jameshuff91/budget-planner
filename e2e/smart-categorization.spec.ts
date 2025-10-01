@@ -1,4 +1,5 @@
 import { test, expect, Page } from '@playwright/test';
+import { loginAsTestUser } from './helpers/auth';
 
 test.describe('Smart Categorization Settings', () => {
   let page: Page;
@@ -13,7 +14,7 @@ test.describe('Smart Categorization Settings', () => {
       localStorage.clear();
     });
 
-    await page.goto('/');
+    await loginAsTestUser(page);
   });
 
   test.afterEach(async () => {

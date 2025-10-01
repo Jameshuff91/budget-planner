@@ -1,4 +1,5 @@
 import { test, expect, Page } from '@playwright/test';
+import { loginAsTestUser } from './helpers/auth';
 
 test.describe('Transaction Management', () => {
   // Helper function to upload sample transaction data
@@ -32,7 +33,7 @@ test.describe('Transaction Management', () => {
   }
 
   test.beforeEach(async ({ page }) => {
-    await page.goto('/');
+    await loginAsTestUser(page);
     await uploadSampleData(page);
 
     // Click on the Transactions tab to show the transaction list

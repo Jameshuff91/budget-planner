@@ -1,8 +1,9 @@
 import { test, expect } from '@playwright/test';
+import { loginAsTestUser } from './helpers/auth';
 
 test.describe('CSV Export Functionality', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/');
+    await loginAsTestUser(page);
 
     // Upload sample data first
     const csvContent = `date,description,amount,category,type
@@ -150,8 +151,8 @@ test.describe('CSV Export Functionality', () => {
   });
 
   test('should handle empty data gracefully', async ({ page }) => {
-    // Clear existing data by reloading and not uploading anything
-    await page.reload();
+    // Clear existing data by reloading and logging in again without uploading
+    await loginAsTestUser(page);
 
     // Try to export without data
     await page.locator('button:has-text("Export Data")').click();

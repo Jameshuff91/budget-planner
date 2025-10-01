@@ -1,4 +1,5 @@
 import { test, expect, Page } from '@playwright/test';
+import { loginAsTestUser } from './helpers/auth';
 
 // Helper function to check if Plaid credentials are configured
 async function checkPlaidConfig(page: Page): Promise<boolean> {
@@ -87,7 +88,7 @@ async function mockPlaidLinkSuccess(page: Page) {
 
 test.describe('Plaid Bank Connection', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/');
+    await loginAsTestUser(page);
 
     // Click on Financial Dashboard if needed
     const financialDashboard = page.locator('div').filter({ hasText: /^Financial Dashboard$/ });

@@ -1,8 +1,9 @@
 import { test, expect } from '@playwright/test';
+import { loginAsTestUser } from './helpers/auth';
 
 test.describe('Category Rules Configuration', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/');
+    await loginAsTestUser(page);
 
     // Clear any existing rules from localStorage
     await page.evaluate(() => {

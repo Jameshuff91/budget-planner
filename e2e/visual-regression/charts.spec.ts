@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { loginAsTestUser } from '../helpers/auth';
 
 // Helper to wait for charts to render
 async function waitForChartRender(page: any) {
