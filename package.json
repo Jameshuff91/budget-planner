@@ -60,7 +60,7 @@
     "lucide-react": "^0.468.0",
     "next": "14.2.16",
     "papaparse": "^5.4.1",
-    "pdfjs-dist": "^4.10.38",
+    "pdfjs-dist": "^5.3.93",
     "plaid": "^36.0.0",
     "react": "^18",
     "react-dom": "^18",
