@@ -71,7 +71,7 @@
     "string_decoder": "^1.3.0",
     "tailwind-merge": "^2.5.5",
     "tailwindcss-animate": "^1.0.7",
-    "tesseract.js": "^5.1.1",
+    "tesseract.js": "^6.0.1",
     "vitest": "^3.0.2",
     "web-vitals": "^5.0.3"
   },
